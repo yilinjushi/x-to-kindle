@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+kindle_outbox/
+logs/
+email_config.json
+x_session.json
+*.docx
+*.jpg
+*.jpeg
+*.png
