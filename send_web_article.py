@@ -19,26 +19,25 @@ from bs4 import BeautifulSoup
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Pt
+from playwright.sync_api import sync_playwright
 from readability import Document as ReadabilityDocument
 
 from app_config import (
+    CHROME_EXE,
     GMAIL_APP_PASSWORD,
     GMAIL_USER,
     KINDLE_EMAIL,
+    LAUNCH_ARGS,
     OUTDIR,
     PYTHON_EXE,
     SENT_WEB_HISTORY_FILE,
+    USER_AGENT,
     ensure_parent_dir,
     load_json_file,
 )
 from tweet_to_docx import make_all_black, title_to_filename
 
 
-USER_AGENT = (
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-    "AppleWebKit/537.36 (KHTML, like Gecko) "
-    "Chrome/132.0.0.0 Safari/537.36"
-)
 TRACKING_QUERY_PREFIXES = ("utm_", "fbclid", "gclid", "igshid", "mc_", "ref")
 SEND_EMAIL_SCRIPT = Path(__file__).resolve().parent / "send_email.py"
 WEB_OUTDIR = OUTDIR / "web"
@@ -77,14 +76,44 @@ def save_sent_history(history: dict[str, dict]) -> None:
 
 
 def fetch_html(url: str) -> str:
-    response = requests.get(
-        url,
-        headers={"User-Agent": USER_AGENT},
-        timeout=30,
-    )
-    response.raise_for_status()
-    response.encoding = response.encoding or response.apparent_encoding
-    return response.text
+    try:
+        response = requests.get(
+            url,
+            headers={"User-Agent": USER_AGENT},
+            timeout=30,
+        )
+        response.raise_for_status()
+        response.encoding = response.encoding or response.apparent_encoding
+        return response.text
+    except requests.HTTPError as exc:
+        status_code = exc.response.status_code if exc.response is not None else None
+        if status_code not in {401, 403, 429}:
+            raise
+        print(f"HTTP {status_code} from direct fetch, falling back to Playwright...")
+    except requests.RequestException as exc:
+        print(f"Direct fetch failed ({exc}), falling back to Playwright...")
+
+    return fetch_html_with_playwright(url)
+
+
+def fetch_html_with_playwright(url: str) -> str:
+    launch_kwargs = {
+        "headless": True,
+        "args": LAUNCH_ARGS,
+    }
+    if CHROME_EXE:
+        launch_kwargs["executable_path"] = CHROME_EXE
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch(**launch_kwargs)
+        context = browser.new_context(user_agent=USER_AGENT)
+        page = context.new_page()
+        page.goto(url, wait_until="domcontentloaded", timeout=60000)
+        page.wait_for_load_state("networkidle", timeout=20000)
+        html = page.content()
+        context.close()
+        browser.close()
+        return html
 
 
 def extract_article(html: str, fallback_title: str | None = None) -> tuple[str, list[str]]:
