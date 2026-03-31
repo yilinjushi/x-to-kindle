@@ -3,3 +3,4 @@ python-docx==1.1.2
 requests==2.32.3
 beautifulsoup4==4.12.3
 readability-lxml==0.8.1
+lxml_html_clean==0.4.1
