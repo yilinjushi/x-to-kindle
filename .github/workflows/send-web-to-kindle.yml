@@ -19,6 +19,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: send-web-to-kindle
+  cancel-in-progress: false
+
 jobs:
   send-web-article:
     runs-on: ubuntu-latest
@@ -59,4 +63,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add state/sent_web_articles.json
           git commit -m "Update sent web article history"
+          git pull --rebase
           git push
