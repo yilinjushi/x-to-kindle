@@ -79,6 +79,11 @@ def get_bookmark_urls(page, target_count: int) -> list[str]:
     return seen[:target_count]
 
 
+def status_id_from_url(url: str) -> str:
+    match = re.search(r"/status/(\d+)$", url)
+    return match.group(1) if match else "unknown"
+
+
 def send_article(filepath: str, title: str, send_to: str) -> bool:
     """Send a single DOCX file via email."""
     subject = title[:60] if title else Path(filepath).stem
@@ -192,22 +197,22 @@ def main():
                     results.append((title, None, 0))
                     continue
 
-                filename = title_to_filename(title) + ".docx"
+                filename = f"{title_to_filename(title)}-{status_id_from_url(url)}.docx"
                 filepath = str(Path(outdir) / filename)
 
                 if Path(filepath).exists():
-                    print(f"  SKIP: {filename} already exists in outbox.")
-                    results.append((title, None, 0))
-                    continue
+                    print(f"  Reusing existing file: {filename}")
 
                 cookies = {c["name"]: c["value"] for c in context.cookies()}
 
-                doc, n_inserted = build_docx(title, author, url, items, cookies)
-                make_all_black(doc)
-
-                doc.save(filepath)
-                size_kb = Path(filepath).stat().st_size // 1024
-                print(f"  Saved: {filename} ({size_kb} KB)")
+                if not Path(filepath).exists():
+                    doc, n_inserted = build_docx(title, author, url, items, cookies)
+                    make_all_black(doc)
+                    doc.save(filepath)
+                    size_kb = Path(filepath).stat().st_size // 1024
+                    print(f"  Saved: {filename} ({size_kb} KB)")
+                else:
+                    n_inserted = 0
 
                 results.append((title, filepath, n_inserted))
 
