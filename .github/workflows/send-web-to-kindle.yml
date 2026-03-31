@@ -1,0 +1,59 @@
+name: Send Web To Kindle
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: Article URL to send
+        required: true
+        type: string
+      title:
+        description: Optional title from Shortcut
+        required: false
+        type: string
+      source:
+        description: Source label
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  send-web-article:
+    runs-on: ubuntu-latest
+    env:
+      KINDLE_EMAIL: ${{ secrets.KINDLE_EMAIL }}
+      GMAIL_USER: ${{ secrets.GMAIL_USER }}
+      GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Send web article
+        run: >
+          python send_web_article.py
+          --url "${{ inputs.url }}"
+          --title "${{ inputs.title }}"
+          --source "${{ inputs.source || 'iphone_shortcut' }}"
+
+      - name: Commit sent-web history updates
+        shell: bash
+        run: |
+          if git diff --quiet -- state/sent_web_articles.json; then
+            echo "No sent-web history changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state/sent_web_articles.json
+          git commit -m "Update sent web article history"
+          git push

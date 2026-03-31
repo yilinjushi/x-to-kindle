@@ -7,6 +7,7 @@ BASE_DIR = Path(__file__).resolve().parent
 DEFAULT_OUTDIR = BASE_DIR / "kindle_outbox"
 DEFAULT_STATE_DIR = BASE_DIR / "state"
 DEFAULT_SENT_HISTORY = DEFAULT_STATE_DIR / "sent_articles.json"
+DEFAULT_SENT_WEB_HISTORY = DEFAULT_STATE_DIR / "sent_web_articles.json"
 DEFAULT_SESSION_FILE = BASE_DIR / "x_session.json"
 
 
@@ -18,6 +19,7 @@ def env_path(name: str, default: Path) -> Path:
 OUTDIR = env_path("OUTDIR", DEFAULT_OUTDIR)
 STATE_DIR = env_path("STATE_DIR", DEFAULT_STATE_DIR)
 SENT_HISTORY_FILE = env_path("SENT_HISTORY_FILE", DEFAULT_SENT_HISTORY)
+SENT_WEB_HISTORY_FILE = env_path("SENT_WEB_HISTORY_FILE", DEFAULT_SENT_WEB_HISTORY)
 SESSION_FILE = env_path("SESSION_FILE", DEFAULT_SESSION_FILE)
 
 KINDLE_EMAIL = os.environ.get("KINDLE_EMAIL", "").strip()
@@ -52,4 +54,3 @@ def load_json_file(path: Path, default):
         return default
     with open(path, encoding="utf-8") as f:
         return json.load(f)
-

@@ -38,3 +38,12 @@ The workflow in `.github/workflows/kindle-delivery.yml` runs twice a day:
 - `06:00 UTC` = `14:00` China Standard Time
 
 It also supports manual runs through `workflow_dispatch`.
+
+## iPhone Share Shortcut Flow
+
+For single web articles shared from iPhone:
+
+- Use `.github/workflows/send-web-to-kindle.yml`
+- Trigger it with `workflow_dispatch`
+- Provide the article URL as the `url` input
+- Sent web URLs are tracked in [state/sent_web_articles.json](/L:/FilenPersonal/aitool/state/sent_web_articles.json)
