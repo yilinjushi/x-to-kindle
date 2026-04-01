@@ -96,24 +96,46 @@ def fetch_html(url: str) -> str:
     return fetch_html_with_playwright(url)
 
 
-def fetch_html_with_playwright(url: str) -> str:
-    launch_kwargs = {
-        "headless": True,
-        "args": LAUNCH_ARGS,
-    }
+def _playwright_launch_kwargs() -> dict:
+    kwargs = {"headless": True, "args": LAUNCH_ARGS}
     if CHROME_EXE:
-        launch_kwargs["executable_path"] = CHROME_EXE
+        kwargs["executable_path"] = CHROME_EXE
+    return kwargs
 
+
+def _playwright_goto(page, url: str) -> None:
+    page.goto(url, wait_until="domcontentloaded", timeout=60000)
+    try:
+        page.wait_for_load_state("networkidle", timeout=20000)
+    except Exception:
+        pass  # domcontentloaded already fired; proceed with whatever is loaded
+
+
+def fetch_html_with_playwright(url: str) -> str:
     with sync_playwright() as p:
-        browser = p.chromium.launch(**launch_kwargs)
+        browser = p.chromium.launch(**_playwright_launch_kwargs())
         context = browser.new_context(user_agent=USER_AGENT)
         page = context.new_page()
-        page.goto(url, wait_until="domcontentloaded", timeout=60000)
-        page.wait_for_load_state("networkidle", timeout=20000)
+        _playwright_goto(page, url)
         html = page.content()
         context.close()
         browser.close()
         return html
+
+
+def fetch_pdf_with_playwright(url: str) -> Path:
+    WEB_OUTDIR.mkdir(parents=True, exist_ok=True)
+    url_digest = hashlib.sha1(url.encode("utf-8")).hexdigest()[:10]
+    output_path = WEB_OUTDIR / f"article-{url_digest}.pdf"
+    with sync_playwright() as p:
+        browser = p.chromium.launch(**_playwright_launch_kwargs())
+        context = browser.new_context(user_agent=USER_AGENT)
+        page = context.new_page()
+        _playwright_goto(page, url)
+        page.pdf(path=str(output_path), format="A4", print_background=False)
+        context.close()
+        browser.close()
+    return output_path
 
 
 def extract_article(html: str, fallback_title: str | None = None) -> tuple[str, list[str]]:
@@ -209,18 +231,21 @@ def main() -> None:
 
     html = fetch_html(args.url)
     title, paragraphs = extract_article(html, args.title or None)
-    if not paragraphs:
-        print("ERROR: Could not extract article text.", file=sys.stderr)
-        sys.exit(1)
 
-    WEB_OUTDIR.mkdir(parents=True, exist_ok=True)
-    url_digest = hashlib.sha1(normalized_url.encode("utf-8")).hexdigest()[:10]
-    filename = f"{title_to_filename(title)}-{url_digest}.docx"
-    output_path = WEB_OUTDIR / filename
-    build_docx(title, normalized_url, paragraphs, output_path)
-
-    total_chars = sum(len(p) for p in paragraphs)
-    print(f"Prepared {len(paragraphs)} paragraph(s), {total_chars} chars")
+    if paragraphs:
+        WEB_OUTDIR.mkdir(parents=True, exist_ok=True)
+        url_digest = hashlib.sha1(normalized_url.encode("utf-8")).hexdigest()[:10]
+        filename = f"{title_to_filename(title)}-{url_digest}.docx"
+        output_path = WEB_OUTDIR / filename
+        build_docx(title, normalized_url, paragraphs, output_path)
+        total_chars = sum(len(p) for p in paragraphs)
+        print(f"Prepared {len(paragraphs)} paragraph(s), {total_chars} chars")
+    else:
+        print("Text extraction failed, falling back to PDF rendering...")
+        output_path = fetch_pdf_with_playwright(args.url)
+        title = args.title or urlparse(args.url).netloc
+        total_chars = 0
+        print(f"PDF rendered: {output_path}")
 
     if send_docx(output_path, title, KINDLE_EMAIL):
         history[normalized_url] = {
