@@ -118,5 +118,53 @@
     "title": "按头学习| 让 AI 真正做好复杂任务，需要一套什么样的系统？（Anthropic官工程师实践指南）",
     "author": "Berryxia.AI @berryxia",
     "chars": 3641
+  },
+  {
+    "url": "https://x.com/Jaden_riku/status/2040103654586515891",
+    "title": "99% 的人给 AI 提的问题都是垃圾，包括你",
+    "author": "Jaden思考日志 @Jaden_riku",
+    "chars": 2530
+  },
+  {
+    "url": "https://x.com/HiTw93/status/2040047268221608281",
+    "title": "你不知道的大模型训练：原理、路径与新实践",
+    "author": "Tw93 @HiTw93",
+    "chars": 13454
+  },
+  {
+    "url": "https://x.com/GoSailGlobal/status/2039954813795074280",
+    "title": "Anthropic内部分享：别再造Agent了，造Skills就够了",
+    "author": "Jason Zhu @GoSailGlobal",
+    "chars": 2500
+  },
+  {
+    "url": "https://x.com/karpathy/status/2039805659525644595",
+    "title": "LLM Knowledge Bases",
+    "author": "Andrej Karpathy @karpathy",
+    "chars": 3426
+  },
+  {
+    "url": "https://x.com/PandaTalk8/status/2037317483884081443",
+    "title": "KARPATHY 的 AUTORESEARCH：当 AI 开始自己做研究",
+    "author": "Mr Panda @PandaTalk8",
+    "chars": 10055
+  },
+  {
+    "url": "https://x.com/PrajwalTomar_/status/2037104246647382058",
+    "title": "Claude Code + NEW Stitch 2.0 just changed how I design apps",
+    "author": "Prajwal Tomar @PrajwalTomar_",
+    "chars": 10599
+  },
+  {
+    "url": "https://x.com/ZeevFarbman/status/2033928611632206219",
+    "title": "Why Big Tech Is Abandoning Open Source (And Why We Are Doubling Down)",
+    "author": "Zeev Farbman @ZeevFarbman",
+    "chars": 4803
+  },
+  {
+    "url": "https://x.com/Voxyz_ai/status/2036863425905586265",
+    "title": "Claude Code Best Practices: From Tool to System",
+    "author": "Vox @Voxyz_ai",
+    "chars": 26899
   }
 ]
