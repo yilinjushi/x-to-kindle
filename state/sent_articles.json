@@ -490,5 +490,29 @@
     "title": "Why Karpathy’s Second Brain Breaks at Agent Scale. How Mercury Solves It.",
     "author": "Zaid @Ctrl_Alt_Zaid",
     "chars": 6089
+  },
+  {
+    "url": "https://x.com/seelffff/status/2050007245216256051",
+    "title": "I Built an AI Agent That Manages My Life",
+    "author": "self.dll @seelffff",
+    "chars": 19036
+  },
+  {
+    "url": "https://x.com/cyrilXBT/status/2050214010541269225",
+    "title": "I Replaced a 4-Person Team With a Multi-Agent Claude System. Here Is the Exact Architecture.",
+    "author": "CyrilXBT @cyrilXBT",
+    "chars": 17035
+  },
+  {
+    "url": "https://x.com/sairahul1/status/2049758043152449849",
+    "title": "I Fixed Claude's Token Limits. Here's How.",
+    "author": "Rahul @sairahul1",
+    "chars": 5117
+  },
+  {
+    "url": "https://x.com/rohit4verse/status/2049548305408131349",
+    "title": "What to Learn, Build, and Skip in AI Agents (2026)",
+    "author": "Rohit @rohit4verse",
+    "chars": 29980
   }
 ]
