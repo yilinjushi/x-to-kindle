@@ -652,5 +652,11 @@
     "title": "Boris Cherny：Claude Code 之后，写代码正在变成“管理 Agent”",
     "author": "宝玉 @dotey",
     "chars": 10866
+  },
+  {
+    "url": "https://x.com/karpathy/status/2053872850101285137",
+    "title": "This works really well btw, at the end of your query ask your LLM to \"structure your response as HTML\", then view the generated file in your browser. I've also had some success asking the LLM to present its output as slideshows, etc.",
+    "author": "Andrej Karpathy @karpathy",
+    "chars": 1686
   }
 ]
