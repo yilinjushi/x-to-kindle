@@ -658,5 +658,17 @@
     "title": "This works really well btw, at the end of your query ask your LLM to \"structure your response as HTML\", then view the generated file in your browser. I've also had some success asking the LLM to present its output as slideshows, etc.",
     "author": "Andrej Karpathy @karpathy",
     "chars": 1686
+  },
+  {
+    "url": "https://x.com/eng_khairallah1/status/2054132051536961540",
+    "title": "How to Turn Claude Into a Full-Time AI Employee in 7 Days (Full Course)",
+    "author": "Khairallah AL-Awady @eng_khairallah1",
+    "chars": 12343
+  },
+  {
+    "url": "https://x.com/sujingshen/status/2043898494818410731",
+    "title": "三省六部幻觉：为什么\"虚拟公司\"式多Agent架构在工程上不成立",
+    "author": "SagaSu @sujingshen",
+    "chars": 5389
   }
 ]
