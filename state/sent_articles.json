@@ -808,5 +808,29 @@
     "title": "如何用 Codex 在 1 小时内进入一个陌生行业（完整版）",
     "author": "Aron厚玉 @aronhouyu",
     "chars": 9004
+  },
+  {
+    "url": "https://x.com/MinLiBuilds/status/2062068646902689895",
+    "title": "Claude Code 动态工作流： 每个任务都可以有自己的 Harness【译】",
+    "author": "实践哥MinLi @MinLiBuilds",
+    "chars": 4657
+  },
+  {
+    "url": "https://x.com/0xCodez/status/2062926176117469477",
+    "title": "How to run Claude on autopilot in 14 steps: /loop, Routines, and the full automation stack.",
+    "author": "Codez @0xCodez",
+    "chars": 21599
+  },
+  {
+    "url": "https://x.com/laowangbabababa/status/2061384966227849698",
+    "title": "一文超详细讲透GitHub：注册，双重认证，搜索，建仓库，issue，本地git，部署，fork，star，pull，push",
+    "author": "老王霸 AI Lab @laowangbabababa",
+    "chars": 6292
+  },
+  {
+    "url": "https://x.com/FakeMaidenMaker/status/2055146731625447516",
+    "title": "一文看懂 Harness Engineering，帮你的 AI 提效 10 倍",
+    "author": "Ren @FakeMaidenMaker",
+    "chars": 10272
   }
 ]
