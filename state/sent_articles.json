@@ -1330,5 +1330,17 @@
     "title": "从 intent.md 到闭环：AI 原生软件开发的六个阶段、一条产物链、几道审批门 原创",
     "author": "meng shao @shao__meng",
     "chars": 9564
+  },
+  {
+    "url": "https://x.com/LanLance24/status/2095144419393683791",
+    "title": "半年后的今天，我怎么用 AI 写代码",
+    "author": "LanLance @LanLance24",
+    "chars": 3604
+  },
+  {
+    "url": "https://x.com/shao__meng/status/2095463232031133769",
+    "title": "Claude Code 的 token 都去哪了：从提示缓存到上下文重发的成本拆解",
+    "author": "meng shao @shao__meng",
+    "chars": 4801
   }
 ]
