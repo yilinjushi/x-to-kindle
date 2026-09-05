@@ -1,0 +1,73 @@
+name: Fetch X Article Smoke Test
+
+on:
+  push:
+    paths:
+      - "fetch_article_json.py"
+      - ".github/workflows/fetch-x-article-smoke.yml"
+  workflow_dispatch:
+    inputs:
+      url:
+        description: X/Twitter status or article URL
+        required: false
+        default: https://x.com/pvncher/status/2095991462416490862
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  TEST_URL: https://x.com/pvncher/status/2095991462416490862
+
+jobs:
+  fetch-article:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Playwright browser
+        run: python -m playwright install --with-deps chromium
+
+      - name: Restore X session
+        shell: bash
+        run: |
+          cat <<'EOF' > x_session.json
+          ${{ secrets.X_SESSION_JSON }}
+          EOF
+
+      - name: Fetch article
+        shell: bash
+        run: |
+          URL="${{ inputs.url }}"
+          if [ -z "$URL" ]; then URL="$TEST_URL"; fi
+          python fetch_article_json.py "$URL" --output article.json
+
+      - name: Show result metadata
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('article.json', encoding='utf-8'))
+          print('TITLE=', d.get('title'))
+          print('AUTHOR=', d.get('author'))
+          print('IS_ARTICLE=', d.get('is_article'))
+          print('CHARS=', len(d.get('text','')))
+          print('PREVIEW=', d.get('text','')[:1000].replace('\n',' '))
+          PY
+
+      - name: Upload article JSON
+        uses: actions/upload-artifact@v4
+        with:
+          name: x-article-smoke-json
+          path: article.json
+          if-no-files-found: error
+          retention-days: 7
