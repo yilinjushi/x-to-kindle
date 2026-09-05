@@ -1,0 +1,96 @@
+name: Fetch X Article From Issue
+
+on:
+  issues:
+    types: [opened, edited, reopened]
+
+permissions:
+  contents: write
+  issues: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+concurrency:
+  group: x-article-issue-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  fetch-article:
+    if: startsWith(github.event.issue.title, '[x-fetch]')
+    runs-on: ubuntu-latest
+    env:
+      ARTICLE_URL: ${{ github.event.issue.body }}
+      ISSUE_NUMBER: ${{ github.event.issue.number }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Playwright browser
+        run: python -m playwright install --with-deps chromium
+
+      - name: Restore X session
+        shell: bash
+        run: |
+          cat <<'EOF' > x_session.json
+          ${{ secrets.X_SESSION_JSON }}
+          EOF
+
+      - name: Validate URL
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os
+          from urllib.parse import urlparse
+          url = os.environ['ARTICLE_URL'].strip()
+          p = urlparse(url)
+          if p.scheme not in {'http', 'https'} or p.netloc.lower() not in {'x.com', 'www.x.com', 'twitter.com', 'www.twitter.com'}:
+              raise SystemExit(f'Unsupported URL: {url}')
+          print(url)
+          PY
+
+      - name: Fetch article JSON
+        shell: bash
+        run: |
+          mkdir -p state/x_fetch_requests
+          python fetch_article_json.py "$ARTICLE_URL" --output "state/x_fetch_requests/${ISSUE_NUMBER}.json"
+
+      - name: Commit result
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "state/x_fetch_requests/${ISSUE_NUMBER}.json"
+          git commit -m "Store X article fetch result for issue #${ISSUE_NUMBER}" || exit 0
+          git pull --rebase
+          git push
+
+      - name: Comment result metadata
+        shell: bash
+        run: |
+          python - <<'PY' > /tmp/x_fetch_comment.md
+          import json, os
+          p = f"state/x_fetch_requests/{os.environ['ISSUE_NUMBER']}.json"
+          d = json.load(open(p, encoding='utf-8'))
+          print('Fetch complete.')
+          print()
+          print(f"- Title: {d.get('title','')}")
+          print(f"- Author: {d.get('author','')}")
+          print(f"- X Article: {d.get('is_article', False)}")
+          print(f"- Characters: {len(d.get('text',''))}")
+          print(f"- Result: `{p}`")
+          PY
+          gh issue comment "$ISSUE_NUMBER" --body-file /tmp/x_fetch_comment.md
+
+      - name: Close request issue
+        shell: bash
+        run: gh issue close "$ISSUE_NUMBER" --reason completed
