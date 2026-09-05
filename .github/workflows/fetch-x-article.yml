@@ -1,0 +1,67 @@
+name: Fetch X Article JSON
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: X/Twitter status or article URL
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  fetch-article:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Playwright browser
+        run: python -m playwright install --with-deps chromium
+
+      - name: Restore X session
+        shell: bash
+        run: |
+          cat <<'EOF' > x_session.json
+          ${{ secrets.X_SESSION_JSON }}
+          EOF
+
+      - name: Fetch article
+        run: python fetch_article_json.py "${{ inputs.url }}" --output article.json
+
+      - name: Add article to job summary
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path('article.json').read_text(encoding='utf-8'))
+          with open(Path(__import__('os').environ['GITHUB_STEP_SUMMARY']), 'a', encoding='utf-8') as f:
+              f.write(f"# {data.get('title') or 'X Article'}\n\n")
+              if data.get('author'):
+                  f.write(f"**Author:** {data['author']}\n\n")
+              f.write(f"**URL:** {data.get('url','')}\n\n")
+              f.write(data.get('text',''))
+              f.write('\n')
+          PY
+
+      - name: Upload article JSON
+        uses: actions/upload-artifact@v4
+        with:
+          name: x-article-json
+          path: article.json
+          if-no-files-found: error
+          retention-days: 7
