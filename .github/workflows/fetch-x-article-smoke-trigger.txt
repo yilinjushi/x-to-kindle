@@ -1,0 +1,1 @@
+Trigger file for X article smoke test.
