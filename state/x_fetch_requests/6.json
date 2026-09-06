@@ -1,0 +1,105 @@
+{
+  "url": "https://x.com/nurijanian/status/2092198860500201545?s=46",
+  "title": "/first-principles: the key skill for PMs",
+  "author": "George from 🕹prodmgmt.world @nurijanian",
+  "is_article": true,
+  "text": "First principles thinking can help you analyse complex, long-standing problems.\n\nElon Musk's widely known examples benefit from using physics as a reliable starting point. For most other people, their fields do not offer a base as certain as the laws of physics.\n\nHowever, some principles are more certain than others. Much of product development and how products function can be understood through principles of human psychology, human interaction design, and other areas. These principles may not have the predictive power or reliability of physics laws, but they are sufficiently strong to support first principles thinking. Often, people overlook or are unaware of these principles. Concepts like retention and engagement are frequently discussed as if they are novel inventions, but they are actually rooted in fundamental aspects of human behavior.\n\nI developed this skill to facilitate this type of analysis. This method seems simple but it is not. AI can help structure this type of thinking. It can also use research to find the foundational assumptions for specific fields. I believe it is valuable to have this skill operating continuously to test assumptions, particularly when faced with claims that something is impossible, too difficult, or too costly.\n\nJust to use Elon Musk's battery example: people said battery packs cost about $600 per kilowatt-hour because that is what they had always cost. He asked what goes into a battery: cobalt, nickel, aluminum, carbon, polymers, steel. Price those on the London Metal Exchange and the materials land near $80 per kilowatt-hour. The gap is not driven by the component prices, so it's likely BS that can be re-thought/removed.\n\nThat is first principles for product work: break the words in a constraint down to mechanisms, separate what physics or economics fixes from what the org inherited, then rebuild.\n\nWhy analogy is the default\n\nUsing analogies can speed up decision-making by looking at what others have done, past quotes, and existing roadmaps. However, relying on analogies can limit progress to small improvements. For example, if you only consider horse-drawn carriages as a reference, you'll only optimize carriages. Thinking from first principles means identifying the fundamental requirements of transportation and then building solutions from that basic understanding.\n\nVolume\n\nA product manager can check one constraint in chat at a time. When many constraints arrive weekly, from roadmaps, vendor quotes, and requests, it's not possible to mentally organize and compare them during meetings. A template for recording these constraints would still result in inconsistent research and labeling. The process of checking constraints should be handled by an automated system, so the format of the results remains consistent even as the specific constraints change.\n\nGive your agent this skill\n\n`first-principles` is one of the 200+ PM skills inside AI PM OS, the operating system for product managers. It runs in Claude Code, Codex, Cowork or Cursor and is updated at least once every 2 weeks, on version 2.8.\n\nEach PM keeps their own product context while the system shares workflows and review standards, so the reduced claims and priced verdicts come back grounded in your product, your users, and your real constraints instead of generic PM advice.\n\nYou don't have to assemble any of it. AI PM OS wires `first-principles` into the operating layer alongside workflows for strategy, research, decisions, stakeholder work, and measurement.\n\nBecome the PM who actually works with agents\n\n---\n\nExamples\n\nBattery materials versus historical pack price:\n\nhttps://www.youtube.com/watch?v=NV3sBlRgzTI\n\nMaterials-cost minimum and \"magic wand\" cost thinking on rockets:\n\nhttps://www.youtube.com/watch?v=54OSbbtXrdI\n\nFarnam Street collects the rocket version of the same move in a different domain: raw materials near 2% of typical rocket price when priced on the commodity market.\n\nhttps://fs.blog/first-principles/",
+  "items": [
+    {
+      "type": "para",
+      "text": "First principles thinking can help you analyse complex, long-standing problems."
+    },
+    {
+      "type": "para",
+      "text": "Elon Musk's widely known examples benefit from using physics as a reliable starting point. For most other people, their fields do not offer a base as certain as the laws of physics."
+    },
+    {
+      "type": "para",
+      "text": "However, some principles are more certain than others. Much of product development and how products function can be understood through principles of human psychology, human interaction design, and other areas. These principles may not have the predictive power or reliability of physics laws, but they are sufficiently strong to support first principles thinking. Often, people overlook or are unaware of these principles. Concepts like retention and engagement are frequently discussed as if they are novel inventions, but they are actually rooted in fundamental aspects of human behavior."
+    },
+    {
+      "type": "para",
+      "text": "I developed this skill to facilitate this type of analysis. This method seems simple but it is not. AI can help structure this type of thinking. It can also use research to find the foundational assumptions for specific fields. I believe it is valuable to have this skill operating continuously to test assumptions, particularly when faced with claims that something is impossible, too difficult, or too costly."
+    },
+    {
+      "type": "para",
+      "text": "Just to use Elon Musk's battery example: people said battery packs cost about $600 per kilowatt-hour because that is what they had always cost. He asked what goes into a battery: cobalt, nickel, aluminum, carbon, polymers, steel. Price those on the London Metal Exchange and the materials land near $80 per kilowatt-hour. The gap is not driven by the component prices, so it's likely BS that can be re-thought/removed."
+    },
+    {
+      "type": "para",
+      "text": "That is first principles for product work: break the words in a constraint down to mechanisms, separate what physics or economics fixes from what the org inherited, then rebuild."
+    },
+    {
+      "type": "h2",
+      "text": "Why analogy is the default"
+    },
+    {
+      "type": "para",
+      "text": "Using analogies can speed up decision-making by looking at what others have done, past quotes, and existing roadmaps. However, relying on analogies can limit progress to small improvements. For example, if you only consider horse-drawn carriages as a reference, you'll only optimize carriages. Thinking from first principles means identifying the fundamental requirements of transportation and then building solutions from that basic understanding."
+    },
+    {
+      "type": "h2",
+      "text": "Volume"
+    },
+    {
+      "type": "para",
+      "text": "A product manager can check one constraint in chat at a time. When many constraints arrive weekly, from roadmaps, vendor quotes, and requests, it's not possible to mentally organize and compare them during meetings. A template for recording these constraints would still result in inconsistent research and labeling. The process of checking constraints should be handled by an automated system, so the format of the results remains consistent even as the specific constraints change."
+    },
+    {
+      "type": "h2",
+      "text": "Give your agent this skill"
+    },
+    {
+      "type": "image",
+      "src": "https://pbs.twimg.com/media/HQj6tFhaMAAdlwr?format=jpg&name=large"
+    },
+    {
+      "type": "para",
+      "text": "`first-principles` is one of the 200+ PM skills inside AI PM OS, the operating system for product managers. It runs in Claude Code, Codex, Cowork or Cursor and is updated at least once every 2 weeks, on version 2.8."
+    },
+    {
+      "type": "para",
+      "text": "Each PM keeps their own product context while the system shares workflows and review standards, so the reduced claims and priced verdicts come back grounded in your product, your users, and your real constraints instead of generic PM advice."
+    },
+    {
+      "type": "para",
+      "text": "You don't have to assemble any of it. AI PM OS wires `first-principles` into the operating layer alongside workflows for strategy, research, decisions, stakeholder work, and measurement."
+    },
+    {
+      "type": "h2",
+      "text": "Become the PM who actually works with agents"
+    },
+    {
+      "type": "para",
+      "text": "---"
+    },
+    {
+      "type": "h2",
+      "text": "Examples"
+    },
+    {
+      "type": "para",
+      "text": "Battery materials versus historical pack price:"
+    },
+    {
+      "type": "para",
+      "text": "https://www.youtube.com/watch?v=NV3sBlRgzTI"
+    },
+    {
+      "type": "para",
+      "text": "Materials-cost minimum and \"magic wand\" cost thinking on rockets:"
+    },
+    {
+      "type": "para",
+      "text": "https://www.youtube.com/watch?v=54OSbbtXrdI"
+    },
+    {
+      "type": "para",
+      "text": "Farnam Street collects the rocket version of the same move in a different domain: raw materials near 2% of typical rocket price when priced on the commodity market."
+    },
+    {
+      "type": "para",
+      "text": "https://fs.blog/first-principles/"
+    }
+  ]
+}
