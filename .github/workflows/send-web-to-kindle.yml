@@ -58,7 +58,7 @@ jobs:
       - name: Commit sent-web history and archive updates
         shell: bash
         run: |
-          git add state/sent_web_articles.json archive/
+          git add state/sent_web_articles.json archive/ site/
           if git diff --cached --quiet; then
             echo "No sent-web history or archive changes to commit."
             exit 0

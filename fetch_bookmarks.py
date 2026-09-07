@@ -210,6 +210,8 @@ def main():
                     source="x_bookmark",
                     chars=total_chars,
                     n_images=n_images,
+                    items=items,
+                    cookies={c["name"]: c["value"] for c in context.cookies()},
                 )
                 print(f"  Archived: {archive_path}")
 

@@ -1,0 +1,34 @@
+:root { color-scheme: light; --paper: #f4f0e8; --ink: #20201e; --muted: #6f6c64; --line: #d4cec2; --accent: #9a432d; }
+* { box-sizing: border-box; }
+html { font-size: 18px; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: Georgia, "Times New Roman", "Noto Serif TC", serif; line-height: 1.75; }
+a { color: inherit; }
+.masthead, main, footer { width: min(100% - 2rem, 760px); margin-inline: auto; }
+.masthead { padding: 1.6rem 0; border-bottom: 1px solid var(--line); }
+.masthead a { font: 700 .78rem/1 system-ui, sans-serif; letter-spacing: .13em; text-decoration: none; text-transform: uppercase; }
+main { min-height: 75vh; }
+.intro { padding: clamp(4rem, 12vw, 8rem) 0 3rem; }
+.intro h1 { max-width: 680px; margin: .35rem 0 .6rem; font-size: clamp(2.8rem, 9vw, 5.4rem); line-height: .98; letter-spacing: -.045em; }
+.intro > p:last-child { color: var(--muted); }
+.eyebrow, .meta, time { color: var(--accent); font: 700 .7rem/1.4 system-ui, sans-serif; letter-spacing: .12em; }
+.articles { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.articles li { border-bottom: 1px solid var(--line); }
+.articles a { display: block; padding: 1.8rem 0; text-decoration: none; }
+.articles a:hover h2, .articles a:focus-visible h2 { color: var(--accent); }
+.articles h2 { margin: .25rem 0 .3rem; font-size: clamp(1.4rem, 4vw, 2rem); line-height: 1.2; transition: color .15s ease; }
+.articles p { max-width: 640px; margin: 0; color: var(--muted); font-size: .92rem; }
+article { padding: 3rem 0 6rem; }
+.back, .source { font: 650 .78rem/1.4 system-ui, sans-serif; color: var(--accent); text-decoration: none; }
+.meta { margin: 2.5rem 0 .8rem; }
+.prose h1 { margin: 0 0 2.5rem; font-size: clamp(2.5rem, 8vw, 4.6rem); line-height: 1.04; letter-spacing: -.035em; }
+.prose h2 { margin-top: 2.8rem; font-size: 1.65rem; line-height: 1.2; }
+.prose h3 { margin-top: 2.2rem; }
+.prose p, .prose li { overflow-wrap: anywhere; }
+.prose img { display: block; width: 100%; height: auto; margin: 2rem 0; border-radius: 3px; }
+.prose blockquote { margin: 2rem 0; padding-left: 1.2rem; border-left: 3px solid var(--accent); color: var(--muted); }
+.prose pre { overflow-x: auto; padding: 1rem; background: #e9e3d8; font-size: .78rem; }
+.source { display: inline-block; margin-top: 3rem; }
+footer { padding: 2rem 0 3rem; border-top: 1px solid var(--line); color: var(--muted); font: .72rem/1.4 system-ui, sans-serif; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+@media (max-width: 520px) { html { font-size: 16px; } .masthead, main, footer { width: min(100% - 1.4rem, 760px); } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }

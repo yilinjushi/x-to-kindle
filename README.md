@@ -2,6 +2,16 @@
 
 This project fetches your X bookmarks, keeps only long-form items, converts them to DOCX, and emails each new item to Kindle.
 
+Every extracted article is also preserved as Markdown with locally downloaded images and published as a framework-free static blog from `site/`.
+
+## Public reading archive
+
+- Durable source: Markdown under `archive/<year>/` and images under `site/assets/`
+- Published output: plain HTML and CSS under `site/`
+- Rebuild locally: `python build_site.py`
+- Cloudflare Pages output directory: `site`
+- No build command is required because the delivery workflows regenerate the HTML before committing.
+
 ## What counts as a long article
 
 - Any native X Article is always eligible.
@@ -10,7 +20,7 @@ This project fetches your X bookmarks, keeps only long-form items, converts them
 
 ## Duplicate protection
 
-- Sent items are tracked by URL in [state/sent_articles.json](/L:/FilenPersonal/aitool/state/sent_articles.json).
+- Sent items are tracked by URL in `state/sent_articles.json`.
 - If a bookmarked URL already exists there, it is skipped.
 - This is more reliable than checking only whether a DOCX filename already exists.
 
@@ -46,4 +56,4 @@ For single web articles shared from iPhone:
 - Use `.github/workflows/send-web-to-kindle.yml`
 - Trigger it with `workflow_dispatch`
 - Provide the article URL as the `url` input
-- Sent web URLs are tracked in [state/sent_web_articles.json](/L:/FilenPersonal/aitool/state/sent_web_articles.json)
+- Sent web URLs are tracked in `state/sent_web_articles.json`.

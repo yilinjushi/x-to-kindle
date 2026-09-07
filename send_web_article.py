@@ -12,7 +12,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
+from urllib.parse import parse_qsl, urlencode, urljoin, urlparse, urlunparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -166,6 +166,19 @@ def extract_article(html: str, fallback_title: str | None = None) -> tuple[str, 
     return title.strip(), paragraphs
 
 
+def extract_image_urls(html: str, base_url: str) -> list[str]:
+    readable = ReadabilityDocument(html)
+    soup = BeautifulSoup(readable.summary(html_partial=True), "html.parser")
+    urls = []
+    for image in soup.find_all("img"):
+        source = image.get("src") or image.get("data-src")
+        if source:
+            absolute = urljoin(base_url, source)
+            if absolute.startswith(("http://", "https://")) and absolute not in urls:
+                urls.append(absolute)
+    return urls
+
+
 def build_docx(title: str, url: str, paragraphs: list[str], output_path: Path) -> None:
     doc = Document()
 
@@ -232,6 +245,7 @@ def main() -> None:
 
     html = fetch_html(args.url)
     title, paragraphs = extract_article(html, args.title or None)
+    image_urls = extract_image_urls(html, normalized_url)
 
     if paragraphs:
         WEB_OUTDIR.mkdir(parents=True, exist_ok=True)
@@ -248,6 +262,7 @@ def main() -> None:
             text="\n\n".join(paragraphs),
             source=args.source,
             chars=total_chars,
+            image_urls=image_urls,
         )
         print(f"Archived: {archive_path}")
     else:
