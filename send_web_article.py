@@ -35,6 +35,7 @@ from app_config import (
     ensure_parent_dir,
     load_json_file,
 )
+from archive import save_article_archive
 from tweet_to_docx import make_all_black, title_to_filename
 
 
@@ -240,6 +241,15 @@ def main() -> None:
         build_docx(title, normalized_url, paragraphs, output_path)
         total_chars = sum(len(p) for p in paragraphs)
         print(f"Prepared {len(paragraphs)} paragraph(s), {total_chars} chars")
+
+        archive_path = save_article_archive(
+            url=normalized_url,
+            title=title,
+            text="\n\n".join(paragraphs),
+            source=args.source,
+            chars=total_chars,
+        )
+        print(f"Archived: {archive_path}")
     else:
         print("Text extraction failed, falling back to PDF rendering...")
         output_path = fetch_pdf_with_playwright(args.url)
