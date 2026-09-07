@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="How I Design with AI.">
+  <title>How I Design with AI. · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Matt Dailey @reactiverobot · 2026-09-07</div><div class="prose"><h1>How I Design with AI.</h1>
+<p>As an engineer who is not a designer and hates slop. </p>
+<p>Every landing page, app and tui look the same. They&#x27;re slop and most of them are incomprehensible. </p>
+<p>Here&#x27;s how I de-slop my product design.</p>
+<h1>1. Always consider the whole.</h1>
+<p>The design process is roughly 3 steps:</p>
+<ul>
+<li>
+<p>Lay out all the constraints you are designing for.</p>
+</li>
+<li>
+<p>Consider an array of solutions that satisfy those constraints.</p>
+</li>
+<li>
+<p>If you realize a constraint must be added or one can be removed, go to #1.</p>
+</li>
+</ul>
+<p>This is from Notes on the Synthesis of Form by Christopher Alexander. It&#x27;s a pleasingly rigorous exploration of the design process.</p>
+<p>Notes on the Synthesis of Form, a very good book.</p>
+<p><img alt="Article image" src="/assets/2026-09-07-how-i-design-with-ai.-2bcedc2d43/01.jpg"></p>
+<p>Constraints can take many forms. They could be font and sizing rules, workflows you must support or business-logic states. The important thing is that you decide the constraints.</p>
+<p>The common problem is skipping Step 3 and playing design wackamole.</p>
+<p>A user gets confused and it&#x27;s natural to jump into solution mode. Our team gets nerd sniped by this all the time. Especially with the left sidebar because it packs so much information into a small space.  The temptation is to spot-fix but that road leads to ruin.</p>
+<p>A ton of information and actions in a small space. Avoid wackamole design.</p>
+<p><img alt="Article image" src="/assets/2026-09-07-how-i-design-with-ai.-2bcedc2d43/02.jpg"></p>
+<p>The problem from skipping laying out the constraints is that you get a disjoint patchwork that randomly prioritizes some interactions over others. AI exacerbates the draw to wackamole design. It encourages prompting &quot;Make X more prominent&quot; or &quot;Add an affordance to do Y&quot;. In the end, more users are confused.</p>
+<p>When feedback arrives, evaluate if it changes your design constraints before jumping to solutions.  The way we handle this is keeping a document tracking papercuts and annoyances. We move fast on obvious fixes but track the minor ones so that when it comes time to redesign, we have a collection to address cohesively. The important thing is that we avoid being overly reactive and creating more mess.</p>
+<h1>2. Remove stuff.</h1>
+<p>Agents love to add stuff. Your job is to remove the unnecessary parts.</p>
+<p>This should be very familiar because agents do exactly the same thing in code and plans. They love belt-and-suspenders, wrapping an extra try-catch or re-implementing the same utility over and over.</p>
+<p>In UI designs, agents do the same thing. They love adding extra copy, lines and icons. You end up with real designs that look better than most engineers would create by hand but are actually kind of bad.</p>
+<p>An easy step is just look at every element of a design and for every element ask &quot;Do I actually need that?&quot;</p>
+<p>Remove the agent&#x27;s litter.</p>
+<p><img alt="Article image" src="/assets/2026-09-07-how-i-design-with-ai.-2bcedc2d43/03.jpg"></p>
+<h1>3. Iterate in a design tool.</h1>
+<p>You should not be iterating on design in the product. Use a tool that gives you fine control and lets you iterate quickly with minimal extra context.</p>
+<p>Prototype gravity is the silent killer. This is when you have the agent build the first version in your code base then it feels easier to just refine that instead of exploring other options. Designing in your real codebase also forces the agent to build a version that grafts onto your real</p>
+<p>Figma is still the GOAT and the AI integration is getting better every week. Cursor Design Mode, Claude Design, a bunch of new startups and even HTML prototypes are great too.</p>
+<p>Just please use a tool meant for design and have AI generate 3-4 variants of everything.</p>
+<p>Figma is still the GOAT for design iteration.</p>
+<p><img alt="Article image" src="/assets/2026-09-07-how-i-design-with-ai.-2bcedc2d43/04.jpg"></p>
+<h1>4. Use components and libraries.</h1>
+<p>This one is probably obvious to most engineers but it&#x27;s very important so I&#x27;ll say it quickly.</p>
+<p>Separate views and logic. Create reusable components. </p>
+<p>It&#x27;s not hard and it pays dividends. Your app will be visually cohesive rather than a patchwork of re-implemented buttons.</p>
+<p>To do this at Ref, we maintain a /showcase page. We have agents build the UI component there first to play with them before connecting to the main app.</p>
+<p>The /showcase page with all of Ref&#x27;s components.</p>
+<p><img alt="Article image" src="/assets/2026-09-07-how-i-design-with-ai.-2bcedc2d43/05.jpg"></p>
+<h1>5. Use preview deploys.</h1>
+<p>The best way to evaluate a design is with real data.  Preview deploys allow you to try the new designs with your real backend.</p>
+<p>It&#x27;s important to remember, there will always be some polish and re-work necessary. Even if the agent builds exactly what you told it, you may still hold it in your hands with real data and realize it&#x27;s not right.</p>
+<p>For a large feature that involves frontend and backend, preview deploys can be tricky. At Ref we solve this by separating frontend and backend PRs. Backend changes can be verified with unit and integration tests. Frontend changes require human verification and preview deploys make it easy to share a link.</p>
+<p>GitHub action setups a preview deploy for each frontend PR.</p>
+<p><img alt="Article image" src="/assets/2026-09-07-how-i-design-with-ai.-2bcedc2d43/06.jpg"></p>
+<h1>6. Steal stuff.</h1>
+<p>Most UX problems have been solved already and you should be taking pieces and putting them together. Spend some time looking at products solving a similar problems or communicating similar ideas.</p>
+<p>Every cracked designer I&#x27;ve worked with starts every single project by pulling together a bunch of screenshots. You should do the same, it makes amazing context to send to your agent.</p>
+<p>Landing page inspiration gathered by an very good actual designer.</p>
+<p><img alt="Article image" src="/assets/2026-09-07-how-i-design-with-ai.-2bcedc2d43/07.jpg"></p>
+<h1>7. Explore your taste.</h1>
+<p>This is the fun part!</p>
+<p>Taste is reflecting on your own reaction to something. And my apologies to Kyle Chayka but reflecting on one&#x27;s experience is not proprietary to parties in Brooklyn lofts. It&#x27;s necessary to create and not create slop.</p>
+<p>Product engineers are excellent at identifying when a design doesn&#x27;t work but have a hard time knowing how to fix it. What engineers lack is the solution library from experience to pull from. Building that just takes reps trying things and reflecting.  </p>
+<p>It&#x27;s fun to play and explore. But it can also feel pretty brutal because its a deluge of critique until something is good enough.</p>
+<p>At Ref we don&#x27;t have a full-time designer so we resort to an agricultural threshing approach to refining our taste. We throw a design in the middle and beat it with sticks until we feel good about it.</p>
+<p>The media could not be played.
+Reload
+The Ref team beating a design into submission.</p>
+<p>That&#x27;s all I&#x27;ve got. GLHF.</p></div><a class="source" href="https://x.com/reactiverobot/status/2092638003789439075" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

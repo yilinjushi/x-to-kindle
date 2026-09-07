@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Harness Engineering: the skill that replaced prompt engineering in 2026">
+  <title>Harness Engineering: the skill that replaced prompt engineering in 2026 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">chuplung @choopyplug1 · 2026-09-07</div><div class="prose"><h1>Harness Engineering: the skill that replaced prompt engineering in 2026</h1>
+<p>In 2024, the skill was writing better prompts. In 2025, it was feeding better context. In 2026, neither one is the bottleneck anymore.</p>
+<p>The bottleneck is everything around the model: who gives it tools, who checks its work, what it remembers, what it is allowed to touch, and whether anyone can see what it did. That layer has a name now. It is called the harness.</p>
+<p>Each wave did not replace the one before it. It absorbed it. Context engineering absorbed prompt engineering: what you feed the model matters more than how you phrase the question. Harness engineering absorbs both: the harness decides what context to load, what prompt to send, and then adds the seven things neither prompts nor context can do alone: tool control, verification, memory, permissions, observability, routing, and feedback.</p>
+<p><img alt="Article image" src="/assets/2026-09-07-harness-engineering-the-skill-that-replaced-prompt-engineeri-077cca89f1/01.png"></p>
+<p>88% of enterprise AI agent projects fail to reach production. The failure is almost never the model. It is context rot, missing guardrails, no state persistence, or feedback loops that never close. Two teams running the same model with different harness designs get dramatically different outcomes. The harness is the differentiator, not the model.</p>
+<h1>What a harness actually is</h1>
+<p>The model contains the raw intelligence. The harness makes that intelligence reliable. It is the execution layer between the model and the real world: tool dispatch, verification, memory, permissions, and logging.</p>
+<p><img alt="Article image" src="/assets/2026-09-07-harness-engineering-the-skill-that-replaced-prompt-engineeri-077cca89f1/02.jpg"></p>
+<p>A production harness has seven layers. Each one prevents a different class of failure.</p>
+<p><img alt="Article image" src="/assets/2026-09-07-harness-engineering-the-skill-that-replaced-prompt-engineeri-077cca89f1/03.jpg"></p>
+<h1>1. Tool Orchestration</h1>
+<p>The single most important rule: never let the model call tools directly. The model returns a structured tool call (function name, arguments). The harness validates the schema, checks permissions, executes, and injects the result back. This prevents prompt injection from escalating to arbitrary code execution.</p>
+<p><img alt="Article image" src="/assets/2026-09-07-harness-engineering-the-skill-that-replaced-prompt-engineeri-077cca89f1/04.png"></p>
+<p>This is the draft-commit pattern. Dangerous actions are first drafted, then explicitly committed. The model suggests &quot;delete this file.&quot; The harness holds that action and asks for confirmation. Read-only operations go through immediately. Write operations wait.</p>
+<p>plaintext
+tools:
+  file_read: auto        # no confirmation needed
+  file_write: auto       # safe, versioned
+  file_delete: confirm   # requires human approval
+  git_commit: auto
+  git_push: confirm      # irreversible
+  shell_exec: confirm    # arbitrary execution, always hold
+  api_call: auto         # read-only endpoints
+  api_mutate: confirm    # state-changing endpoints</p>
+<p>Whether it is a successful API response, a permission denial, or a timeout, the agent always receives a structured observation back. No dangling promises. No silent failures. The harness turns every tool interaction into a clean request-response cycle the agent can reason about, instead of letting the agent parse raw shell output and guess what happened.</p>
+<p><img alt="Article image" src="/assets/2026-09-07-harness-engineering-the-skill-that-replaced-prompt-engineeri-077cca89f1/05.jpg"></p>
+<h1>2. Verification Loops</h1>
+<p>Every production harness separates the maker from the checker. The model that wrote the code is too generous grading its own homework. A second pass with different instructions catches what the first one talked itself into.</p>
+<p><img alt="Article image" src="/assets/2026-09-07-harness-engineering-the-skill-that-replaced-prompt-engineeri-077cca89f1/06.jpg"></p>
+<p>Real example: in April 2026, Claude Code had a quality degradation. Anthropic traced it to three independent harness-level changes: a reasoning-effort downgrade, a caching bug that dropped thinking history, and an aggressive verbosity-limiting prompt. None were model problems. All three were harness problems. The model was the same. The surrounding system changed, and quality collapsed. Anthropic published a full postmortem. The lesson was not &quot;fix the model.&quot; The lesson was &quot;your harness is your product quality, treat it that way.&quot;</p>
+<p><img alt="Article image" src="/assets/2026-09-07-harness-engineering-the-skill-that-replaced-prompt-engineeri-077cca89f1/07.jpg"></p>
+<p>The verification loop does not have to be expensive. A fast, cheap model can handle most checks (does it compile, do the tests pass, is the diff inside scope). Reserve the expensive model for judgment calls where the cheap one lacks the reasoning depth. The split itself is what matters, not the price tag on the verifier.</p>
+<p>plaintext
+verify:
+  enabled: true
+  mode: separate_agent   # never self-grade
+  criteria:
+    - all tests pass
+    - no new lint warnings
+    - no files modified outside task scope
+  on_fail: reject_with_reason
+  on_pass: proceed_to_commit</p>
+<h1>3. Context &amp; Memory</h1>
+<p>Context engineering taught us that what you feed the model matters more than how you ask. Harness engineering takes the next step: the harness decides automatically what enters the context window, instead of relying on the human to get it right every time.</p>
+<p><img alt="Article image" src="/assets/2026-09-07-harness-engineering-the-skill-that-replaced-prompt-engineeri-077cca89f1/08.jpg"></p>
+<p>A production harness compacts context between turns. It does not shove the entire conversation history into every call. It summarizes completed subtasks, drops resolved tool outputs, and keeps only what the current step needs. Without this, long-running agents fill their window, start losing information, and every reasoning step gets worse.</p>
+<p>Memory works the same way. The harness persists what matters (CLAUDE.md, STATE.md, constraints) and loads it automatically at session start. The agent that made a mistake last week cannot make the same mistake this week because the lesson lives in a file the harness reads before doing anything. Without persistent memory, every session is a blank slate. With it, the system compounds.</p>
+<p><img alt="Article image" src="/assets/2026-09-07-harness-engineering-the-skill-that-replaced-prompt-engineeri-077cca89f1/09.jpg"></p>
+<p>The practical test: if your agent is in turn 40 and still knows the constraints you set in turn 1, your context layer is working. If it forgot them by turn 15, it is not.</p>
+<p><img alt="Article image" src="/assets/2026-09-07-harness-engineering-the-skill-that-replaced-prompt-engineeri-077cca89f1/10.jpg"></p>
+<h1>4. Guardrails</h1>
+<p>Guardrails intercept model outputs before they reach a user or downstream system and validate them against policy. In 2026, this is no longer optional. Colorado&#x27;s AI Act took effect June 30. The EU AI Act&#x27;s high-risk provisions applied from August. SOC 2 auditors now ask for evidence of runtime controls on AI outputs.</p>
+<p><img alt="Article image" src="/assets/2026-09-07-harness-engineering-the-skill-that-replaced-prompt-engineeri-077cca89f1/11.jpg"></p>
+<p>A common mistake: treating all four categories with the same weight for every agent. A customer-facing chatbot and an agent with database write access do not need identical controls. The harness should scale guardrail strictness to the risk level of the task, not apply maximum friction everywhere.</p>
+<p>Four categories:</p>
+<ul>
+<li>
+<p>Behavioral. Content safety, tone, formatting rules</p>
+</li>
+<li>
+<p>Data. PII detection, data classification. The agent cannot leak customer data into a log or PR description.</p>
+</li>
+<li>
+<p>Tool &amp; action. Permission scoping, draft-commit for irreversible operations.</p>
+</li>
+<li>
+<p>Operational. Token budgets, time limits, retry caps. The agent cannot burn $200 on a task you expected to cost $5.</p>
+</li>
+</ul>
+<p>plaintext
+guardrails:
+  scope_lock:
+    - do not touch files outside /src/[task-scope]/
+    - do not modify CI config without human approval
+  budget:
+    max_tokens_per_run: 500000
+    max_cost_per_run: $2.00
+    max_retries: 3
+  data:
+    block_pii_in_output: true
+    redact_secrets_in_logs: true
+  action:
+    require_approval: [git_push, deploy, db_migrate]</p>
+<h1>5. Observability</h1>
+<p>An agent that worked last week can fail this week without any code change. The model got a silent update, an API shifted its response format, or usage hit a path nobody tested. Without observability, you find out when production breaks. With it, you detect drift before it causes harm.</p>
+<p><img alt="Article image" src="/assets/2026-09-07-harness-engineering-the-skill-that-replaced-prompt-engineeri-077cca89f1/12.jpg"></p>
+<p>Organizations that can trace every agent action and detect behavioral drift are the ones that can confidently expand agent autonomy over time. Without traces, every expansion of scope is a bet. With them, it is an evidence-based decision.</p>
+<ul>
+<li>
+<p>Every tool call and its result. What the agent tried, what happened, how long it took. The audit trail.</p>
+</li>
+<li>
+<p>Cost per accepted change. Not total tokens. Cost per useful output. If accepted-change rate drops below 50%, the harness is spending more than it saves.</p>
+</li>
+<li>
+<p>Drift detection. Compare this week&#x27;s output distribution to last week&#x27;s. Catch a silent model regression before your users do.</p>
+</li>
+</ul>
+<p><img alt="Article image" src="/assets/2026-09-07-harness-engineering-the-skill-that-replaced-prompt-engineeri-077cca89f1/13.jpg"></p>
+<h2>6.Routing &amp; Model Selection</h2>
+<p>Not every subtask needs the same model. A lint check does not need the same reasoning power as an architecture review. A harness without routing sends everything through the most expensive model and hopes the budget holds. A harness with routing picks the cheapest model that can handle each subtask and reserves the expensive one for where it matters</p>
+<p><img alt="Article image" src="/assets/2026-09-07-harness-engineering-the-skill-that-replaced-prompt-engineeri-077cca89f1/14.png"></p>
+<p>The practical split: use a fast, cheap model for classification, formatting, and mechanical checks. Use the strong model for planning, complex reasoning, and anything that requires judgment. The harness routes automatically based on task type, not on the developer remembering to switch models mid-workflow.</p>
+<p>plaintext
+routing:
+  classify_issue:
+    model: haiku
+    effort: low
+    # fast, cheap, handles 90% of triage
+  plan_fix:
+    model: sonnet
+    effort: medium
+    # needs reasoning but not frontier-grade
+  write_code:
+    model: sonnet
+    effort: high
+    # balance of speed and quality
+  verify_output:
+    model: opus
+    effort: high
+    # expensive but catches what cheaper models miss
+  format_pr_description:
+    model: haiku
+    effort: low
+    # mechanical task, no reasoning needed</p>
+<h1>7. Feedback &amp; Self-Improvement</h1>
+<p>A static harness runs the same way on run 50 as it did on run 1. A feedback-enabled harness learns from every rejection, every timeout, every budget overshoot and writes the lesson into a constraints file that every future run reads automatically.</p>
+<p><img alt="Article image" src="/assets/2026-09-07-harness-engineering-the-skill-that-replaced-prompt-engineeri-077cca89f1/15.jpg"></p>
+<p>This is not model fine-tuning. The weights do not change. What changes is the system around the model: the rules tighten, the routing improves, the context gets more precise. Over a few weeks, the verifier has less and less to catch because the constraints already prevent the mistakes it used to flag.</p>
+<p>plaintext</p>
+<h1>CONSTRAINTS.md - loaded before every run</h1>
+<h1>Auto-generated from verifier rejections</h1>
+<h2>From run 3 (2026-08-10)</h2>
+<ul>
+<li>never disable a failing test, escalate instead</li>
+<li>do not modify files outside the task&#x27;s stated scope</li>
+</ul>
+<h2>From run 5 (2026-08-12)</h2>
+<ul>
+<li>every claimed metric must link to a source</li>
+<li>if two sub-agents contradict, flag both, do not pick a side</li>
+</ul>
+<h2>From run 8 (2026-08-14)</h2>
+<ul>
+<li>PR descriptions must include &quot;What changed&quot; and &quot;Why&quot;</li>
+<li>do not add dependencies without checking license compatibility</li>
+</ul>
+<h1>Why 88% of agents fail without one</h1>
+<p>The number comes from enterprise deployment data. Nearly 9 out of 10 AI agent projects stall before reaching production, and the root cause is almost never &quot;the model is not smart enough.&quot; It is the infrastructure around the model: missing layers, skipped checks, unmonitored drift. Here is what actually breaks:</p>
+<p><img alt="Article image" src="/assets/2026-09-07-harness-engineering-the-skill-that-replaced-prompt-engineeri-077cca89f1/16.jpg"></p>
+<ul>
+<li>
+<p>Context rot. Long sessions lose constraints. The rule from turn 3 is gone by turn 50. The agent was told &quot;never modify billing code.&quot; By turn 50, the summarization has dropped that instruction. The agent modifies billing code.</p>
+</li>
+<li>
+<p>No verification. Agent grades its own work. The grade is always generous. A study of self-evaluating agents found they approve their own output 94% of the time. A separate verifier with different instructions drops that to 61%. The 33% gap is the bugs that would have shipped.</p>
+</li>
+<li>
+<p>Tool escalation. Prompt injection triggers a shell command. No permission layer stops it. In one documented case, a crafted GitHub issue description caused an agent to run an arbitrary script embedded in the issue body, because the harness had no tool-level permission check.</p>
+</li>
+<li>
+<p>Silent model updates. Provider ships a change. Agent behavior drifts. Nobody notices for two weeks because there are no behavioral baselines to compare against.</p>
+</li>
+<li>
+<p>No state persistence. Every session starts from zero. Same mistakes repeated daily. Same context re-derived at full token cost. A team reported spending 40% of their agent budget on context the agent had already processed in previous sessions.</p>
+</li>
+<li>
+<p>Budget explosion. Loop retries 40 times on a failing task. No cap stops it. The invoice arrives Monday.</p>
+</li>
+</ul>
+<p><img alt="Article image" src="/assets/2026-09-07-harness-engineering-the-skill-that-replaced-prompt-engineeri-077cca89f1/17.jpg"></p>
+<p>Every one of these is a harness problem, not a model problem. Swap the model and the same failures happen. Fix the harness and the same model starts working. The cheapest time to design the harness is before the first real user touches the agent, not after the first incident report.</p>
+<h2>Where a harness does not help</h2>
+<p>A harness cannot fix a bad task definition. If the goal is vague, the best harness in the world will reliably produce the wrong thing.</p>
+<p>Guardrails rot. Permissions set once and never reviewed become a false sense of security. Re-audit every 30 days.</p>
+<p>Over-harnessing kills speed. Every approval gate adds latency. A harness designed for a bank will make a hackathon feel like filing taxes. Match the weight to the risk.</p>
+<p>The harness is not the product. It is infrastructure. Nobody buys your harness. They buy what the agent produces.</p>
+<h2>Conclusion</h2>
+<p>Prompt engineering taught us how to talk to models. Context engineering taught us what to show them. Harness engineering is the part that gets them into production: who gives them tools, who checks their work, what they remember, what they can touch, and whether anyone can see what happened.</p>
+<p>Every enterprise still evaluating AI agents through a &quot;which model should we pick&quot; lens is asking last year&#x27;s question. The model is the engine. The harness is the car. Nobody ships an engine without a car around it.</p>
+<p>You do not need all seven layers on day one. Start with tool permissions (layer 1) and a basic verification check (layer 2). Add memory when sessions start repeating themselves. Add guardrails when the agent touches anything a customer can see. Add observability when you need to prove it is working. Add routing when the token bill gets uncomfortable. Add feedback when you want the system to stop making the same mistake twice.</p>
+<p>Seven layers. Tool orchestration, verification, context, guardrails, observability, routing, feedback. Skip one and you have a demo. Build all seven and you have a system that gets better every time it runs.</p></div><a class="source" href="https://x.com/choopyplug1/status/2088973320964215253" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

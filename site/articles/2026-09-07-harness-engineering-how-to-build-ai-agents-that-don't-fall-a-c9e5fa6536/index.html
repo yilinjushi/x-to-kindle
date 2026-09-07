@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Harness Engineering: How to Build AI Agents That Don&#x27;t Fall Apart">
+  <title>Harness Engineering: How to Build AI Agents That Don&#x27;t Fall Apart · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">rari @0xwhrrari · 2026-09-07</div><div class="prose"><h1>Harness Engineering: How to Build AI Agents That Don&#x27;t Fall Apart</h1>
+<p>Most people respond to a failing agent by changing the prompt</p>
+<p>Then they change the model</p>
+<p>Then they add a larger context window</p>
+<p>The agent still forgets decisions</p>
+<p>It still uses the wrong tool</p>
+<p>It still skips verification</p>
+<p>It still gets stuck in the same loop</p>
+<p>The problem is not always the intelligence</p>
+<p>The problem is the environment around it</p>
+<p>That environment is the harness</p>
+<p>And designing it is harness engineering</p>
+<p>Dario Amodei, CEO of Anthropic, said it directly while explaining how Claude Code emerged</p>
+<p>&quot;Of course, you need an interface, you need a harness to use them&quot;</p>
+<p>I publish practical breakdowns of AI agents, workflows, and production systems on Substack Join the newsletter here</p>
+<h2>The model is only the reasoning engine</h2>
+<p>A model can suggest the next action</p>
+<p>It cannot create a reliable operating environment by itself</p>
+<p>The harness decides what the model can see, what it can touch, what survives between sessions, what counts as evidence, and when the run must stop</p>
+<p>MODEL
+reasons and proposes actions</p>
+<p>HARNESS
+selects context
+exposes tools
+stores state
+enforces permissions
+checks results
+records traces
+recovers from failure</p>
+<p>The prompt is one component inside this system</p>
+<p>The model is another</p>
+<p>The product is what happens when every surrounding component works together</p>
+<p>Prompt engineering improves the instruction</p>
+<p>Harness engineering improves the conditions under which the instruction is executed</p>
+<h2>The same model can become a completely different agent</h2>
+<p>Put the same model inside a chat box and it answers questions</p>
+<p>Put it inside a repository with terminal access, tests, browser tools, project memory, isolated worktrees, and a review loop and it can ship software</p>
+<p>The weights did not change</p>
+<p>The harness did</p>
+<p>OpenAI described the same shift while building an agent-first codebase with Codex</p>
+<p>Their early progress was slow because the environment was underspecified, not because the model lacked raw capability</p>
+<p>The response was not to tell the agent to try harder</p>
+<p>It was to ask what capability was missing and make that capability both legible and enforceable</p>
+<p>&quot;The environment was underspecified&quot;</p>
+<p>OpenAI, Harness engineering: leveraging Codex in an agent-first world</p>
+<p>This is the central idea</p>
+<p>When an agent fails repeatedly, stop editing adjectives in the prompt</p>
+<p>Inspect the system around the model</p>
+<h2>A production harness has seven jobs</h2>
+<p><img alt="Article image" src="/assets/2026-09-07-harness-engineering-how-to-build-ai-agents-that-don&#x27;t-fall-a-c9e5fa6536/01.jpg"></p>
+<h2>1. Turn the request into a contract</h2>
+<p>Before the agent acts, convert the request into a bounded object</p>
+<p>{
+  &quot;goal&quot;: &quot;ship the feature&quot;,
+  &quot;inputs&quot;: [&quot;issue&quot;, &quot;repository&quot;, &quot;design&quot;],
+  &quot;output&quot;: &quot;reviewable pull request&quot;,
+  &quot;constraints&quot;: [&quot;no schema changes&quot;, &quot;preserve public API&quot;],
+  &quot;done_when&quot;: [&quot;tests pass&quot;, &quot;visual check passes&quot;, &quot;review passes&quot;]
+}</p>
+<p>The contract protects the task from silent redefinition</p>
+<p>Without it, the agent can complete a different job and still declare success</p>
+<h2>2. Give the agent a map</h2>
+<p>Agents need project knowledge</p>
+<p>They do not need every document in every context window</p>
+<p>Use a small root guide that tells the agent where to look</p>
+<p>AGENTS.md
+  -&gt; architecture map
+  -&gt; testing map
+  -&gt; product rules
+  -&gt; security rules
+  -&gt; task-specific guides</p>
+<p>A map preserves context</p>
+<p>A giant manual consumes it</p>
+<p>Keep the detailed knowledge close to the code, tool, or workflow it governs</p>
+<p>Load it only when the current task needs it</p>
+<h2>3. Expose the right tools inside the right environment</h2>
+<p>Tool access is not a list of buttons</p>
+<p>It is an interface between the model and the real world</p>
+<p>Every tool needs a clear purpose, predictable output, explicit failure state, and a permission boundary</p>
+<p>READ FILES       allowed by default
+RUN TESTS        allowed inside sandbox
+WRITE FILES      allowed inside workspace
+ACCESS NETWORK   scoped by task
+DEPLOY           requires approval
+DELETE DATA      requires approval</p>
+<p>Good tools reduce ambiguity before the model has a chance to reason badly</p>
+<p>Bad tools force the model to guess what happened</p>
+<h2>4. Externalize memory into durable state</h2>
+<p>The conversation is not the system of record</p>
+<p>Store decisions, artifacts, failures, and open risks outside the context window</p>
+<p>{
+  &quot;task_id&quot;: &quot;task_042&quot;,
+  &quot;current_step&quot;: &quot;verify_ui&quot;,
+  &quot;artifacts&quot;: [&quot;build.zip&quot;, &quot;report.md&quot;, &quot;screenshot.png&quot;],
+  &quot;decisions&quot;: [&quot;keep existing schema&quot;],
+  &quot;failures&quot;: [&quot;mobile overflow at 390px&quot;],
+  &quot;pending&quot;: [&quot;human approval&quot;]
+}</p>
+<p>The next session should inherit the state of the work, not a lossy retelling of the conversation</p>
+<p>This is how an agent survives context resets, crashes, and handoffs</p>
+<h2>5. Add sensors before adding autonomy</h2>
+<p>An agent cannot correct what it cannot observe</p>
+<p>Tests, linters, screenshots, logs, metrics, and schema validators turn vague quality into evidence</p>
+<p>CODE       -&gt; tests + type checks + lint
+UI         -&gt; render + screenshot + visual inspection
+RESEARCH   -&gt; source check + contradiction check
+DATA       -&gt; schema + range + freshness checks</p>
+<p>The model creates an artifact</p>
+<p>The environment produces evidence about the artifact</p>
+<p>The harness decides whether that evidence is enough to continue</p>
+<h2>6. Enforce permissions outside the model</h2>
+<p>The model can recommend an action</p>
+<p>The harness must authorize it</p>
+<p>MODEL SUGGESTS -&gt; POLICY CHECKS -&gt; TOOL EXECUTES</p>
+<p>This separation matters most when the action is expensive, irreversible, or touches another person</p>
+<p>Do not ask the same probabilistic system to invent the plan, approve the risk, and execute the side effect</p>
+<h2>7. Record traces and recover locally</h2>
+<p>Every run should leave a readable trail</p>
+<p>request
+selected context
+tool calls
+state changes
+verification results
+retries
+cost
+final artifact
+rollback point</p>
+<p>Without traces, failure becomes a mystery</p>
+<p>With traces, failure becomes input for the next harness improvement</p>
+<h2>Instructions should become infrastructure</h2>
+<p>Most teams keep important rules in prose</p>
+<p>The agent reads them</p>
+<p>Then eventually ignores one</p>
+<p>The stronger pattern is to encode the important rule twice</p>
+<p>First as guidance the agent can understand</p>
+<p>Then as a mechanical check the agent cannot bypass</p>
+<p>GUIDE
+&quot;UI code may not query the database directly&quot;</p>
+<p>CHECK
+lint fails when UI imports the repository layer</p>
+<p>The guide explains the reason</p>
+<p>The check enforces the boundary</p>
+<p>This turns a past failure into a permanent system improvement</p>
+<p>The next agent does not need to remember the incident</p>
+<p>The harness remembers for it</p>
+<h2>The loop belongs to the harness</h2>
+<p>Long-running work needs iteration</p>
+<p>But &quot;keep trying until it works&quot; is not a control system</p>
+<p>A useful loop has evidence, bounded retries, a budget, and an escalation path</p>
+<p>for (let attempt = 1; attempt &lt;= 3; attempt += 1) {
+  const artifact = await build(state)
+  const evidence = await verify(artifact)</p>
+<p>if (evidence.pass) return artifact</p>
+<p>state.failures.push(evidence.gap)
+  state.repair = evidence.repair
+}</p>
+<p>return requestHumanReview(state)</p>
+<p>The model should decide how to repair the local gap</p>
+<p>The harness should decide whether another attempt is allowed</p>
+<p>Anthropic reached a similar conclusion in its work on long-running agents</p>
+<p>Structured artifacts preserve continuity across sessions, while a separate evaluator gives the builder concrete feedback instead of letting it approve its own work</p>
+<p>&quot;Find the simplest solution possible, and only increase complexity when needed&quot;</p>
+<p>Anthropic, Harness design for long-running application development</p>
+<h2>Failure should upgrade the system</h2>
+<p><img alt="Article image" src="/assets/2026-09-07-harness-engineering-how-to-build-ai-agents-that-don&#x27;t-fall-a-c9e5fa6536/02.jpg"></p>
+<p>Most people repair the current output</p>
+<p>Harness engineers repair the class of failure</p>
+<p>MISSING CONTEXT   -&gt; add a map or retrieval rule
+WRONG TOOL        -&gt; improve tool description or routing
+BAD OUTPUT        -&gt; add a validator or stronger contract
+REPEATED LOOP     -&gt; add a retry cap and escalation
+UNSAFE ACTION     -&gt; add a permission gate
+LOST DECISION     -&gt; store it in durable state
+UNKNOWN FAILURE   -&gt; add tracing and evidence capture</p>
+<p>The immediate patch fixes one run</p>
+<p>The harness change improves every run after it</p>
+<p>That is the compounding advantage</p>
+<p>A good harness converts agent mistakes into infrastructure</p>
+<h2>Separate the brain, the hands, and the history</h2>
+<p>A reliable agent is easier to reason about when three components are separate</p>
+<p>BRAIN
+the model that reasons</p>
+<p>HANDS
+the sandbox and tools that act</p>
+<p>HISTORY
+the append-only record of what happened</p>
+<p>If the sandbox dies, the history survives</p>
+<p>If the model changes, the tools and policy remain inspectable</p>
+<p>If a task resumes, a new session can reconstruct the state from artifacts and traces</p>
+<p>Anthropic&#x27;s Managed Agents architecture makes this separation explicit through the session, harness, and sandbox</p>
+<p>Claude
+@claudeai
+·
+Apr 8
+Introducing Claude Managed Agents: everything you need to build and deploy agents at scale.</p>
+<p>It pairs an agent harness tuned for performance with production infrastructure, so you can go from prototype to launch in days.</p>
+<p>Now in public beta on the Claude Platform.
+The media could not be played.
+Reload
+2K
+9K
+56K
+21M</p>
+<p>The important part is not the vendor</p>
+<p>It is the architecture</p>
+<p>The reasoning engine should not also be the filesystem, permission system, memory database, and audit log</p>
+<h2>Give every run a change receipt</h2>
+<p>When the agent finishes, do not keep only the final output</p>
+<p>Keep a compact receipt that explains how the output was produced</p>
+<p>{
+  &quot;context_sources&quot;: [&quot;issue&quot;, &quot;repo_map&quot;, &quot;design_spec&quot;],
+  &quot;policy_version&quot;: &quot;v12&quot;,
+  &quot;model_route&quot;: &quot;complex_coding&quot;,
+  &quot;tools_used&quot;: [&quot;shell&quot;, &quot;browser&quot;, &quot;tests&quot;],
+  &quot;tests&quot;: { &quot;passed&quot;: 42, &quot;failed&quot;: 0 },
+  &quot;human_corrections&quot;: 1,
+  &quot;retries&quot;: 2,
+  &quot;cost_usd&quot;: 3.84,
+  &quot;accepted_artifact&quot;: &quot;pr_1842&quot;,
+  &quot;rollback_point&quot;: &quot;commit_7f3a&quot;
+}</p>
+<p>This makes model upgrades comparable</p>
+<p>It makes regressions attributable</p>
+<p>It makes audits possible</p>
+<p>And it prevents the final answer from hiding a broken process</p>
+<h2>Start with the smallest harness that closes the loop</h2>
+<p>Harness engineering does not mean building a platform before the first task</p>
+<p>Start with the smallest system that can observe, verify, and recover</p>
+<p>LEVEL 0
+prompt + model</p>
+<p>LEVEL 1
+project guide + tools</p>
+<p>LEVEL 2
+structured state + tests + bounded loop</p>
+<p>LEVEL 3
+permissions + traces + recovery + human gates</p>
+<p>Move up only when the task earns the complexity</p>
+<p>A short low-risk task may need one prompt and one review</p>
+<p>A six-hour coding run that can edit files, access the network, and open a pull request needs a real harness</p>
+<p>The harness should be smaller than the failure surface it controls</p>
+<h2>The harness engineering checklist</h2>
+<p>Before you trust an agent with real work, ask</p>
+<p>[ ] Is success defined before execution begins
+[ ] Can the agent find the right project knowledge without loading everything
+[ ] Does every tool have a clear contract and failure state
+[ ] Is execution isolated from production systems
+[ ] Are important decisions stored outside the conversation
+[ ] Does every risky transition have evidence
+[ ] Are irreversible actions protected by approval
+[ ] Does every loop have a retry cap and budget
+[ ] Can the run resume after interruption
+[ ] Can you explain every tool call and state change
+[ ] Does failure update a guide, test, tool, or policy
+[ ] Can the final artifact be rolled back</p>
+<p>If several answers are no, a stronger model will not make the system reliable</p>
+<p>It will only make the failure more expensive</p>
+<h2>The real shift</h2>
+<p>Prompt engineering tells the model what to do</p>
+<p>Context engineering decides what the model sees</p>
+<p>Harness engineering builds the world in which the model acts</p>
+<p>PROMPT      -&gt; instruction
+CONTEXT     -&gt; working view
+HARNESS     -&gt; operating system
+LOOP        -&gt; local improvement
+GRAPH       -&gt; coordination</p>
+<p>The model may change next month</p>
+<p>The tools, tests, state, policies, and traces can keep improving</p>
+<p>That is why the durable advantage is moving out of the prompt and into the system around it</p>
+<p>The best builders will not only ask which model is smartest</p>
+<p>They will ask which environment makes that intelligence reliable</p>
+<p>That is harness engineering</p>
+<h2>If you read this far</h2>
+<p>-&gt; Subscribe to my Substack</p>
+<p>-&gt; Join my Telegram</p>
+<p>-&gt; Bookmark the article so you can use the checklist when you build your next agent</p>
+<p>-&gt; Follow @0xwhrrari for more practical breakdowns of agent systems</p></div><a class="source" href="https://x.com/0xwhrrari/status/2093685107534000560" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>
