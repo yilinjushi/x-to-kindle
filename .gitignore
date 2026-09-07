@@ -9,3 +9,8 @@ x_session.json
 *.jpg
 *.jpeg
 *.png
+!site/**/*.jpg
+!site/**/*.jpeg
+!site/**/*.png
+!site/**/*.gif
+!site/**/*.webp

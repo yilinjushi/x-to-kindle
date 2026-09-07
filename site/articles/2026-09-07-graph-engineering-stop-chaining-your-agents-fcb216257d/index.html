@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Graph Engineering: Stop Chaining Your Agents">
+  <title>Graph Engineering: Stop Chaining Your Agents · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">seeco @seeconvm · 2026-09-07</div><div class="prose"><h1>Graph Engineering: Stop Chaining Your Agents</h1>
+<p>Almost every multi step agent I have ever opened is a queue. Step one, step two, step three, each one politely waiting for the last one to finish. And once you look closely, roughly half of those steps never had anything to wait for.</p>
+<p>They don&#x27;t route. They don&#x27;t split. They don&#x27;t run anything side by side. They just stand in line, one head, one context, one thing at a time, until the window fills up and the agent quietly forgets what it was doing in the first place.</p>
+<p>Here is the part nobody spells out for you. A prompt is a sentence. A loop is a cycle. A harness is the floor your agent stands on. But the shape of the work itself, what runs before what, what can run at the same time, what genuinely has to wait for everything else, that shape is a graph. Nodes do the thinking. Edges carry the results.</p>
+<p>Claude Code shipped the tooling for building these graphs directly: dynamic workflows. Claude writes a plain JavaScript orchestration script, then spawns a coordinated fleet of subagents to execute it. The coordination itself costs zero model tokens, because it is code, not another conversation.</p>
+<p>This is the 14 step roadmap I use to turn a single file agent into a graph that fans out across a fleet, checks its own findings, and lands on a result one agent could never hold.</p>
+<p>AT A GLANCE</p>
+<ol>
+<li>
+<p>Nodes are jobs. Edges are what flows.</p>
+</li>
+<li>
+<p>Your linear script is already a graph, just a bad one.</p>
+</li>
+<li>
+<p>Every node gets a contract.</p>
+</li>
+<li>
+<p>Every edge gets a data contract.</p>
+</li>
+<li>
+<p>Fan out with parallel().</p>
+</li>
+<li>
+<p>Fan in at a barrier, and only when you must.</p>
+</li>
+<li>
+<p>The diamond: split, work, merge.</p>
+</li>
+<li>
+<p>Route the edge at runtime with a conditional.</p>
+</li>
+<li>
+<p>Put a verifier on the edge.</p>
+</li>
+<li>
+<p>Isolate nodes so one failure stays local.</p>
+</li>
+<li>
+<p>Add a cycle, but make it converge.</p>
+</li>
+<li>
+<p>Tier your models across the nodes.</p>
+</li>
+<li>
+<p>Topology is your cost and your latency.</p>
+</li>
+<li>
+<p>Let Claude draw the graph for you.</p>
+</li>
+<li>
+<p>Nodes and Edges, or Why &quot;And Then&quot; Is Not a Dependency</p>
+</li>
+</ol>
+<p>A graph has exactly two pieces, and getting them straight clears up most of the confusion.</p>
+<p>A node is a unit of work. One agent, one bounded job, one input in, one output out.</p>
+<p>An edge is a dependency. It says this node&#x27;s output feeds that node&#x27;s input. That is the whole definition.</p>
+<p>The mistake almost everyone makes is treating &quot;and then&quot; as an edge. &quot;Summarize this file and then tell me the weather&quot; has no edge in it anywhere. The weather does not consume the summary. Those are two disconnected nodes that a linear script chained together for no reason at all.</p>
+<p>The question to ask. For every and then in your agent: does the next step actually read the previous step&#x27;s output? If it doesn&#x27;t, there is no edge there, and the wait is pure waste.</p>
+<p>plaintext
+Draw it as boxes and arrows. A box is one agent()
+call. An arrow is a variable that leaves one call&#x27;s
+return and enters another call&#x27;s prompt. If you cannot
+draw the arrow, if no variable crosses, those two boxes
+are independent. That independence is the thing you are
+going to spend the rest of this article exploiting.</p>
+<ol start="02">
+<li>Your Linear Script Is a Degenerate Graph</li>
+</ol>
+<p>When you write an agent as &quot;do A, then B, then C, then D,&quot; you already drew a graph. You drew the worst one available: a single unbranching chain where every node has exactly one edge in and one edge out.</p>
+<p>It runs. It also runs slowly, and it breaks badly, because a chain has no redundancy. If C stalls, D never happens, and everything A produced is stuck upstream with nowhere to go.</p>
+<p>The first real skill here is redrawing the chain. Take your linear agent, walk every arrow, and ask the question from step 01. In practice you will find two or three arrows that carry no data at all. They only exist because that is the order you happened to type things in.</p>
+<p>Cut those arrows and the chain collapses sideways into something much wider: a handful of independent nodes that can all run at once, feeding into a single node that needs all of them.</p>
+<ol start="03">
+<li>Give Every Node a Contract</li>
+</ol>
+<p>A node you cannot reason about is a node you cannot parallelize. The fix is a contract: bounded input, bounded output, exactly one job.</p>
+<p>The input is whatever that node reads, passed in explicitly. Never assumed from some shared window it happens to be sitting in. The output is a defined shape, ideally validated, so the next node can consume it without guessing.</p>
+<p>In a workflow you enforce this with a schema. When you hand Claude an agent() call with a JSON schema attached, the subagent it spawns is forced to return validated structured data. Validation happens down at the tool call layer, so Claude retries on a mismatch instead of handing you free text you have to parse and pray over.</p>
+<p>json
+// A node with a real contract: bounded in, validated
+out, one job.
+const FINDING = {
+  type: &#x27;object&#x27;,
+  additionalProperties: false,
+  properties: {
+    title:  { type: &#x27;string&#x27; },
+    url:    { type: &#x27;string&#x27; },
+    impact: { type: &#x27;string&#x27;, enum: [&#x27;high&#x27;, &#x27;medium&#x27;,
+&#x27;low&#x27;] },
+  },
+  required: [&#x27;title&#x27;, &#x27;url&#x27;, &#x27;impact&#x27;],
+};</p>
+<p>const result = await agent(source.prompt, {
+  label: <code>research:${source.key}</code>,
+  schema: FINDING,          // forces validated
+structured output
+  agentType: &#x27;general-purpose&#x27;,
+});
+// result is now a shape the next node can trust, not
+free text.</p>
+<p>That is the entire difference between a node Claude can wire into a graph and a node that only works when a human reads its output.</p>
+<ol start="04">
+<li>The Edge Is a Data Contract Too</li>
+</ol>
+<p>An edge is not &quot;B comes after A.&quot; It is a promise about what crosses: A produces this shape, B was built to consume this shape. Name your edges by their data instead of their order and two things get much easier.</p>
+<p>You can instantly tell whether the edge is even real, meaning does data actually move across it. And you can swap the node on either end without touching the rest of the graph, as long as the shape holds.</p>
+<p>In practice the edge lives in plain JavaScript. The reduce step between a fan out and a synthesis, flatten, dedupe, filter, is just code operating on the shapes your nodes returned.</p>
+<p>No agent needed. This is one of the quiet wins of thinking in graphs: a huge amount of what people burn model tokens on is really just an edge, and edges are free.</p>
+<p>json
+// Tempting: spawn an agent to &quot;combine the results.
+&quot;Don&#x27;t.
+// If combining means flatten and dedupe, that is flatMap
+plus a Set.
+// Deterministic, instant, zero tokens.
+const flat  = collected.flatMap((c) =&gt; c.items);
+const clean = [...new Map(flat.map((i) =&gt; [i.url, i])).
+values()];</p>
+<p>Save agents for judgment. Not for plumbing. A graph where every edge is an agent is a graph paying rent on its own wiring.</p>
+<ol start="05">
+<li>Fan Out With parallel()</li>
+</ol>
+<p>This is the move that pays for everything else. When you have N independent nodes, N sources to check, N files to review, N routes to audit, you do not chain them.</p>
+<p>You tell Claude to fan them out and run them at once. In a workflow that is parallel(): Claude takes an array of thunks, spawns one subagent per thunk, runs them concurrently, and hands you back the array of results.</p>
+<p>Two details make it robust. First, parallel() is a barrier, so it waits for every thunk before it returns and the next stage always sees the complete set. Second, a thunk that throws resolves to null instead of rejecting the whole batch, so one flaky agent cannot sink the run.</p>
+<p>Always .filter(Boolean) on the way out. Concurrency is capped around your core count and the overflow queues up, so you can hand it a hundred thunks and they will all finish, just a handful at a time.</p>
+<p>json
+phase(&#x27;Research&#x27;);</p>
+<p>// Nine sources, nine agents, all at once.
+const raw = await parallel(
+  SOURCES.map((s) =&gt; () =&gt;
+    agent(s.prompt, {
+      label: <code>research:${s.key}</code>,
+      phase: &#x27;Research&#x27;,
+      schema: ITEM_SCHEMA,        // each node returns
+validated JSON
+      agentType: &#x27;general-purpose&#x27;,
+    }),
+  ),
+);</p>
+<p>const collected = raw.filter(Boolean);  // drop nulls
+from failed agents</p>
+<p>The fan out lives in code Claude wrote, not in a model conversation. Claude&#x27;s own context never holds nine sources at once. Each subagent carries its own, and only the final answer comes back. That is what lets a workflow scale to dozens or hundreds of subagents without drowning the session, and the orchestration layer costs nothing, because it is not another turn of Claude thinking.</p>
+<ol start="06">
+<li>Fan In at a Barrier</li>
+</ol>
+<p>A fan out is only worth anything if something gathers it. The fan in is the node where your edges converge, where one agent or one piece of code sees all the upstream results at the same time and does something that genuinely requires the whole set: dedupe across sources, rank by impact, exit early if everything came back empty.</p>
+<p>That is the one place a barrier earns its wall clock cost.</p>
+<p>The rule that keeps graphs fast: use a barrier only when a stage truly needs every prior result together. Deduping across all sources qualifies.</p>
+<p>json
+// The edge: plain JS, no agent, zero tokens.
+const flat = collected.flatMap((c) =&gt; c.items);
+log(<code>Collected ${flat.length} items</code>);</p>
+<p>phase(&#x27;Curate&#x27;);
+// The barrier node: needs the WHOLE set to dedupe and
+rank.
+const curated = await agent(
+  <code>Dedupe and rank these by impact:\n${JSON.stringify
+(flat)}</code>,
+  { phase: &#x27;Curate&#x27;, schema: CURATED_SCHEMA },
+);</p>
+<p>Just flattening a list is not a barrier, it is an edge, do it inline. The smell test is brutally simple: if you wrote parallel, then a transform, then parallel again, and that middle transform has no cross item dependency, you should have used a pipeline and skipped the barrier entirely.</p>
+<ol start="07">
+<li>The Diamond: Split, Work, Merge</li>
+</ol>
+<p>Put a fan out and a fan in together and you get the workhorse topology of every serious agent graph: the diamond.</p>
+<p>One node splits the job. Many nodes do the work in parallel. One node merges. That is the shape behind a market scan, a dependency audit, a code review, a research report. Swap the sources and the prompts and the same skeleton adapts to all of them.</p>
+<p>The canonical form is worth memorizing: fan out, reduce, synthesize. Fan out to gather breadth. Reduce with plain code to compress it. Synthesize with a final agent to write the answer.</p>
+<p>Once you can see the diamond, you stop asking &quot;how do I make my agent do more steps&quot; and start asking &quot;where is the split, where is the merge.&quot; That second question is the one that actually scales.</p>
+<ol start="08">
+<li>Route the Edge at Runtime With a Conditional</li>
+</ol>
+<p>Not every graph is fixed. Sometimes which edge you take depends on what a node found. A router node inspects a result and decides which downstream path fires: classify the ticket, then branch to the right handler. Check the diff size, then either do a quick review or spin up a full audit.</p>
+<p>In a workflow this is just a JavaScript if or switch on a node&#x27;s validated output, because your control flow lives in code.</p>
+<p>json
+// Router node: an agent classifies, code picks the edge.
+const { severity } = await agent(<code>Classify this diff&amp;#x27;s
+risk:\n${diff}</code>, {
+  schema: {
+    type: &#x27;object&#x27;,
+    properties: { severity: { type: &#x27;string&#x27;, enum:
+[&#x27;low&#x27;, &#x27;high&#x27;] } },
+    required: [&#x27;severity&#x27;],
+  },
+});</p>
+<p>let review;
+if (severity === &#x27;high&#x27;) {
+  // heavy path: full parallel audit
+  review = await parallel(FILES.map((f) =&gt; () =&gt; agent
+(<code>Audit ${f}</code>)));
+} else {
+  // light path: one quick pass
+  review = await agent(<code>Quick review of ${diff}</code>);
+}</p>
+<p>This is where determinism turns into a feature instead of a limitation. The router&#x27;s decision can be Claude powered, a subagent classifies it. The routing is code Claude wrote, so it runs the same way every single time for the same classification.</p>
+<p>You get Claude&#x27;s judgment at the node and a script&#x27;s reliability at the edge. There is no emergent &quot;Claude decided to skip the audit today&quot; surprise, because skipping would have to be written into the graph, and it isn&#x27;t.</p>
+<ol start="09">
+<li>Put a Verifier on the Edge</li>
+</ol>
+<p>The real leverage of a graph is not that you get more agents. It is the structure you can wrap around them to produce confidence.</p>
+<p>A verifier node sits on the edge, before a result is allowed downstream, and its only job is to try to kill the finding. If it survives, it passes. If it doesn&#x27;t, it never reaches your answer.</p>
+<p>Three patterns worth keeping in your hands:</p>
+<ul>
+<li>
+<p>Adversarial verify. For each finding, spawn N independent skeptics prompted to refute it, and keep it only if a majority survive.</p>
+</li>
+<li>
+<p>Perspective diverse verify. Give each verifier its own lens, correctness, security, does it reproduce, because diversity catches failure modes that N identical checks never will.</p>
+</li>
+<li>
+<p>Judge panel. Generate N attempts from different angles, score them with parallel judges, synthesize from the winner while grafting in the best pieces of the runners up.</p>
+</li>
+</ul>
+<p>This is exactly the pattern that let a real team port the Bun runtime with adversarial code review baked straight into the loop.</p>
+<ol start="10">
+<li>Isolate Nodes So One Failure Stays Local</li>
+</ol>
+<p>In a chain, a failure cascades. C dies, D never runs, the whole thing halts. In a graph, failure should be contained to its node.</p>
+<p>Part of that is already true: a thunk that throws inside parallel() resolves to null, so eight good agents still return while the one bad one drops out. Your .filter(Boolean) is the containment. Design every fan in to tolerate missing inputs instead of assuming a full set.</p>
+<p>The subtler failure is nodes stepping on each other. When agents write files in parallel, they collide.</p>
+<p>The fix is isolation: worktree. Each agent runs in its own git worktree, does its work in a sandbox, and merges cleanly at the end. Reach for it only when nodes genuinely write in parallel. It is the seatbelt for one specific topology, not a default tax on every run.</p>
+<ol start="11">
+<li>Add a Cycle, But Make It Converge</li>
+</ol>
+<p>Sometimes you have no idea how big the job is until you are inside it. Discovery of unknown size. A bug sweep where finding one bug reveals three more. That calls for a cycle, a controlled edge back to an earlier node.</p>
+<p>The danger is obvious. A cycle that never converges is an infinite loop that spawns agents until your budget is gone.</p>
+<p>The pattern that converges is loop until dry: keep spawning finders until K consecutive rounds surface nothing new, then stop. And here is the detail that makes or breaks it, the one almost everybody gets wrong the first time: what you dedupe against.</p>
+<p>Dedupe against everything seen, not just against confirmed results. Otherwise rejected findings come back every round, the loop never runs dry, and you have built a machine that pays to rediscover the same dead ends forever.</p>
+<p>json
+const seen = new Set(); const confirmed = []; let dry = 0;</p>
+<p>while (dry &lt; 2) {                        // stop after 2
+empty rounds
+  const found = (await parallel(
+    FINDERS.map((f) =&gt; () =&gt; agent(f.prompt, { schema:
+BUGS }))
+  )).filter(Boolean).flatMap((r) =&gt; r.bugs);</p>
+<p>const fresh = found.filter((b) =&gt; !seen.has(key(b)));
+  if (!fresh.length) { dry++; continue; }   // nothing
+new, closer to dry
+  dry = 0;
+  fresh.forEach((b) =&gt; seen.add(key(b)));   // dedupe vs
+SEEN, not confirmed</p>
+<p>// diverse lens verify: every fresh finding earns its
+place
+  const judged = await parallel(fresh.map((b) =&gt; () =&gt;
+    parallel([&#x27;correctness&#x27;, &#x27;security&#x27;, &#x27;repro&#x27;].map
+((lens) =&gt; () =&gt;
+      agent(<code>Judge &amp;quot;${b.desc}&amp;quot; via ${lens}. Real?</code>, {
+schema: VERDICT })))
+      .then((v) =&gt; ({ b, real: v.filter(Boolean).filter
+((x) =&gt; x.real).length &gt;= 2 }))
+  ));</p>
+<p>confirmed.push(...judged.filter((v) =&gt; v.real).map((v)
+=&gt; v.b));
+}</p>
+<ol start="12">
+<li>Tier the Models Across Your Nodes</li>
+</ol>
+<p>Not every node needs your best model. A graph makes this obvious in a way a single agent never does: some nodes are bounded and repetitive, extract this field, classify this ticket. Others carry the actual judgment, synthesize the report, adjudicate the finding.</p>
+<p>Run the boring nodes on a cheaper model and spend your expensive tokens where judgment actually lives.</p>
+<p>In a workflow, every subagent Claude spawns inherits your session model unless the script overrides it, so by default a big run bills entirely at your session tier. The model option on a single agent() call tells Claude to route just that node somewhere else.</p>
+<p>Check /model before a large run, then have Claude route the fan out&#x27;s repetitive nodes down to a cheaper model while keeping the merge node up top. This is the lever that turns a token hungry graph into an economical one without touching its shape at all.</p>
+<ol start="13">
+<li>Topology Is Your Cost and Latency</li>
+</ol>
+<p>The shape of the graph is not cosmetic. It is the single biggest lever you have on wall clock time. The choice that trips up basically everyone is parallel() versus pipeline().</p>
+<p>A parallel() barrier makes everything wait for the slowest node before the next stage can start. A pipeline() streams each item through all the stages independently, with no barrier, so item A can be sitting in stage 3 while item B is still in stage 1. Fast items finish early instead of idling behind slow ones.</p>
+<p>Default to pipeline(). Reach for a barrier only when a stage truly needs every prior result at once: a cross set dedupe, an early exit on the total, a prompt that compares one finding against all the others.</p>
+<p>&quot;It&#x27;s cleaner code&quot; and &quot;the stages feel separate&quot; are not reasons. Barrier latency is real, measurable, wasted time. Separate is not the same thing as synchronized.</p>
+<p>Shape</p>
+<p>Use it when</p>
+<p>What it costs you</p>
+<p>Chain</p>
+<p>Each step really reads the last step&#x27;s output</p>
+<p>Slowest possible run, one stall kills everything</p>
+<p>parallel() fan out</p>
+<p>N independent jobs, and the next stage needs them all</p>
+<p>Everyone waits for the slowest node</p>
+<p>pipeline()</p>
+<p>N independent jobs flowing through the same stages</p>
+<p>Almost nothing, this is your default</p>
+<p>Diamond</p>
+<p>Breadth first, then one merged answer</p>
+<p>One barrier, at the merge, where it is earned</p>
+<p>Conditional</p>
+<p>The path depends on what a node found</p>
+<p>A classification call before the branch</p>
+<p>Cycle</p>
+<p>You don&#x27;t know how big the job is</p>
+<p>Runaway spend if it never converges</p>
+<ol start="14">
+<li>Let Claude Draw the Graph</li>
+</ol>
+<p>The final move is to stop drawing graphs by hand for jobs you cannot plan in advance.</p>
+<p>With dynamic workflows you describe the objective and Claude writes the orchestration script itself: decomposing the task, choosing the fan out, spawning a coordinated fleet of subagents, and synthesizing the result. You end up with a graph tailored to <strong>this</strong> run instead of a fixed one you hoped would fit.</p>
+<p>There are three ways in.</p>
+<p>Say the word workflow in your prompt and Claude writes one for the task.</p>
+<p>Run a saved or bundled one. /deep-research is a real graph shipping in production right now: scope, parallel search, fetch, adversarial verify, synthesize. That is the exact skeleton from this article.</p>
+<p>Turn on ultracode and Claude plans a workflow for every substantial task in the session. When a run comes out good, press s to save its script into .claude/workflows/. Now it is version controlled, re-runnable by name, and a graph anyone who clones the repo can launch.</p>
+<p>plaintext
+&gt; Run a workflow to audit every route under src/routes/
+for missing auth.
+  Spawn one agent per route file, then verify each
+ finding before reporting.</p>
+<p>• Claude wrote an orchestration script · launching in
+background...
+  /workflows &gt; auth-audit · running
+  ✓ Scope 1/1 2.1k tok · 4s
+  ✓ Fan-out 18/18 one agent per route file
+  ○ Verify 11/18 3-vote skeptics per finding...
+  ○ Synthesize 0/1 waiting on verify
+  session stays responsive, keep working while the fleet
+runs</p>
+<p>Six Graphs Worth Building This Week</p>
+<ul>
+<li>
+<p>A security sweep across every route. One subagent per route file, each hunting missing auth checks, then a verifier pass that confirms every finding before it reaches the report. Breadth no single context could hold.</p>
+</li>
+<li>
+<p>A cited report with /deep-research. Claude splits your question into distinct angles, runs the searches in parallel, dedupes the sources, then adversarially verifies every claim with three vote skeptics before it writes a word.</p>
+</li>
+<li>
+<p>A module ported file by file. The Bun ceiling, scaled down to your repo. Claude fans translation out across files, runs the test suite as a gate on each one, and loops the failures back, with adversarial review catching what a single pass would have shipped broken.</p>
+</li>
+<li>
+<p>An adversarial review of a diff. Claude routes on diff size: a small change gets one quick pass, a large one triggers a full parallel audit with reviewers on distinct lenses, then a judge panel synthesizes the verdict.</p>
+</li>
+<li>
+<p>An ecosystem scan on a schedule. Save it once, re-run it forever. Claude checks many sources in parallel, releases, blogs, discussion, ranks by impact at a barrier, and writes the digest. Version controlled in .claude/workflows/, launchable by name.</p>
+</li>
+<li>
+<p>A discovery job of unknown size. You have no idea how many bugs are in there. Claude runs finders in parallel, dedupes each new find against everything seen, verifies the survivors, and keeps looping until two rounds turn up nothing new.</p>
+</li>
+</ul>
+<p>Why This Actually Matters</p>
+<p>Every one of these steps points at the same underlying thing. Your agent&#x27;s ceiling is almost never the model. It is the shape of the work you handed it.</p>
+<p>A chain forces one context to hold everything, one failure to halt everything, and every fast step to wait behind the slowest one. A graph spreads the context across a fleet, contains failure at the node, and buys you structure you can wrap confidence around: schemas at the nodes, verifiers on the edges, routing that runs the same way every time.</p>
+<p>And the orchestration layer is code. That is the part people underestimate. Coordination between eighteen agents costs zero model tokens, because a script is not a conversation.</p>
+<p>What Actually Matters Here</p>
+<p>If you only take three things from this: cut the arrows that carry no data, default to pipeline() instead of a barrier, and dedupe against everything you have seen rather than everything you confirmed.</p>
+<p>Those three alone will make your agents faster, cheaper, and far harder to break than adding another step to the queue ever will.</p>
+<p>The linear agent was never the ceiling. It was just the first shape everybody reaches for, because it matches how we type. One line, one head, one thing at a time.</p>
+<p>A prompter asks a question. An architect draws a graph.</p>
+<p>So which is your agent right now, a line or a graph?</p>
+<p>If you made it this far, there is a lot more to this topic than fourteen steps and a few code blocks.</p>
+<p>@seeconvm is where I keep breaking it down.</p>
+<p>More coming soon.</p></div><a class="source" href="https://x.com/seeconvm/status/2088199384580108339" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>
