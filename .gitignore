@@ -1,6 +1,7 @@
 __pycache__/
 *.pyc
 .venv/
+.wrangler/
 kindle_outbox/
 logs/
 email_config.json
