@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="清华这个开源教育Agent夯爆了，Github已经21K Star了～">
+  <title>清华这个开源教育Agent夯爆了，Github已经21K Star了～ · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">刘聪NLP @liucong0120 · 2026-09-07</div><div class="prose"><h1>清华这个开源教育Agent夯爆了，Github已经21K Star了～</h1>
+<p>今天刷到一个开源AI教育Agent项目，清华THU-MAIC团队做的，GitHub已经21k star了。</p>
+<p><img alt="Article image" src="/assets/2026-09-07-清华这个开源教育agent夯爆了，github已经21k-star了～-b7471d6014/01.jpg"></p>
+<p>我翻了一下，这个项目是3月份开源的，当时AI互动课堂（实时生成课件，AI老师讲课，AI同学讨论）还依赖固定Workflow模式，</p>
+<p>昨天发布1.0正式版，全面升级成了Agent形态，你只需要描述需求，这个Agent就可以自己选skill、自己调研、自己规划课程结构，最后出一套可交互、有AI配音的完整课件。</p>
+<p><img alt="Article image" src="/assets/2026-09-07-清华这个开源教育agent夯爆了，github已经21k-star了～-b7471d6014/02.jpg"></p>
+<p>比如，你看这个7天入门大模型系列课，很强～</p>
+<p>The media could not be played.
+Reload</p>
+<p>先说整体感受，</p>
+<p>我真特别喜欢这个产品，可以给到一个夯，虽然我觉得有的PPT课件的界面有点杂乱，但内容是真的有料，能教会我东西。</p>
+<p>PRO专业模式，对话式交互，扔一份PDF进去，Agent自己读材料，自己联网核实，自己选教学策略，你坐那儿等就行。</p>
+<p><img alt="Article image" src="/assets/2026-09-07-清华这个开源教育agent夯爆了，github已经21k-star了～-b7471d6014/03.jpg"></p>
+<p>生成的课件是有建模、有动效、有实时交互的那种，不是PPT套图片。物理课的磁铁穿线圈模拟，滑块拖完数值实时变，这个确实超出预期。</p>
+<p><img alt="Article image" src="/assets/2026-09-07-清华这个开源教育agent夯爆了，github已经21k-star了～-b7471d6014/04.png"></p>
+<p>AI配音也到位，每页都有讲解脚本和 spotlight 动作，讲到哪儿，屏幕哪块就高亮，像真人讲师指着屏幕给你讲重点，体验接近真人录课。</p>
+<p><img alt="Article image" src="/assets/2026-09-07-清华这个开源教育agent夯爆了，github已经21k-star了～-b7471d6014/05.jpg"></p>
+<p>先看几个跑的case。</p>
+<p>第一个case，书籍精读课，材料是可汗学院创始人Salman Khan 2024年出的新书《Brave New Words》，Penguin官方样章PDF。</p>
+<p><img alt="Article image" src="/assets/2026-09-07-清华这个开源教育agent夯爆了，github已经21k-star了～-b7471d6014/06.jpg"></p>
+<p>过程读了12次材料，搜了2次确认背景信息，输出10页课程方案，找到三大核心命题：AI导师如何革新教育、个性化学习如何落地、教育者应该拥抱而非恐惧；</p>
+<p>每页都有讲解脚本、聚光动作和AI配音，还自动加了课后练习题和角色阵容。</p>
+<p><img alt="Article image" src="/assets/2026-09-07-清华这个开源教育agent夯爆了，github已经21k-star了～-b7471d6014/07.jpg"></p>
+<p>第二个case，物理课-电磁感应，材料是MIT OCW 8.02电磁学Chapter 10 Faraday&#x27;s Law官方讲义PDF。</p>
+<p>这次Agent自动输出6页课程，重点是3个interactive建模场景，第一个场景是磁通量交互仿真。Φ_B = BA cosθ，给了三个滑块，磁感应强度B、线圈面积A、夹角θ，拖动以后磁通量数值和磁感线动画实时变化。还有三个预设场景可以一键切换。</p>
+<p><img alt="Article image" src="/assets/2026-09-07-清华这个开源教育agent夯爆了，github已经21k-star了～-b7471d6014/08.jpg"></p>
+<p>第二个场景更有意思，磁铁穿线圈模拟。条形磁铁可以手动拖动穿过线圈，速度和匝数都能调。实时显示感应电动势ε、感应电流I、磁通量Φ的数值，底部还有折线图跟着动。支持自动运行和手动拖动两种模式。</p>
+<p><img alt="Article image" src="/assets/2026-09-07-清华这个开源教育agent夯爆了，github已经21k-star了～-b7471d6014/09.jpg"></p>
+<p>这个效果确实不像是靠AI一轮生成能做出来的东西，交互逻辑比较完整。</p>
+<p>第三个case，论文精读课，材料是Kimi K3技术报告。</p>
+<p>比较特别的是，这个调研过程很重，20多次读取材料，多次联网搜索核实数字，最终输出11页课程，硬数字非常密集。</p>
+<p>第一页直接是K2 vs K3对比表格（总参数量/激活参数/层数/上下文窗口）；第二页拆架构三条轴，序列维度KDA、深度维度AttnRes、宽度维度Stable LatentMoE。</p>
+<p><img alt="Article image" src="/assets/2026-09-07-清华这个开源教育agent夯爆了，github已经21k-star了～-b7471d6014/10.jpg"></p>
+<p>跟我之前写的K3详解文章对比了一下，核心数字和架构逻辑基本对得上，说明调研深度确实是在的。</p>
+<p>还有一个点值得提，课件播放过程中可以直接提问。</p>
+<p>比如问，KDA和Attention Residuals到底解决了什么具体问题？传统Transformer在长上下文上卡在哪？</p>
+<p>agent会联网核实以后分层拆解回答，交互对学习者很实用，不用退出课件去查。</p>
+<p><img alt="Article image" src="/assets/2026-09-07-清华这个开源教育agent夯爆了，github已经21k-star了～-b7471d6014/11.jpg"></p>
+<p>再升级难度，看一下课程级规划。</p>
+<p>OpenMAIC 1.0有个curriculum-planner skill，可以一次规划一整个系列课程，不是一页一页生成。</p>
+<p>我直接让它做了一个7天入门大模型系列课，</p>
+<p>先输出完整7天大纲（每天一个递进主题），确认以后自动创建系列文件夹，统一角色阵容，然后逐节生成Day 1到Day 7。</p>
+<p><img alt="Article image" src="/assets/2026-09-07-清华这个开源教育agent夯爆了，github已经21k-star了～-b7471d6014/12.jpg"></p>
+<p>Day 1 大模型到底是什么→ Day 2 大模型怎么&#x27;读懂&#x27;语言 → Day 3 第一次和它对话 → Day 4 把prompt调好的方法论 → Day 5 让大模型真正干活 → Day 6 看清大模型的边界 → Day 7 动手交付一个真实方案 。</p>
+<p><img alt="Article image" src="/assets/2026-09-07-清华这个开源教育agent夯爆了，github已经21k-star了～-b7471d6014/13.jpg"></p>
+<p>7节课之间有明确的递进关系，不是独立的7个主题拼在一起，这个对做系列课的人来说比较实用。</p>
+<p>讲得很地道，举的例子也特别贴切，一看就是懂教学的老师，还配了答题和选择题，这个交互设计有意思。</p>
+<p><img alt="Article image" src="/assets/2026-09-07-清华这个开源教育agent夯爆了，github已经21k-star了～-b7471d6014/14.jpg"></p>
+<p>上面这个是概览，下面这里给大家放一节课看看，</p>
+<p>The media could not be played.
+Reload</p>
+<p>希望大家听完后不要睡着，哈哈哈哈。</p>
+<p>然后这个还支持PPT导入，通过pptx-import skill，可以把已有的PPT课件高保真导入，不需要从零生成。</p>
+<p>我用MIT 12.010第一讲的真实课件测了一下，</p>
+<p>8页课件导入以后，原版排版保留得很完整，封面、结构图、代码块、分栏布局都在，逐页渲染以后自动配了中文旁白。</p>
+<p><img alt="Article image" src="/assets/2026-09-07-清华这个开源教育agent夯爆了，github已经21k-star了～-b7471d6014/15.jpg"></p>
+<p>这对已经有课件的老师比较有用，不用重新做，直接导入，加AI配音和交互，变成可播放的课程。</p>
+<p>真正有价值的还有openmaic开源的整个skill体系，</p>
+<p>PRO模式内置了18个skill：系列课规划、深度交互、深度调研、大师讲授、页面克隆、PPT导入、职业实训、互动工作坊等等。</p>
+<p><img alt="Article image" src="/assets/2026-09-07-清华这个开源教育agent夯爆了，github已经21k-star了～-b7471d6014/16.jpg"></p>
+<p>这些skill是可以下载的，可以直接导入WorkBuddy或Codex使用。</p>
+<p><img alt="Article image" src="/assets/2026-09-07-清华这个开源教育agent夯爆了，github已经21k-star了～-b7471d6014/17.jpg"></p>
+<p>也就是说，你不需要打开OpenMAIC网站，在WorkBuddy里给一个指令，用OpenMAIC skill本地部署OpenMAIC，就能跑。</p>
+<p>生成一个sk-xxx格式的访问码，选hosted模式，粘贴进去就能用，消耗的是账号每日免费额度。</p>
+<p><img alt="Article image" src="/assets/2026-09-07-清华这个开源教育agent夯爆了，github已经21k-star了～-b7471d6014/18.jpg"></p>
+<p>本地部署可以直接GitHub clone安装，直接告诉你的workbuddy或者codex，</p>
+<p>本地安装这个github项目https://github.com/THU-MAIC/OpenMAIC</p>
+<p>好处是可以接本地模型，数据不出内网，这对学校和企业会比较在意，</p>
+<p>同时，开源版本还支持VoxCPM声音克隆，讲课件可以用自己的声音，或者用自己喜欢的人的声音～</p>
+<p>还有个小功能，竞技场。两个隐藏模型同时生成课件，你投票选哪个好，计入社区排行榜；</p>
+<p>跟Chatbot Arena差不多的思路，但比的是课件生成质量，</p>
+<p>这个可以从侧面比较出哪些模型对这种交互式课件生成的效果更好，算是一个垂域的榜单。</p>
+<p><img alt="Article image" src="/assets/2026-09-07-清华这个开源教育agent夯爆了，github已经21k-star了～-b7471d6014/19.jpg"></p>
+<p>最后，</p>
+<p>说实话，OpenMAIC已经不是一个Demo了，</p>
+<p>已经把调研、备课、讲解、互动和答疑串成了一条完整链路，</p>
+<p>虽然有些页面还比较花里胡哨，但是真的能教会我东西。</p>
+<p>更难得的是，开源。</p>
+<p>以后每一本读不下去的书、每一篇啃不动的论文，都可能被现场做成一门适合你的课。</p>
+<p>AI生成内容已经不稀奇了，能不能帮一个人把知识真正学会，</p>
+<p>才是AI教育更值得期待的地方。</p></div><a class="source" href="https://x.com/liucong0120/status/2093547141579022737" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

@@ -4,7 +4,8 @@ title: "Graph Engineering: Stop Chaining Your Agents"
 author: "seeco @seeconvm"
 source: "x_bookmark"
 date: 2026-09-07
-chars: 22311
+chars: 22059
+images: 3
 ---
 
 # Graph Engineering: Stop Chaining Your Agents
@@ -19,7 +20,7 @@ Claude Code shipped the tooling for building these graphs directly: dynamic work
 
 This is the 14 step roadmap I use to turn a single file agent into a graph that fans out across a fleet, checks its own findings, and lands on a result one agent could never hold.
 
-AT A GLANCE
+## AT A GLANCE
 
 1. Nodes are jobs. Edges are what flows.
 
@@ -49,7 +50,7 @@ AT A GLANCE
 
 14. Let Claude draw the graph for you.
 
-01. Nodes and Edges, or Why "And Then" Is Not a Dependency
+## 01. Nodes and Edges, or Why "And Then" Is Not a Dependency
 
 A graph has exactly two pieces, and getting them straight clears up most of the confusion.
 
@@ -69,21 +70,25 @@ draw the arrow, if no variable crosses, those two boxes
 are independent. That independence is the thing you are
 going to spend the rest of this article exploiting.
 
-02. Your Linear Script Is a Degenerate Graph
+## 02. Your Linear Script Is a Degenerate Graph
 
 When you write an agent as "do A, then B, then C, then D," you already drew a graph. You drew the worst one available: a single unbranching chain where every node has exactly one edge in and one edge out.
 
 It runs. It also runs slowly, and it breaks badly, because a chain has no redundancy. If C stalls, D never happens, and everything A produced is stuck upstream with nowhere to go.
 
+![Article image](/assets/2026-09-07-graph-engineering-stop-chaining-your-agents-fcb216257d/01.jpg)
+
 The first real skill here is redrawing the chain. Take your linear agent, walk every arrow, and ask the question from step 01. In practice you will find two or three arrows that carry no data at all. They only exist because that is the order you happened to type things in.
 
 Cut those arrows and the chain collapses sideways into something much wider: a handful of independent nodes that can all run at once, feeding into a single node that needs all of them.
 
-03. Give Every Node a Contract
+## 03. Give Every Node a Contract
 
 A node you cannot reason about is a node you cannot parallelize. The fix is a contract: bounded input, bounded output, exactly one job.
 
 The input is whatever that node reads, passed in explicitly. Never assumed from some shared window it happens to be sitting in. The output is a defined shape, ideally validated, so the next node can consume it without guessing.
+
+![Article image](/assets/2026-09-07-graph-engineering-stop-chaining-your-agents-fcb216257d/02.jpg)
 
 In a workflow you enforce this with a schema. When you hand Claude an agent() call with a JSON schema attached, the subagent it spawns is forced to return validated structured data. Validation happens down at the tool call layer, so Claude retries on a mismatch instead of handing you free text you have to parse and pray over.
 
@@ -113,7 +118,7 @@ free text.
 
 That is the entire difference between a node Claude can wire into a graph and a node that only works when a human reads its output.
 
-04. The Edge Is a Data Contract Too
+## 04. The Edge Is a Data Contract Too
 
 An edge is not "B comes after A." It is a promise about what crosses: A produces this shape, B was built to consume this shape. Name your edges by their data instead of their order and two things get much easier.
 
@@ -135,7 +140,7 @@ values()];
 
 Save agents for judgment. Not for plumbing. A graph where every edge is an agent is a graph paying rent on its own wiring.
 
-05. Fan Out With parallel()
+## 05. Fan Out With parallel()
 
 This is the move that pays for everything else. When you have N independent nodes, N sources to check, N files to review, N routes to audit, you do not chain them.
 
@@ -166,7 +171,7 @@ from failed agents
 
 The fan out lives in code Claude wrote, not in a model conversation. Claude's own context never holds nine sources at once. Each subagent carries its own, and only the final answer comes back. That is what lets a workflow scale to dozens or hundreds of subagents without drowning the session, and the orchestration layer costs nothing, because it is not another turn of Claude thinking.
 
-06. Fan In at a Barrier
+## 06. Fan In at a Barrier
 
 A fan out is only worth anything if something gathers it. The fan in is the node where your edges converge, where one agent or one piece of code sees all the upstream results at the same time and does something that genuinely requires the whole set: dedupe across sources, rank by impact, exit early if everything came back empty.
 
@@ -190,7 +195,7 @@ const curated = await agent(
 
 Just flattening a list is not a barrier, it is an edge, do it inline. The smell test is brutally simple: if you wrote parallel, then a transform, then parallel again, and that middle transform has no cross item dependency, you should have used a pipeline and skipped the barrier entirely.
 
-07. The Diamond: Split, Work, Merge
+## 07. The Diamond: Split, Work, Merge
 
 Put a fan out and a fan in together and you get the workhorse topology of every serious agent graph: the diamond.
 
@@ -200,7 +205,7 @@ The canonical form is worth memorizing: fan out, reduce, synthesize. Fan out to 
 
 Once you can see the diamond, you stop asking "how do I make my agent do more steps" and start asking "where is the split, where is the merge." That second question is the one that actually scales.
 
-08. Route the Edge at Runtime With a Conditional
+## 08. Route the Edge at Runtime With a Conditional
 
 Not every graph is fixed. Sometimes which edge you take depends on what a node found. A router node inspects a result and decides which downstream path fires: classify the ticket, then branch to the right handler. Check the diff size, then either do a quick review or spin up a full audit.
 
@@ -232,7 +237,7 @@ This is where determinism turns into a feature instead of a limitation. The rout
 
 You get Claude's judgment at the node and a script's reliability at the edge. There is no emergent "Claude decided to skip the audit today" surprise, because skipping would have to be written into the graph, and it isn't.
 
-09. Put a Verifier on the Edge
+## 09. Put a Verifier on the Edge
 
 The real leverage of a graph is not that you get more agents. It is the structure you can wrap around them to produce confidence.
 
@@ -248,7 +253,7 @@ Three patterns worth keeping in your hands:
 
 This is exactly the pattern that let a real team port the Bun runtime with adversarial code review baked straight into the loop.
 
-10. Isolate Nodes So One Failure Stays Local
+## 10. Isolate Nodes So One Failure Stays Local
 
 In a chain, a failure cascades. C dies, D never runs, the whole thing halts. In a graph, failure should be contained to its node.
 
@@ -258,11 +263,13 @@ The subtler failure is nodes stepping on each other. When agents write files in 
 
 The fix is isolation: worktree. Each agent runs in its own git worktree, does its work in a sandbox, and merges cleanly at the end. Reach for it only when nodes genuinely write in parallel. It is the seatbelt for one specific topology, not a default tax on every run.
 
-11. Add a Cycle, But Make It Converge
+## 11. Add a Cycle, But Make It Converge
 
 Sometimes you have no idea how big the job is until you are inside it. Discovery of unknown size. A bug sweep where finding one bug reveals three more. That calls for a cycle, a controlled edge back to an earlier node.
 
 The danger is obvious. A cycle that never converges is an infinite loop that spawns agents until your budget is gone.
+
+![Article image](/assets/2026-09-07-graph-engineering-stop-chaining-your-agents-fcb216257d/03.jpg)
 
 The pattern that converges is loop until dry: keep spawning finders until K consecutive rounds surface nothing new, then stop. And here is the detail that makes or breaks it, the one almost everybody gets wrong the first time: what you dedupe against.
 
@@ -300,7 +307,7 @@ schema: VERDICT })))
 => v.b));
 }
 
-12. Tier the Models Across Your Nodes
+## 12. Tier the Models Across Your Nodes
 
 Not every node needs your best model. A graph makes this obvious in a way a single agent never does: some nodes are bounded and repetitive, extract this field, classify this ticket. Others carry the actual judgment, synthesize the report, adjudicate the finding.
 
@@ -310,7 +317,7 @@ In a workflow, every subagent Claude spawns inherits your session model unless t
 
 Check /model before a large run, then have Claude route the fan out's repetitive nodes down to a cheaper model while keeping the merge node up top. This is the lever that turns a token hungry graph into an economical one without touching its shape at all.
 
-13. Topology Is Your Cost and Latency
+## 13. Topology Is Your Cost and Latency
 
 The shape of the graph is not cosmetic. It is the single biggest lever you have on wall clock time. The choice that trips up basically everyone is parallel() versus pipeline().
 
@@ -368,7 +375,7 @@ You don't know how big the job is
 	
 Runaway spend if it never converges
 
-14. Let Claude Draw the Graph
+## 14. Let Claude Draw the Graph
 
 The final move is to stop drawing graphs by hand for jobs you cannot plan in advance.
 
@@ -398,7 +405,7 @@ background...
   session stays responsive, keep working while the fleet
 runs
 
-Six Graphs Worth Building This Week
+## Six Graphs Worth Building This Week
 
 - A security sweep across every route. One subagent per route file, each hunting missing auth checks, then a verifier pass that confirms every finding before it reaches the report. Breadth no single context could hold.
 
@@ -412,7 +419,7 @@ Six Graphs Worth Building This Week
 
 - A discovery job of unknown size. You have no idea how many bugs are in there. Claude runs finders in parallel, dedupes each new find against everything seen, verifies the survivors, and keeps looping until two rounds turn up nothing new.
 
-Why This Actually Matters
+## Why This Actually Matters
 
 Every one of these steps points at the same underlying thing. Your agent's ceiling is almost never the model. It is the shape of the work you handed it.
 
@@ -420,7 +427,7 @@ A chain forces one context to hold everything, one failure to halt everything, a
 
 And the orchestration layer is code. That is the part people underestimate. Coordination between eighteen agents costs zero model tokens, because a script is not a conversation.
 
-What Actually Matters Here
+## What Actually Matters Here
 
 If you only take three things from this: cut the arrows that carry no data, default to pipeline() instead of a barrier, and dedupe against everything you have seen rather than everything you confirmed.
 

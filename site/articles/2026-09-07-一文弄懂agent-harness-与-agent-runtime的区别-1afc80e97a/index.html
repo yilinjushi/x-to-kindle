@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="一文弄懂Agent Harness 与 Agent Runtime的区别">
+  <title>一文弄懂Agent Harness 与 Agent Runtime的区别 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Smartpig @Smartpigai · 2026-09-07</div><div class="prose"><h1>一文弄懂Agent Harness 与 Agent Runtime的区别</h1>
+<p>本文深入探讨了 AI 智能体 (Agent) 的两个关键组成层面：Agent Harness（智能体驱动程序）与 Agent Runtime（智能体运行时环境）的区别。简单来说，智能体 Harness 是位于基础模型（LLM）之上的应用层逻辑，它为模型提供多步规划、工具调用、状态管理、策略控制等功能；而 智能体 Runtime 则是承载并执行这些动作的基础设施层，类似于“Agent 专用的 Lambda”，负责提供安全隔离的执行环境、资源调度与限制、网络与凭证管理等。两者相辅相成：Harness 定义了智能体“思考”和“行动”的方式，Runtime 则负责在哪儿和怎样安全地执行这些动作。本文将从定义、职责、生命周期、接口、资源管理、安全隔离、可扩展性、可观察性、部署模型、性能、故障与恢复、典型用例等多个方面，逐一比较二者的差异，并给出示例和表格总结，以期提供全面的理解和实践指导。</p>
+<h2>定义</h2>
+<ul>
+<li>
+<p>智能体 Harness (驱动程序)：是位于基础模型之上、负责组织智能体行为的软件层。它包含提示工程、工具接口、执行循环、记忆和策略等，使得一个原本只会生成文本的模型能够完成多步骤任务。换句话说，如果把模型看作大脑，Harness 就是围绕大脑的工作台、笔记本、工具和权限系统。微软将其称为“runtime 脚手架 (scaffolding)”，用以驱动模型调用、管理上下文并让智能体能够持续前进。主流观点认为：Agent = 模型 + Harness。</p>
+</li>
+<li>
+<p>智能体 Runtime (运行时)：是提供智能体实际执行环境的基础设施层。它类似于云函数或容器环境，负责调度和运行智能体逻辑及工具执行。Google 云架构指南指出：“代理运行时是代理的应用逻辑运行所在的计算环境”。Runtime 负责创建隔离会话（如容器或微VM）、管理资源限额、网络出入控制、凭证注入、持久化状态与并发调度等。简言之，Harness 决定下一步做什么，Runtime 决定如何安全地去做。</p>
+</li>
+</ul>
+<h2>职责</h2>
+<ul>
+<li>
+<p>Harness 的职责：如 Credal 所述，Harness 负责智能体的执行循环和逻辑控制，具体包括：执行循环 (Agent Loop)：控制模型与环境的交互步骤（例如 ReAct、计划-执行等流程）。
+提示拼装与上下文管理：构造合理的提示（prompts），管理对话历史和记忆，以有效引导模型。
+工具接口：定义并向模型公开可用工具，处理模型的工具调用请求与结果反馈。
+消息/状态跟踪：跟踪会话中的对话内容与任务状态，用于对话历史持久化和任务恢复。
+输出解析与校验：解析模型输出、校验格式或语义，必要时重试或纠正，保证输出符合预期。
+错误处理：识别运行时错误（如工具失败、超时等），并采取重试、更换工具、升级到人工审批或安全停止等策略。
+子代理管理：在复杂任务中协调多智能体（子代理）的创建与合并结果，处理多代理协作与冲突。
+简言之，Harness 就是构建在模型之上的逻辑层，负责<strong>“想什么”和“怎么做”</strong>。其目标是让模型的推理能力变成对现实有用的工作能力。</p>
+</li>
+<li>
+<p>Runtime 的职责：Runtime 层着重于执行时的基础设施支持，具体包括：隔离与沙箱执行：每个会话（甚至每次工具调用）在独立隔离的环境（容器/微VM）中执行，防止故障、侧效应或恶意行为跨会话传播。
+资源限制：强制实施 CPU、内存、磁盘、令牌（API 调用）等资源限制，防止智能体无限循环或资源滥用。
+网络和凭证控制：控制环境的网络出入，限制智能体能访问的 API 与资源；在执行时安全注入短期凭证，避免敏感密钥暴露在模型上下文中。
+持久化与检查点：为长时运行或并发任务提供状态持久化功能，允许会话重启或迁移时从上次检查点恢复进度。
+并发与可扩展性：调度和扩缩容多个智能体会话，管理队列与并行执行，确保平台在高负载下稳定运行。
+监控与审计日志：记录每次模型调用、工具执行、网络请求等操作的追踪信息与日志，以支持调试与合规模型。
+简单来说，Runtime 负责执行环境和治理，包括安全、隔离、资源和监控等基础设施层面的内容。</p>
+</li>
+</ul>
+<h2>生命周期</h2>
+<p>智能体从用户请求到任务结束的生命周期通常经历以下步骤：用户发起请求后，Harness 首先加载任务指令、上下文和策略，然后调用模型生成下一步行动；若模型请求调用工具，Harness 会将该调用分发到 Runtime。Runtime 在隔离环境中执行工具代码或命令，并将结果返回给 Harness；Harness 接收结果后继续循环（可能调用模型或进一步工具），直到达到终止条件（如任务完成、错误上限或超时）。整个过程可表示如下顺序图：</p>
+<p><img alt="Article image" src="/assets/2026-09-07-一文弄懂agent-harness-与-agent-runtime的区别-1afc80e97a/01.png"></p>
+<p>在不同部署场景下，团队常见以下模式：模式1：一个 Harness 对应一个 Runtime，将应用逻辑与执行环境紧密绑定；模式2：一个 Harness 服务多个 Runtime 环境（如开发、测试、生产），方便在不同环境下应用不同网络或资源策略；模式3：多个 Harness 共享一个 Runtime，适合大型平台将执行基础设施抽象出来，统一安全和监控。</p>
+<h2>接口与 API</h2>
+<ul>
+<li>
+<p>Harness 接口：通常由具体的智能体框架或 SDK 提供。比如，使用 Microsoft Agent Framework 时，可以通过 create_harness_agent（Python）或 AsHarnessAgent（.NET）等工厂方法生成带有默认功能的 Harness 智能体。其他开源框架（如 LangChain、CrewAI、Anthropic Agents SDK、OpenAI Agents SDK 等）也提供相应接口，让开发者定义提示、工具和记忆等。常见的工具集成接口有 Model-Context Protocol (MCP)，可以让 Harness 通过统一协议调用外部工具服务器。Harness 本身通常以函数调用或服务方式暴露给应用，可能包括启动会话、发送用户消息、处理模型响应等方法。</p>
+</li>
+<li>
+<p>Runtime 接口：主要体现在对外的执行入口和管理控制面。一方面，开发者可以通过 SDK 或 CLI（如 AWS AgentCore CLI 的 InvokeHarness 命令）将任务发给 Runtime 执行；另一方面，Runtime 平台（如 Azure Agent Service、Google Gemini Runtime、AWS AgentCore 等）可能提供 REST API 或托管服务端点，支持管理会话（启动、停止、检查点）和查询执行状态。例如，AWS AgentCore 要求调用 InvokeHarness 时对 Harness 资源和底层 Runtime 资源都具有权限；Azure Foundry 平台则提供“Agent Service”入口，将 Prompt Agent 或 Hosted Agent 的任务提交到托管环境。通常，Runtime 接口对上层透明，主要用于部署和监控——用户不必关注内部实现细节，只需确保应用代码符合接口规范即可。</p>
+</li>
+</ul>
+<h2>资源管理</h2>
+<ul>
+<li>
+<p>Harness 资源管理：主要管理与模型上下文相关的资源。例如，Harness 会追踪对话历史长度和 token 使用情况，对话提示通常有长度限制。Harness 也可能限制模型调用的步数或费用（在模型层面限速）。但更多情况下，资源控制交由 Runtime 实现。Harness 关注的是逻辑正确性和上下文完整度，而非底层 CPU/内存配额。</p>
+</li>
+<li>
+<p>Runtime 资源管理：由 Runtime 完成对底层计算资源的管控。Runtime 通常以容器或微VM方式执行，每个会话都有独立的资源配额。它负责强制执行 CPU、内存、磁盘、网络带宽以及模型调用令牌等限制，防止单个智能体任务耗尽主机资源。比如 AWS AgentCore 在每个微VM 中为会话分配固定内存和 CPU；容器化平台则可设置 Pod 的资源上限。此外，Runtime 还负责多会话间的调度与扩缩容，将任务分发到可用节点或新启的实例上，以满足并发负载。总之，Runtime 是资源管理的第一责任层。</p>
+</li>
+</ul>
+<h2>安全隔离</h2>
+<ul>
+<li>
+<p>Harness 安全：主要从业务逻辑层面提供权限和护栏。它决定哪些工具可以被调用、哪些 API 可以访问、是否需要人工审批，以及对输入/输出的校验。比如，Harness 会对模型发出的工具调用请求进行验证：仅允许经过批准的工具名、检查调用参数是否合法、过滤敏感信息等。Harness 也可在提示中加入检测逻辑，避免模型进行未经授权的操作。总之，Harness 提供策略性保护，使得智能体决策受到约束。</p>
+</li>
+<li>
+<p>Runtime 安全：负责环境隔离与系统防护。每个会话在独立沙箱（容器或 Firecracker 微VM）中运行，确保进程隔离、不共享文件系统和网络空间。Runtime 会严格控制网络出口，只有允许的域名或 API 可被访问，避免智能体随意外联。它还注入短期凭证（令牌）供模型代码使用，避免长期密钥泄露。此外，Runtime 系统本身定期打补丁、监控恶意行为，并提供审计日志。简单来说，Runtime 负责运行时防护：从操作系统层面隔离攻击面，从网络层面管控出入流量。正如行业观点所言，应当将“网络出口控制、执行沙箱和凭证管理”等基础设施安全留给 Runtime 实现，而将“工具调用权限和输出验证”等业务安全留给 Harness。</p>
+</li>
+</ul>
+<h2>可扩展性与插件</h2>
+<ul>
+<li>
+<p>Harness 扩展：现代智能体平台通常提供可扩展机制，让开发者添加新工具、技能、记忆模块和处理逻辑。例如 AWS AgentCore 可以挂载 AWS Skills (自研技能)、从 Git 或 S3 载入自定义函数库，LangChain 可通过扩展 Tool 类添加第三方 API。Harness 本身通常采用插件化设计，开发者可以编写中间件、回调（hook）或策略文件来增强功能。如 LangChain Deep Agents 在存储介质、规划算法上支持多种插件；Anthropic 的 Agents SDK 允许注册自定义验证器或批准器。总之，Harness 层面对接插件和工具非常灵活，生态中已有众多开源或商业工具可供集成。</p>
+</li>
+<li>
+<p>Runtime 扩展：Runtime 主要通过环境配置和镜像来扩展功能。例如，开发者可以为智能体提供自定义容器镜像，其中预装特定库或依赖；可以配置网络策略和节点类型来满足不同性能需求。高级平台可能允许用户编写边车 (sidecar) 或网络策略插件来增强监控能力。此外，一些系统（如 DeepSeek Harness）提出了“万物即插件”的理念，将执行环境、工具都统一视为可插拔组件。总体来说，Runtime 的可扩展性体现在运行时环境的可定制：选择或构建带有所需功能的沙箱环境，而不是直接在运行时中编写业务代码。</p>
+</li>
+</ul>
+<h2>可观察性与监控</h2>
+<ul>
+<li>
+<p>Harness 可观察性：Harness 通常负责生成和收集上层事件日志，如每一步对话、提示内容、模型决策、工具调用请求及其结果等。现代智能体框架往往集成跟踪系统（如 OpenTelemetry），能够记录模型调用延迟、成本、错误率等指标。例如，OpenAI Agents SDK 默认开启全链路追踪，LangSmith 等平台提供可视化调试界面。 Harness 还负责关联上下文信息，将用户输入、对话历史、内存状态等纳入日志，以便回溯问题。</p>
+</li>
+<li>
+<p>Runtime 可观察性：Runtime 层关注底层执行和安全日志。它记录每个容器或会话的启动、资源使用情况（CPU/内存占用）、每次工具执行的入口与出口日志，以及网络请求审计日志。如 Credal 建议，审计跟踪应将 Harness 的决策与 Runtime 的执行关联起来，通过共享的跟踪 ID 实现端到端可追溯。运行时平台一般会收集这些数据并发送到监控系统（如 Prometheus、CloudWatch、Azure Monitor 等），方便运维团队查看并设置报警。</p>
+</li>
+</ul>
+<h2>部署模型</h2>
+<p>智能体系统的部署通常分为两层：Harness 层和 Runtime 层。常见模式有：</p>
+<ul>
+<li>
+<p>模式1：一Harness 一Runtime：应用逻辑与执行环境紧耦合，同一个仓库管理代码和基础设施，适用于初创团队快速迭代。</p>
+</li>
+<li>
+<p>模式2：一Harness 多Runtime：同一应用在不同环境（开发/测试/生产）中使用不同配置的 Runtime，例如开发沙箱和生产集群，分别有各自的网络策略和资源限额。</p>
+</li>
+<li>
+<p>模式3：多Harness 共用一Runtime：多个不同业务逻辑共用统一的执行平台，便于统一管理安全和监控。
+在部署时，Harness 通常以应用服务形式存在（例如托管在云服务器或容器中），通过 API 或消息队列与前端/用户通信；而 Runtime 则可能是容器集群、Serverless 函数平台或微服务，负责实际执行指令。比如 AWS AgentCore Runtime 是一个按需启动微VM的托管服务，Azure Agent Service 可能以容器或函数形式部署，Google Gemini Enterprise 代理运行时以托管方式提供环境。</p>
+</li>
+</ul>
+<p><img alt="Article image" src="/assets/2026-09-07-一文弄懂agent-harness-与-agent-runtime的区别-1afc80e97a/02.png"></p>
+<h2>性能特征</h2>
+<ul>
+<li>
+<p>Harness 性能：主要受模型推理延迟和框架代码复杂度影响。Harness 自身主要运行在应用层（如 Python/Node.js 服务），其性能取决于所选框架效率和内部逻辑开销。通常，Harness 需要管理对话和工具调用，因此会引入一定的中间层延迟，但只要逻辑简明，其开销相对可控。优化点包括使用并发队列、异步调用模型、对长对话进行适当压缩等。总体上，Harness 的性能瓶颈在于如何高效组织推理和工具交互。</p>
+</li>
+<li>
+<p>Runtime 性能：主要在于底层执行效率和扩展能力。Runtime 环境（容器、虚拟机、Serverless）启动通常有初始化延迟，频繁启动新容器会带来冷启动成本；而长期运行的实例则关注资源利用率。在运行时执行工具代码时，CPU/GPU资源、I/O 性能和并发伸缩能力决定了吞吐量。现代平台会支持自动扩缩容，以应对流量突增。在高并发场景下，Runtime 的性能优势在于可横向扩展，而启动延迟和资源隔离可能带来额外开销。比较而言，Harness 更关注单次任务的响应速度与内部逻辑效率，Runtime 更关注总体吞吐和资源利用效率。</p>
+</li>
+</ul>
+<h2>故障模式与恢复</h2>
+<ul>
+<li>
+<p>Harness 故障：常见失败包括模型返回格式错误、工具执行错误或超时、策略冲突等。Harness 需要检测和处理这些故障，常见做法有：对模型输出进行格式校验，若失败则重试或用不同模型；对工具调用异常进行重试、切换备用工具或请求人工介入；若整个循环陷入死循环或超时，则根据策略限制作业终止。例如，对于代码智能体，如果编译失败，Harness 可能会引导模型检查错误并修正；对于网络调用失败，Harness 可能会稍后重试或跳过该步骤。良好的Harness 会维护业务级别的状态快照，并在失败时保存上下文以便调查和重试。</p>
+</li>
+<li>
+<p>Runtime 故障：主要是基础设施层面的故障，如容器崩溃、主机故障、网络中断等。现代 Runtime 平台通常内置了容错机制：单个会话失败后，可依赖持久化状态从上次检查点恢复。比如，若微VM 意外重启，Runtime 会根据检查点和日志恢复文件系统和内存状态，重启执行流程。对于长期会话，Runtime 会记录必要的持久化数据（磁盘文件、数据库状态等），并在故障后自动重建环境。资源耗尽（如内存超限）时，Runtime 会在安全范围内终止进程并报告错误，通常与 Harness 协调决定后续措施。总的来说，故障恢复由两层协同实现：Harness 负责业务级的重试与备选策略，Runtime 负责环境级的重启与状态恢复。</p>
+</li>
+</ul>
+<h2>典型用例</h2>
+<ul>
+<li>
+<p>复杂多步骤任务：例如自动化编程辅助、报表生成或数据分析等需要多轮交互的任务，通常依赖全面的 Harness。此类场景要求对话、上下文和外部工具（编译器、数据库、搜索等）的紧密协同，强调容错和长期记忆。Anthropic 的 Claude Code、OpenAI 的 Codex 等都是典型的带有强大 Harness 的代码智能体实例。对于此类任务，Harness 的设计细节（如测试失败时的回退策略、分布式缓存等）直接决定智能体的效果。</p>
+</li>
+<li>
+<p>轻量级自动化任务：一些简单的自动化场景，如批量客服回复、报警监控触发等，可能更关注稳定执行而不需要过多定制的对话逻辑。这时可以主要依赖 Runtime 平台：将模型调用和逻辑打包成函数或容器，由云平台负责扩容与运维。例如，在 Azure Functions 或 AWS Lambda 上部署的简单问答或数据查询智能体，就将更多任务交给了 Runtime。此时，Harness 只需提供最基本的提示和异常处理，复杂度较低。</p>
+</li>
+<li>
+<p>企业多智能体场景：对于需要同时管理多个不同目的智能体的大型系统，通常会采用多个 Harness+共享 Runtime 的方案。不同团队开发各自业务逻辑（各自的 Harness），而底层执行环境统一使用同一平台（共用 Runtime），以便统一管理安全、监控和资源。这在大企业中尤为常见，能提高治理效率并保证隔离度。</p>
+</li>
+</ul>
+<h2>示例代码</h2>
+<p>以下示例展示了使用主流框架构建 Agent Harness 和在 Runtime 环境中运行智能体的基本方式。</p>
+<p>Python Harness 示例（使用 Microsoft Agent Framework）：</p>
+<p>python
+from agent_framework import create_harness_agent
+from agent_framework.openai import OpenAIChatClient</p>
+<h1>创建一个使用 GPT-4o 的强化代理</h1>
+<p>client = OpenAIChatClient(model=&quot;gpt-4o&quot;, temperature=0.0)
+agent = create_harness_agent(client=client,
+                             harness_instructions=&quot;Use tools deliberately.&quot;,
+                             agent_instructions=&quot;You are a helpful research assistant.&quot;)
+session = agent.create_session()
+response = await agent.run(&quot;帮我总结一下最新的机器学习论文。&quot;, session=session)
+print(response.text)</p>
+<p>Node.js Agent 示例（使用 LangChain.js in Azure Functions）：</p>
+<p>python
+import { ChatOpenAI } from &quot;@langchain/openai&quot;;
+import { AgentExecutor, createReactAgent } from &quot;langchain/agents&quot;;
+import { SerpAPI } from &quot;@langchain/community/tools/serpapi&quot;;
+import { Calculator } from &quot;@langchain/community/tools/calculator&quot;;</p>
+<p>// 初始化模型和工具
+const model = new ChatOpenAI({ model: &quot;gpt-4o-mini&quot;, temperature: 0 });
+const tools = [ new SerpAPI(), new Calculator() ];</p>
+<p>// 创建 ReAct Agent
+const agent = await createReactAgent({ llm: model, tools });
+const executor = AgentExecutor.fromAgentAndTools({
+  agent,
+  tools,
+  returnIntermediateSteps: true,
+  verbose: true
+});</p>
+<p>// 调用智能体
+const result = await executor.invoke({ input: &quot;请找出法国当前人口，并加上一百万。&quot; });
+console.log(&quot;答案:&quot;, result.output);
+// 中间步骤已在 result.intermediateSteps 中返回</p>
+<p>第一个示例演示了在 Python 中使用微软的 Agent Framework 快速搭建 Harness Agent；第二个示例展示了使用 LangChain.js 在 Azure Functions 上部署的智能体，兼具推理（聊天模型）和行动（搜索、计算）能力。这些框架隐藏了繁杂的执行细节，使开发者专注于业务逻辑和提示设计。</p></div><a class="source" href="https://x.com/Smartpigai/status/2094035177492164795" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Loops and Graphs: how to stop babysitting agents and only approve the last step (full course)">
+  <title>Loops and Graphs: how to stop babysitting agents and only approve the last step (full course) · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Hanako @hanakoxbt · 2026-09-07</div><div class="prose"><h1>Loops and Graphs: how to stop babysitting agents and only approve the last step (full course)</h1>
+<p>You check every step your agents take. Not because you want to, but because nothing else does.</p>
+<p>Getting out of that chair takes two things, and almost everyone builds only one of them.</p>
+<p>A loop makes a unit of work correct without you. A graph decides which units exist at all.</p>
+<p>Here is the split, the mechanics that are not obvious, and the point where you approve one thing instead of everything.</p>
+<h2>A loop is a check that can fail</h2>
+<p>Strip everything else away and a loop is four parts: produce, check, correct, repeat until green.</p>
+<p>The check is the whole thing.</p>
+<p>Without something that can fail the work while you are out of the room, you do not have a loop. You have a scheduler.</p>
+<p>This sounds obvious and almost nobody writes the check first.</p>
+<p>They build the work, then bolt a review onto the end, and the review is another model asked to look at the output.</p>
+<p>Two optimists agreeing.</p>
+<p>Write the condition first, and write it so a program could evaluate it:</p>
+<p>GREEN    the test suite exits 0
+GREEN    every claim carries a source line
+GREEN    the diff touches only files listed in the plan</p>
+<p>NOT A CHECK   the output looks good
+NOT A CHECK   the model says it is confident
+NOT A CHECK   no errors were raised</p>
+<p>That last one catches careful people. Absence of an error is not evidence of correctness.</p>
+<p>Build a loop on it and you get a system that confidently repeats a mistake until the budget runs out, with a clean log the whole way.</p>
+<h2>The ceiling nobody warns you about</h2>
+<p>A loop makes one unit of work better. That is its entire job, and it is very good at it.</p>
+<p>It cannot decide which units exist, or their order, or notice that two of the five steps never needed to wait for each other.</p>
+<p>So you get a very good agent running the wrong three steps, in the wrong order, one at a time.</p>
+<p>Every step is correct. The result is still slow and still wrong-shaped, and tuning the loop will not fix it, because the fault is not inside any unit.</p>
+<p>That is the moment people blame the model. It is also the moment the next layer starts paying for itself.</p>
+<p><img alt="Article image" src="/assets/2026-09-07-loops-and-graphs-how-to-stop-babysitting-agents-and-only-app-ad0258fc37/01.png"></p>
+<h2>The graph is the layer above</h2>
+<p>A graph is the shape of the work: what runs, what runs at the same time, what waits, what never runs at all, and where results go back.</p>
+<p>Two things and nothing else. A node is a unit of work: one bounded job, one input in, one output out.</p>
+<p>An edge is a dependency, this node&#x27;s output feeds that node&#x27;s input.</p>
+<p>The mistake behind every unnecessary wait is treating &quot;and then&quot; as an edge.</p>
+<p>Summarize the file and then check the weather has no edge between them. The weather does not consume the summary.</p>
+<p>Those are two independent nodes that a linear script chained, and the chaining came from the order you typed them.</p>
+<p>So run this on every arrow in a pipeline you already have: does the next step actually read the previous step&#x27;s output?</p>
+<p>If you cannot name the variable that crosses, there is no edge, and the wait is pure waste.</p>
+<p>Most chains have two or three arrows like that, and finding them is usually the largest single speedup available.</p>
+<p>The full breakdown of all five layers, in the order they matter, is here: agent-layers.vercel.app</p>
+<h2>Four kinds of node, and one of them is not a model</h2>
+<p>Splitter, worker, code node, gate. That is the whole vocabulary.</p>
+<p>The splitter cuts the work into units and sits at the front.</p>
+<p>It decides more than any other node, because splitting by the wrong dimension wastes everything downstream.</p>
+<p>Cut a repository by folder and four workers audit the same three files.</p>
+<p>Cut by blast radius and each one sees something the others cannot.</p>
+<p>Workers do one unit each, with one lens, in their own context. That last part gets skipped constantly.</p>
+<p>Give four auditors a shared window and they converge: the first writes a finding, the rest read it, and all four reports centre on the same thing.</p>
+<p>You paid four times for one opinion with three echoes.</p>
+<p>The code node is the one people forget exists. Merging, ranking, deduplicating, comparing every export before and after.</p>
+<p>None of that is reasoning. Each has exactly one correct answer, each is a few lines of code, and running it through a model adds cost, latency and variance to a step that had none.</p>
+<p>If you can describe the transformation without using the words judge, decide, assess or summarize, it is code.</p>
+<p>A graph where every edge is an agent pays rent on its own wiring.</p>
+<p><img alt="Article image" src="/assets/2026-09-07-loops-and-graphs-how-to-stop-babysitting-agents-and-only-app-ad0258fc37/02.png"></p>
+<h2>Where the loop actually lives</h2>
+<p>One sentence resolves the whole confusion. The loop lives inside a node. The graph lives between them.</p>
+<p>Inside one unit: produce, check, correct, repeat until green.</p>
+<p>Between units: split, fan out, merge, gate, send back. None of the second list is expressible from inside a single unit.</p>
+<p>So you do not choose. A graph without loops in its nodes produces unverified work in parallel, which is worse than serially because there is more of it.</p>
+<p>A loop without a graph around it is one very good step in a queue nobody designed.</p>
+<h2>The two return paths, and the one everyone skips</h2>
+<p>A graph without a way back is a pipeline. It produces output and forgets.</p>
+<p>Next week it starts from the same place with the same blind spots.</p>
+<p>Working graphs have two return paths, doing different jobs.</p>
+<p>The correction edge is short. A gate rejects one unit back to the step that produced it, and it fixes the run you are in.</p>
+<p>The learning edge is long. An accepted result goes back to the splitter as a constraint, and it fixes every run after.</p>
+<p>Almost everyone builds the first and skips the second. The tell is a system that is fast and never gets smarter.</p>
+<p>The learning edge does not carry the output, it carries a constraint derived from it:</p>
+<p>ACCEPTED   utils slice ported, green on first pass
+DERIVED    adapters preserve keyword args exactly
+LANDS IN   the splitter&#x27;s brief for every later slice</p>
+<p>Notice where it lands. Not in the worker&#x27;s instructions, in the brief that shapes how the work gets cut.</p>
+<p>A confirmed cause becomes a rule, so the next break starts where this one ended.</p>
+<p><img alt="Article image" src="/assets/2026-09-07-loops-and-graphs-how-to-stop-babysitting-agents-and-only-app-ad0258fc37/03.png"></p>
+<h2>Return the unit, not the batch</h2>
+<p>This is the most expensive mistake on the return path, and it is worth stating plainly.</p>
+<p>Four slices were ported. One fails its tests. If the whole batch goes back, three correct slices get rewritten.</p>
+<p>Their next version is different, not better, because nothing was wrong with them.</p>
+<p>Now you re-verify all four, and any of the three may fail this time for unrelated reasons.</p>
+<p>You converted one failure into four uncertain outcomes and paid for the privilege. Do it twice in a run and it never converges.</p>
+<p>From the outside this looks like the model failing repeatedly. It is a return path destroying correct work.</p>
+<p>Four things travel with a return, and each is doing a job:</p>
+<p>UNIT      handlers slice
+VERDICT   red
+REASON    test_auth_redirect failed
+EVIDENCE  expected 302, got 200, handlers/auth.py:88
+SCOPE     fix this file only, do not touch other slices</p>
+<p>The scope line matters more than it looks.</p>
+<p>Without it a returned unit grows: the agent opens the file, notices two adjacent issues, fixes those too, and your one-slice correction becomes a four-file diff nobody reviewed.</p>
+<p>Cap it at three attempts. If a unit fails three corrections the problem is in the plan that produced it, and the loop cannot see the plan.</p>
+<h2>Open the gate on blast radius, not on confidence</h2>
+<p>Most write-ups build a confidence score, set a threshold, and let anything above it through. That is the wrong variable.</p>
+<p>Confidence is the weakest input in that decision, for a reason that is easy to miss: it is the only one the model can influence.</p>
+<p>The strong variable is what happens if the change is wrong. Sort work by how expensive the mistake is to undo:</p>
+<p>Reversible and contained. A copy change, a test, an isolated function with coverage. One bad merge costs a revert, so this lane can open first.</p>
+<p>Reversible but wide. A shared utility, a schema addition, anything a dozen callers touch. Gate on deterministic checks plus a clean trajectory.</p>
+<p>Hard to reverse. Migrations, deletions, anything writing to production data or moving money. This lane does not open, regardless of score.</p>
+<p>That third row is not a threshold set very high. It is a lane that does not open, and the distinction matters because thresholds get adjusted and closed lanes do not.</p>
+<p>Inside an open lane the gate reads evidence in order: deterministic results, then the trajectory of this run, then how often work from this node has been rolled back before, and the model&#x27;s own assessment last.</p>
+<p><img alt="Article image" src="/assets/2026-09-07-loops-and-graphs-how-to-stop-babysitting-agents-and-only-app-ad0258fc37/04.jpg"></p>
+<h2>Where to start on your own work</h2>
+<p>Take one thing you do repeatedly. Draw the splitter, the lanes, the merge, one gate, one back edge.</p>
+<p>Build the gate first. Everything gets easier once something can fail loudly, and a graph without a gate is just a faster way to produce unverified output.</p>
+<p>Then the lanes. Then the learning edge, last, because you cannot derive constraints from accepted results until something is accepting results.</p>
+<p>Put the human on one step, at the point of highest consequence and lowest reversibility.</p>
+<p>Approve the merge. Choose which fixes ship. Not reviewing intermediate output, not confirming each step.</p>
+<p>A human in the middle of a graph becomes the slowest node in it, and the graph runs exactly as fast as a person reading things.</p>
+<p>I put all five layers into a full course, twenty lessons with the templates, the configs and the order to build them in: agent-layers.vercel.app</p>
+<p>Three lines hold the whole discipline. Measure the path, not only the answer it landed on.</p>
+<p>A verdict that does not change what runs next is a report.</p>
+<p>And any failure you do not turn into a permanent constraint, you will meet again.</p>
+<p>Most people will keep tuning one loop and calling it a system.</p>
+<p>The ones who draw the graph around it will run a fleet, and never quite understand why everyone else finds it so hard to keep up.</p>
+<p>If you want the one-page version of the graph layer before anything else, DM me the word Graph.</p>
+<p>Also follow me for more on agent internals, and subscribe to my Telegram channel:</p>
+<p>https://t.me/+75nMf005jRpjMDU1</p></div><a class="source" href="https://x.com/hanakoxbt/status/2091515787366306154" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

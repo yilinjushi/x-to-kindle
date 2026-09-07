@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Graph Engineering with Claude. What It Is and How to Actually Use It">
+  <title>Graph Engineering with Claude. What It Is and How to Actually Use It · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Mahax @Mahaximus_ · 2026-09-07</div><div class="prose"><h1>Graph Engineering with Claude. What It Is and How to Actually Use It</h1>
+<p>A few weeks ago the whole AI field was talking about loops. Then graphs showed up on everyone&#x27;s timeline and loops were suddenly old news overnight.</p>
+<p>The shift happened fast. But most of what gets posted about graph engineering is either too vague to be useful or too technical to actually follow. Nobody explains what a graph actually is before they start telling you to build one.</p>
+<p>By the end of this article you will know what a graph actually is, how to recognize one hiding inside your current workflow. The single pattern that makes them powerful, where they quietly fail, and how to build one yourself with Claude in a couple of minutes.</p>
+<h2>What a graph actually is</h2>
+<p>Most people hear &quot;graph&quot; and think of a chart with bars or lines. That&#x27;s not this. A graph in the context of AI work is simpler than it sounds: it&#x27;s a map of which jobs need to happen and what each one depends on.</p>
+<p>Two things make up the whole thing.</p>
+<p>A node is a unit of work. One agent, one task, one thing going in and one thing coming out. Not &quot;research everything about this topic and then write a summary and also check the sources.&quot; Just one of those. The smaller and more defined the job, the more useful the node.</p>
+<p>An edge is a dependency. It connects two nodes when the second one genuinely needs what the first one produced. Not &quot;these two things happen in sequence.&quot; Only when the output of one actually feeds the input of the other.</p>
+<p><img alt="Article image" src="/assets/2026-09-07-graph-engineering-with-claude.-what-it-is-and-how-to-actuall-3e56978eb5/01.jpg"></p>
+<p>That&#x27;s it. Nodes do the work. Edges carry what moves between them. Everything else in graph engineering is just applying those two ideas at different scales.</p>
+<h2>Your current workflow is already a graph</h2>
+<p>Here is the thing most people miss when they first hear about graph engineering: you are already doing it. Just badly.</p>
+<p>When you write a prompt like &quot;research this topic, then summarize what you find, then write a draft based on the summary&quot; - that is a graph. A single unbranching chain where every step waits for the one before it to finish. One head, one line, one thing at a time.</p>
+<p>It runs correctly. It also runs slowly, and it breaks easily. If the summary step produces something unusable, the draft step fails. If the research step takes too long, everything behind it waits. A chain has no redundancy and no flexibility - it is the simplest possible graph, and simple is not the same as efficient.</p>
+<p>The first move in graph engineering is not learning something new. It is looking at what you already have and asking: does every step actually need to wait for the one before it? Because most of the time, it doesn&#x27;t.</p>
+<p>❌ Linear chain:</p>
+<p>Research → Summarize → Write → Check sources → Format → Publish</p>
+<p>Six steps in a line. Each one waiting. Total time: the sum of all six.</p>
+<p>✅ Redrawn as a graph:</p>
+<p>Research + Check sources (run at the same time) → Summarize → Write + Format (run at the same time) → Publish</p>
+<p>Same work. Less waiting. Finishes faster because independent jobs stop queuing behind each other.</p>
+<h2>The fake-edge test</h2>
+<p>Once you can see your workflow as a graph, the next move is finding the edges that shouldn&#x27;t be there.</p>
+<p>Look at your current workflow step by step. At each arrow, ask one question: does this step actually need the result of the one before it? Not &quot;does it come after it&quot; - does it genuinely use what the previous step produced?</p>
+<p>If yes, the edge is real. Keep the order.</p>
+<p>If no, there is no edge. Those two jobs have nothing to do with each other and the wait between them is pure waste.</p>
+<p>Take a simple example: &quot;review file A for bugs, then review file B for bugs.&quot; It reads like a sequence. But the review of file B never looks at what file A returned. They only run one after the other because that is the order you typed them in. Run them at the same time and the whole thing finishes in the time of the slower one - not the two added together.</p>
+<p>Run this test on any workflow in under five minutes:</p>
+<ul>
+<li>
+<p>Write out every step as a box</p>
+</li>
+<li>
+<p>Draw an arrow between each pair of consecutive steps</p>
+</li>
+<li>
+<p>For each arrow, ask: does data from step A actually go into step B?</p>
+</li>
+<li>
+<p>If yes - keep the arrow. Real dependency</p>
+</li>
+<li>
+<p>If no - delete the arrow. That&#x27;s a fake edge</p>
+</li>
+<li>
+<p>Everything with no incoming arrow can start immediately</p>
+</li>
+<li>
+<p>Everything with no outgoing arrow is a final output</p>
+</li>
+</ul>
+<p>You will find two or three fake edges in almost any workflow you draw. Each one is time you are giving away for free.</p>
+<h2>The Diamond</h2>
+<p>Once you start removing fake edges, one pattern shows up more than any other. It&#x27;s called the diamond and it&#x27;s the shape that makes graphs worth using.</p>
+<p>The idea is simple. One node fans out into several parallel nodes. Those parallel nodes all feed into one final node that pulls their outputs together. Draw it out and it looks like a diamond.</p>
+<p><img alt="Article image" src="/assets/2026-09-07-graph-engineering-with-claude.-what-it-is-and-how-to-actuall-3e56978eb5/02.jpg"></p>
+<p>Here is what that looks like in practice. Say you are researching a topic to write about. The linear version looks like this: search → read source 1 → read source 2 → read source 3 → synthesize.</p>
+<p>The diamond version: search → [read source 1 + read source 2 + read source 3 in parallel] → synthesize.</p>
+<p>The final synthesis node gets the same inputs either way. But the time it waits is the length of the slowest source read - not all three added together.</p>
+<p>The diamond works because synthesis genuinely depends on all three reads. Those are real edges. But the three reads have no dependency on each other. Those connections don&#x27;t exist. So you run them at the same time and the only wait is at the end, where the wait is unavoidable anyway.</p>
+<p>This is why the diamond shows up everywhere once you start looking. Research pipelines. Code review. Market analysis. Any time you have a &quot;gather from multiple places, then combine&quot; shape in your work, you have a diamond. The gathering is parallel. The combining is the convergence point.</p>
+<p>The pattern has two rules. First, the parallel nodes must be genuinely independent - no fake edges disguised as real ones. Second, the convergence node must actually need all of them. If it only needs one, the others are wasted work.</p>
+<p>Get both of those right and the diamond is the fastest shape a workflow can take.</p>
+<h2>Where graphs quietly fail</h2>
+<p>The diamond is clean in theory. In practice it breaks in two specific places, and both are easy to miss.</p>
+<p>The first is a bad node going undetected. When three sources run in parallel and one of them returns garbage - a hallucination, an empty result, a misread file, that bad output flows straight into your synthesis node alongside the two good ones.</p>
+<p>The synthesis node doesn&#x27;t know one of its inputs is wrong. It combines everything and produces a confident answer built on bad material. The parallel structure that made things fast also removed the natural checkpoints where you would have noticed the problem.</p>
+<p>The second is a cascade. In a linear chain, a bad step produces a bad output and you see it immediately. In a graph with converging paths, the bad output gets mixed with good outputs and the error becomes harder to trace. By the time the final node responds, the damage is diluted and invisible.</p>
+<p>Both problems have the same fix: a checker node.</p>
+<p>A checker node sits between your parallel layer and your convergence point. Its only job is to evaluate each output before it moves forward. It doesn&#x27;t synthesize, doesn&#x27;t write, doesn&#x27;t do any of the main work. It asks: is this output usable? If yes, pass it through. If no, flag it, retry, or drop it before it poisons the next step.</p>
+<p>The five things a checker node should catch:</p>
+<ul>
+<li>
+<p>Empty or null outputs - a node that returned nothing useful</p>
+</li>
+<li>
+<p>Outputs that contradict each other in ways that can&#x27;t both be true</p>
+</li>
+<li>
+<p>Outputs that are off-topic relative to the original task</p>
+</li>
+<li>
+<p>Confidence signals that are too low to be reliable</p>
+</li>
+<li>
+<p>Format errors that will break the synthesis node&#x27;s parsing</p>
+</li>
+</ul>
+<p>A graph without a checker node is a graph that assumes everything upstream worked. That assumption fails more often than you&#x27;d expect.</p>
+<h2>Static graphs vs. dynamic graphs</h2>
+<p>Everything so far has assumed you know the shape of your graph before you start. You define the nodes, draw the edges, and run it. That works for repeatable workflows where the structure doesn&#x27;t change.</p>
+<p>But a lot of real work doesn&#x27;t fit that shape. You start a research task and discover halfway through that one source requires three additional lookups. You start a code review and find that one file needs deeper analysis than the others. The structure you needed wasn&#x27;t knowable at the start - it only became clear once the work was underway.</p>
+<p>That&#x27;s where dynamic graphs come in. Instead of a fixed structure defined upfront, the graph builds itself as it runs. A node completes its work, looks at what it found, and decides what nodes should come next. The graph isn&#x27;t planned - it&#x27;s grown.</p>
+<p>The difference matters in practice. A static graph is fast and predictable. You know exactly what will run, in what order, and how long it should take. A dynamic graph is flexible and handles the unexpected. But it&#x27;s harder to debug when something goes wrong, because the structure that ran isn&#x27;t the one you originally drew.</p>
+<p>Knowing which one you need before you start saves a lot of backtracking:</p>
+<ul>
+<li>
+<p>Use a static graph when the task is repeatable and the structure is the same every time</p>
+</li>
+<li>
+<p>Use a static graph when speed and predictability matter more than flexibility</p>
+</li>
+<li>
+<p>Use a dynamic graph when the scope of the work depends on what you find along the way</p>
+</li>
+<li>
+<p>Use a dynamic graph when some nodes need to decide what comes next based on their output</p>
+</li>
+<li>
+<p>Use a static graph first, always - switch to dynamic only when you hit a wall the static version can&#x27;t handle</p>
+</li>
+<li>
+<p>Never use a dynamic graph for anything where you need to audit exactly what ran and why</p>
+</li>
+</ul>
+<p>Most workflows that feel like they need a dynamic graph actually just need a better-designed static one. The dynamic version is more powerful and harder to control. Reach for it second, not first.</p>
+<h2>What the difference actually looks like</h2>
+<p>Theory is easy to follow in the abstract. Here is the same task run two ways so you can see what actually changes.</p>
+<p>The task: analyze three competitor products and write a comparison.</p>
+<p>Without a graph:</p>
+<p>Research competitor A → Research competitor B → Research competitor C → Compare all three → Write draft → Check facts → Format output</p>
+<p>Seven steps, all sequential. Total time is the sum of every step. If step two takes longer than expected, everything behind it waits.</p>
+<p>With a graph:</p>
+<p>[Research A + Research B + Research C] → Checker node → Compare → [Write draft + Format output] → Final check</p>
+<p>Five logical stages. The three research steps run at the same time. The write and format steps run at the same time. The checker catches bad research before it reaches the comparison. Total time collapses.</p>
+<p>The output is the same. The structure is not.</p>
+<p>Here is where each approach wins and loses:</p>
+<p>Linear</p>
+<p>Graph</p>
+<p>Setup time</p>
+<p>Low</p>
+<p>Higher</p>
+<p>Total runtime</p>
+<p>Slow</p>
+<p>Fast</p>
+<p>Easy to debug</p>
+<p>Yes</p>
+<p>Harder</p>
+<p>Handles errors mid-run</p>
+<p>Poorly</p>
+<p>Well (checker node)</p>
+<p>Works for one-off tasks</p>
+<p>Yes</p>
+<p>Overkill</p>
+<p>Works for repeatable workflows</p>
+<p>Yes</p>
+<p>Better</p>
+<p>Scales as task grows</p>
+<p>No</p>
+<p>Yes</p>
+<p>The table makes it look like graphs win everywhere except setup and debugging. That&#x27;s roughly true for anything you run more than once. For a one-off task you&#x27;ll never repeat, the linear version is almost always faster to build and run.</p>
+<p>The graph is worth it when the task is big enough that the time savings compound, or when errors in the middle are expensive enough that the checker node pays for itself.</p>
+<h2>How to build one with Claude</h2>
+<p>Everything above is still just a mental model until you give Claude something it can execute. This is where it becomes practical.</p>
+<p>Claude Code has a workflow keyword that changes how it processes your instructions. Without it, Claude reads your prompt as a sequence and runs each step one after another. With it, Claude parses the structure, identifies which nodes have no dependencies on each other, and runs those in parallel automatically. You describe the graph. Claude figures out the execution order.</p>
+<p>A basic workflow looks like this:</p>
+<p>python
+workflow: research-and-compare</p>
+<p>nodes:
+  research_a:
+    task: &quot;Research competitor A&#x27;s pricing, features, and recent news&quot;
+    output: competitor_a.md</p>
+<p>research_b:
+    task: &quot;Research competitor B&#x27;s pricing, features, and recent news&quot;
+    output: competitor_b.md</p>
+<p>research_c:
+    task: &quot;Research competitor C&#x27;s pricing, features, and recent news&quot;
+    output: competitor_c.md</p>
+<p>checker:
+    task: &quot;Review each research file. Flag any that are incomplete or off-topic.&quot;
+    depends_on: [research_a, research_b, research_c]
+    output: checker_report.md</p>
+<p>compare:
+    task: &quot;Using the research files, write a structured comparison across price, features, and positioning.&quot;
+    depends_on: [checker]
+    output: comparison.md</p>
+<p><img alt="Article image" src="/assets/2026-09-07-graph-engineering-with-claude.-what-it-is-and-how-to-actuall-3e56978eb5/03.jpg"></p>
+<p>Three things to notice. First, research_a, research_b, and research_c have no depends_on - Claude runs all three at the same time the moment the workflow starts. Second, checker lists all three as dependencies, so it waits until all three finish before it runs. Third, compare depends only on checker, not directly on the research nodes - the checker is the gatekeeper</p>
+<p>That depends_on line is the only thing you need to understand to design any graph. No dependencies means parallel. A dependency means wait. Everything else is just deciding which nodes need what.</p>
+<h2>Ready-to-paste prompts</h2>
+<p>The workflow syntax from the last section works across any repeatable task. Here are four you can drop straight into Claude Code and adapt.</p>
+<p>Competitive research:</p>
+<p>python
+workflow: competitive-research</p>
+<p>nodes:
+  research_a:
+    task: &quot;Research [Company A]. Cover: pricing, core features, recent product changes, public sentiment. Output a structured summary.&quot;
+    output: company_a.md</p>
+<p>research_b:
+    task: &quot;Research [Company B]. Cover: pricing, core features, recent product changes, public sentiment. Output a structured summary.&quot;
+    output: company_b.md</p>
+<p>research_c:
+    task: &quot;Research [Company C]. Cover: pricing, core features, recent product changes, public sentiment. Output a structured summary.&quot;
+    output: company_c.md</p>
+<p>synthesize:
+    task: &quot;Using company_a.md, company_b.md, company_c.md — write a comparison table and a one-paragraph positioning summary for each.&quot;
+    depends_on: [research_a, research_b, research_c]
+    output: comparison.md</p>
+<p>Multi-file code review:</p>
+<p>python
+workflow: code-review</p>
+<p>nodes:
+  review_auth:
+    task: &quot;Review auth.py for security issues, edge cases, and code quality. Be specific.&quot;
+    output: review_auth.md</p>
+<p>review_api:
+    task: &quot;Review api.py for security issues, edge cases, and code quality. Be specific.&quot;
+    output: review_api.md</p>
+<p>review_db:
+    task: &quot;Review db.py for security issues, edge cases, and code quality. Be specific.&quot;
+    output: review_db.md</p>
+<p>checker:
+    task: &quot;Read all three review files. Flag any issues that appear in more than one file. Note cross-file dependencies that could cause problems.&quot;
+    depends_on: [review_auth, review_api, review_db]
+    output: checker.md</p>
+<p>summary:
+    task: &quot;Using all review files and checker.md, write a prioritized list of fixes — critical first, then medium, then low.&quot;
+    depends_on: [checker]
+    output: final_review.md</p>
+<p>Article research and draft:</p>
+<p>python
+workflow: article-research</p>
+<p>nodes:
+  angle_a:
+    task: &quot;Research [topic] from the angle of [audience A]. What do they care about most? What are the common misconceptions?&quot;
+    output: angle_a.md</p>
+<p>angle_b:
+    task: &quot;Research [topic] from the angle of [audience B]. What do they care about most? What are the common misconceptions?&quot;
+    output: angle_b.md</p>
+<p>examples:
+    task: &quot;Find 3 specific real-world examples of [topic] that most people haven&#x27;t heard of. No generic case studies.&quot;
+    output: examples.md</p>
+<p>draft:
+    task: &quot;Using angle_a.md, angle_b.md, and examples.md — write a draft that speaks to both audiences and opens with one of the specific examples.&quot;
+    depends_on: [angle_a, angle_b, examples]
+    output: draft.md</p>
+<p>Replace anything in brackets. The structure stays the same regardless of what you put inside the nodes.</p>
+<h2>What changes when you think in graphs</h2>
+<p>The workflows in the last two sections are useful immediately. But the bigger shift is what happens after you use them for a few weeks.</p>
+<p>You stop reading a task as a list of things to do and start reading it as a set of dependencies. The first question stops being &quot;what do I do first?&quot; and becomes &quot;what actually needs to wait for what?&quot; Most of the time the answer is: less than you assumed.</p>
+<p>The change shows up in how you write prompts too. A linear prompt tells Claude what to do in order. A graph prompt tells Claude what each piece needs and lets it figure out the order. That&#x27;s a smaller prompt, easier to edit, and it doesn&#x27;t break when you swap out one node.</p>
+<p>The last thing worth adding to any workflow you run more than twice is a CLAUDE.md entry. This tells Claude how you want graphs handled in that project - your defaults for output format, checker behavior, and error handling, so you don&#x27;t rebuild that context every session:</p>
+<p>python</p>
+<h1>Workflow defaults</h1>
+<p>When running a workflow:
+- All nodes without depends_on run in parallel by default
+- Checker nodes should flag incomplete outputs, not silently pass them
+- Output files go to /outputs with the node name as filename
+- If a node fails, pause and report before continuing
+- Never merge outputs from flagged nodes into the final synthesis</p>
+<p>One file, set once. Every workflow you run in that project inherits it.</p>
+<p>The graphs you draw now will look obvious in six months. Not because they were easy - because once you see dependencies clearly, you can&#x27;t unsee them. The linear version of any workflow starts to look like what it is: a graph with all its edges faked.</p>
+<p>At the start of this article I said most of what gets posted about graph engineering is either too vague or too technical. I meant it, and I tried to thread the gap.</p>
+<p>You now know what a graph is. You know how to find the one hiding inside your current workflow. You know the fake-edge test, the diamond, the checker node, and when to reach for a dynamic graph instead of a static one. You have the syntax to build one in Claude Code and four prompts you can use today.</p>
+<p>That is the whole thing. There is no deeper layer of graph theory you need before any of this is useful.</p>
+<p>The one thing I&#x27;d push back on if someone told me not to include it: the fake-edge test. Run it on one workflow this week. Just one. Draw out the steps, go through the arrows, and ask which ones are actually carrying data. You will find at least one that isn&#x27;t.</p>
+<p>That&#x27;s the moment the whole model clicks. Not when you understand the theory - when you find the first fake edge in something you built yourself and realize you&#x27;ve been waiting on it for months.</p>
+<p>The rest follows from there.</p></div><a class="source" href="https://x.com/Mahaximus_/status/2082442856417956173" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>
