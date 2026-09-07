@@ -55,16 +55,16 @@ jobs:
           --title "${{ inputs.title }}"
           --source "${{ inputs.source || 'iphone_shortcut' }}"
 
-      - name: Commit sent-web history updates
+      - name: Commit sent-web history and archive updates
         shell: bash
         run: |
-          if git diff --quiet -- state/sent_web_articles.json; then
-            echo "No sent-web history changes to commit."
+          git add state/sent_web_articles.json archive/
+          if git diff --cached --quiet; then
+            echo "No sent-web history or archive changes to commit."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add state/sent_web_articles.json
-          git commit -m "Update sent web article history"
+          git commit -m "Update sent web article history and archive"
           git pull --rebase
           git push
