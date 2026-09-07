@@ -12,6 +12,7 @@ import json
 import subprocess
 from pathlib import Path
 from playwright.sync_api import sync_playwright
+from archive import save_article_archive
 from app_config import (
     BOOKMARKS_URL,
     CHROME_EXE,
@@ -196,6 +197,21 @@ def main():
                     )
                     results.append((title, None, 0))
                     continue
+
+                n_images = sum(1 for x in items if x["type"] == "image")
+                full_text = "\n\n".join(
+                    x["text"] for x in items if x["type"] != "image" and x.get("text")
+                )
+                archive_path = save_article_archive(
+                    url=url,
+                    title=title,
+                    text=full_text,
+                    author=author,
+                    source="x_bookmark",
+                    chars=total_chars,
+                    n_images=n_images,
+                )
+                print(f"  Archived: {archive_path}")
 
                 filename = f"{title_to_filename(title)}-{status_id_from_url(url)}.docx"
                 filepath = str(Path(outdir) / filename)
