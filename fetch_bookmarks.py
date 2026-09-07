@@ -14,6 +14,7 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 from archive import save_article_archive
 from app_config import (
+    ARCHIVE_DIR,
     BOOKMARKS_URL,
     CHROME_EXE,
     KINDLE_EMAIL,
@@ -131,6 +132,7 @@ def main():
     target_count = TARGET_COUNT
     send_to = KINDLE_EMAIL or None
     outdir = OUTDIR
+    archive_only = "--archive-only" in sys.argv[1:]
 
     args = sys.argv[1:]
     for i, arg in enumerate(args):
@@ -185,12 +187,12 @@ def main():
                 total_chars = sum(len(x.get("text", "")) for x in items if x["type"] != "image")
                 print(f"  {title!r} | {n_txt} text blocks, {n_img} images, {total_chars} chars")
 
-                if url in sent_history:
+                if url in sent_history and not archive_only:
                     print("  SKIP: this URL was already sent before.")
                     results.append((title, None, 0))
                     continue
 
-                if not is_long_article(content, total_chars):
+                if not archive_only and not is_long_article(content, total_chars):
                     print(
                         f"  SKIP: not a long article "
                         f"(needs X Article or at least {MIN_TEXT_CHARS} chars)."
@@ -214,6 +216,10 @@ def main():
                     cookies={c["name"]: c["value"] for c in context.cookies()},
                 )
                 print(f"  Archived: {archive_path}")
+
+                if archive_only:
+                    results.append((title, str(archive_path), n_images))
+                    continue
 
                 filename = f"{title_to_filename(title)}-{status_id_from_url(url)}.docx"
                 filepath = str(Path(outdir) / filename)
@@ -254,7 +260,10 @@ def main():
     print(f"\n{'='*50}")
     print(f"Done. {len(results)} article(s) processed.")
     succeeded = [(t, f, n) for t, f, n in results if f]
-    print(f"  Saved:  {len(succeeded)} DOCX file(s) → {outdir}")
+    if archive_only:
+        print(f"  Archived: {len(succeeded)} article(s) → {ARCHIVE_DIR}")
+    else:
+        print(f"  Saved:  {len(succeeded)} DOCX file(s) → {outdir}")
     if send_to:
         print(f"  Emails: sent individually to {send_to}")
         print(f"  History: {len(sent_history)} sent URL(s) tracked in {SENT_HISTORY_FILE}")

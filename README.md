@@ -11,6 +11,7 @@ Every extracted article is also preserved as Markdown with locally downloaded im
 - Rebuild locally: `python build_site.py`
 - Cloudflare Pages output directory: `site`
 - No build command is required because the delivery workflows regenerate the HTML before committing.
+- To publish recent bookmarks without sending them to Kindle, run the `Publish Bookmarks To Blog` workflow.
 
 ## What counts as a long article
 
