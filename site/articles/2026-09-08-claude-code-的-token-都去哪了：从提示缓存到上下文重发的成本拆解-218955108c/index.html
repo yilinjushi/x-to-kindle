@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Claude Code 的 token 都去哪了：从提示缓存到上下文重发的成本拆解">
+  <title>Claude Code 的 token 都去哪了：从提示缓存到上下文重发的成本拆解 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">meng shao @shao__meng · 2026-09-08</div><div class="prose"><h1>Claude Code 的 token 都去哪了：从提示缓存到上下文重发的成本拆解</h1>
+<p>Maximizing the value of your Claude Code sessions</p>
+<p>https://claude.com/blog/maximizing-the-value-of-your-claude-code-sessions</p>
+<p>Claude 这篇 Blog 表面上这是一篇&quot;省 token 的技巧清单&quot;，但它的真正价值在于把 Claude Code 的成本模型讲透：一次会话的开销是怎么产生的、钱花在了哪个环节、哪些操作会让成本突然跳升。理解了这个模型，那些技巧就不再是需要死记的规则，而是自然推导出来的结果。</p>
+<p>开头点出了一个思维转变：过去的编程工具是固定费用（或免费），修一个测试和修五十个测试成本相同，所以&quot;单个任务&quot;没有价格。而在 agentic coding 工具里，同一个任务、同样的结果，可以花掉不同数量的 token——取决于你怎么用，Lydia 特别强调：效率不是指用更少的 token，是让用掉的 token 都花在你真正要解决的问题上。</p>
+<p><img alt="Article image" src="/assets/2026-09-08-claude-code-的-token-都去哪了：从提示缓存到上下文重发的成本拆解-218955108c/01.jpg"></p>
+<h2>第一部分：一个 token 的价格由什么决定</h2>
+<p>三个因素：模型、输入/输出方向、是否命中缓存。</p>
+<p>模型。 更大的模型对每个 token 做的计算都更多，后面所有的成本都要乘上模型的价格系数。原则很简单：问题真正困难或模糊时用大模型，常规工作用小模型。</p>
+<p><img alt="Article image" src="/assets/2026-09-08-claude-code-的-token-都去哪了：从提示缓存到上下文重发的成本拆解-218955108c/02.jpg"></p>
+<p>输入 token 与输出 token。 这里作者解释了推理的两个阶段。Prefill（预填充）阶段模型读取你的全部上下文——系统提示、CLAUDE.md、你的消息、以及会话中累积的所有文件内容和命令输出，这些是输入 token。Decode（解码）阶段模型逐个生成输出——思考过程、工具调用、你看到的文字。解码是串行的，一个 200 token 的回复就是模型跑 200 次，所以输出的单价大约是输入的 5 倍。</p>
+<p>输出 token 中很大一部分是思考（thinking）token，而 /effort 控制的正是每轮思考的多少。文章给了两个实用提示：/model 和 /effort 的选择会被记住并成为下次会话的默认值，所以在新会话开始时应该确认一下自己&quot;实际在用什么&quot;；如果确定是体力活，MAX_THINKING_TOKENS=0 claude 可以彻底关掉思考，比 /effort low 更低一档（Fable 5 除外）。</p>
+<p><img alt="Article image" src="/assets/2026-09-08-claude-code-的-token-都去哪了：从提示缓存到上下文重发的成本拆解-218955108c/03.jpg"></p>
+<p>提示缓存（Prompt caching）。 这是全文最核心的技术段落。原理是：如果一个请求的开头和服务器刚处理过的请求完全相同，那段共同前缀的计算状态可以复用，只需要对后面新增的部分做 prefill。缓存读取的价格是正常输入的 0.1 倍，缓存写入最高到 2 倍——但写入只发生一次，之后每一轮都是 0.1 倍的读取。</p>
+<p>Lydia 用一个具体例子拆解了&quot;修复 utils.test.ts 中失败的测试&quot;这个小任务，实际上会产生 5 次请求：</p>
+<ul>
+<li>
+<p>发送系统提示 + CLAUDE.md + 你的消息（全部 prefill 并写入缓存）</p>
+</li>
+<li>
+<p>模型请求读取测试文件 → 文件内容追加到对话 → 整个对话再次发送（前面的从缓存读取，只有新增部分全价）</p>
+</li>
+<li>
+<p>模型请求读取被测文件 → 同样的过程</p>
+</li>
+<li>
+<p>模型执行 Edit → 同样的过程</p>
+</li>
+<li>
+<p>模型运行 npm test → 测试输出追加 → 同样的过程</p>
+</li>
+<li>
+<p>测试通过，模型给出总结，没有工具调用，结束</p>
+</li>
+</ul>
+<p>每一次请求都包含了到那时为止的完整对话。一个典型的轮次是极不对称的：几万 token 进去，几百 token 出来。但只有当轮新增的部分按全价 prefill。所以每轮的账单就是：历史部分的缓存读取 + 新增部分的全价输入 + 输出。作者提醒，订阅用户虽然看不到这些价格，但同样的请求在消耗你的额度。</p>
+<p>什么会打破缓存。 缓存必须从请求最开头逐字匹配，请求的顺序永远是：工具定义 → 系统提示 → 对话（CLAUDE.md 在最前面）。任何改变前部内容或改变缓存键的操作，都会导致后面的一切重新 prefill：</p>
+<ul>
+<li>
+<p>/model：每个模型有独立的缓存，切换后整个对话按全价重算。opusplan 模式也在其中，因为它进出 plan mode 时会切换模型。</p>
+</li>
+<li>
+<p>/effort：effort 是缓存键的一部分，同样的后果。这就是为什么在对话中途切换这两项时 Claude Code 会要求确认。</p>
+</li>
+<li>
+<p>Fast mode：也是键的一部分，而且重新 prefill 是按 fast mode 的价格算。要开就在会话开头开；关掉则不影响缓存。</p>
+</li>
+<li>
+<p>/compact：对话被替换成更短的摘要，缓存不再匹配（系统提示部分保留）。生成摘要本身的开销，只要旧对话还在缓存里就很便宜——所以在长时间离开之前 compact 比回来之后 compact 便宜得多。</p>
+</li>
+<li>
+<p>时间：订阅用户缓存一小时后过期，API key 用户是五分钟（ENABLE_PROMPT_CACHING_1H=1 可延长到一小时）。恢复旧会话几乎必然是缓存未命中，因为系统提示在启动时也会重建。</p>
+</li>
+</ul>
+<p>Lydia 的结论不是&quot;永远不要切换&quot;，而是有便宜的时机（会话开始、/clear 之后）和昂贵的时机（长对话中途）。还有一个很实用的对比：如果最近几轮走偏了，用 /rewind 回退到走偏之前，而不是 /compact。rewind 只是从尾部截掉几轮，前面的缓存完好，零成本；compact 是重写整个对话，总是有开销。</p>
+<h2>第二部分：一个会话会发送多少 token</h2>
+<p>核心认知：没有任何东西只发送一次。进入对话的每一样东西——读过的文件、命令输出——在之后的每一轮都会被再次发送，直到会话结束。虽然缓存让每次重发很便宜，但便宜不等于零，而且它还占据着模型每轮必须&quot;绕着思考&quot;的上下文空间。</p>
+<p>所以一个会话的成本模型可以归结为三个变量：多少 token 进入了上下文、它们在里面停留了多少轮、你同时开着多少个上下文。</p>
+<p>上下文里有什么。 一部分在你输入任何东西之前就已经存在：工具定义、系统提示、CLAUDE.md、启动时加载的其他内容。建议在新会话里跑一次 /context 看看究竟有什么。CLAUDE.md 应该只保留具体的指令，把工作流相关的内容移到 skills 里（只在使用时加载）。不需要的 MCP server 用 /mcp 关掉。</p>
+<p><img alt="Article image" src="/assets/2026-09-08-claude-code-的-token-都去哪了：从提示缓存到上下文重发的成本拆解-218955108c/04.jpg"></p>
+<p>会话中新增的几乎都是工具结果：Claude 读的文件和运行的命令输出。Claude 读多少取决于它需要自己摸索多少。&quot;测试失败了&quot;这种描述会触发一两次 grep、打开几个文件来确认哪个相关，而这些结果在失去用处之后还会一直留在上下文里。&quot;修复 utils.test.ts 中失败的测试&quot;跳过了搜索，只需要一次 Read；而用 @utils.test.ts 连这次 Read 也省了——文件在发送前就附加到你的消息里，进入第一个请求。</p>
+<p>关于 @-mention 还有一个细节：文件在上下文里占的空间是一样的，所以一次对话只需要提一次。之后再 @ 同一个文件通常会附加第二份副本。</p>
+<p>命令输出是另一个填充上下文的来源。超过 30,000 字符的输出反而没问题，Claude Code 会写入文件、只在对话里放一个简短预览和路径（BASH_MAX_OUTPUT_LENGTH 可调整）。真正的问题是低于这个阈值的输出：一个逐行打印 400 个通过测试的 test runner，这 400 行就成了剩余每一轮的一部分。Claude 通常会自己加 flags 和 tail 来处理，文档里也有一个 hook 可以在命令执行前重写它们。作者建议把你每天在用的两三个命令连同静默参数一起写进 CLAUDE.md（比如 npx vitest run --reporter=dot），每个会话都能省一轮和几百行输出。</p>
+<p>停留多少轮。 一个长会话比同样工作拆成几个短会话贵得多——超出直觉——因为第 40 轮同时在重读前 39 轮。所以不要把一个任务的上下文带进下一个任务：开始新任务时 /clear，同一任务的前半部分完成后 /compact。相关提示：/clear 前用 /rename 以便日后找回；/compact 时告诉它要保留什么，或者在 CLAUDE.md 里放一段固定的 &quot;Compact instructions&quot;；在 1M 上下文模型上如果想要以前那个自动 compact 的安全网，/autocompact 200k 可以把它调回来（需要 v2.1.221+）。</p>
+<p><img alt="Article image" src="/assets/2026-09-08-claude-code-的-token-都去哪了：从提示缓存到上下文重发的成本拆解-218955108c/05.jpg"></p>
+<p>还要注意你不在键盘前时发生的轮次。/loop 每次触发都是它所在会话的一个完整轮次，带着整个对话，如果距上一轮超过一小时还会叠加缓存未命中。建议在另一个终端开新会话来跑 loop。</p>
+<p>Subagents。 把东西留在上下文之外的另一种方式，是让它发生在另一个上下文里。Subagents 有独立的上下文窗口，有自己的系统提示、工具和你的 CLAUDE.md，但没有你的对话。它跑自己的轮次，只有最终答案回到主会话，其余的全部丢弃。</p>
+<p><img alt="Article image" src="/assets/2026-09-08-claude-code-的-token-都去哪了：从提示缓存到上下文重发的成本拆解-218955108c/06.jpg"></p>
+<p>代价是 Subagents 有时要重读主会话已经有的东西，并为此付出自己的轮次。对小任务而言这是纯开销；对产生大量你不需要保留的输出的任务（比如翻一份日志），它就划得来。Claude 通常会自己判断，你也可以直接要求（&quot;在 Subagents 里看这份日志&quot;）。要记住主会话只能拿到 Subagents 选择报告的内容。如果有反复交给 Subagents 的嘈杂任务，给它一个专门的定义并指定 model: haiku（或 sonnet），否则它会跟主会话用同一个模型。</p>
+<h2>第三部分：优先看哪里</h2>
+<p>文末用一张图总结了四个最值钱的关注点，按成本大致排序：</p>
+<p><img alt="Article image" src="/assets/2026-09-08-claude-code-的-token-都去哪了：从提示缓存到上下文重发的成本拆解-218955108c/07.jpg"></p>
+<ul>
+<li>
+<p>会话太长——每轮都在重发之前的一切，这是一个会话大部分 token 的去处。</p>
+</li>
+<li>
+<p>上下文里东西太多——Claude 不需要的文件、嘈杂的命令输出、上一个任务的残留、没在用的 MCP server，全部在每一轮被重发、被思考。</p>
+</li>
+<li>
+<p>模型或 effort 高于任务所需——其他所有成本都要乘上它，而且两个设置会跨会话保留。</p>
+</li>
+<li>
+<p>打破提示缓存——中途切换模型、effort 或 fast mode，或者缓存过期后回来，整个对话按全价重新 prefill。</p>
+</li>
+</ul>
+<h2>阅读后我的几点观察</h2>
+<p>这篇文章的排序值得注意。 直觉上大家最容易关注&quot;模型选择&quot;和&quot;缓存&quot;，但 Lydia 把&quot;会话长度&quot;和&quot;上下文内容&quot;排在前面。原因在于这两项的效应是累积的：每多一轮，前面所有内容都要再算一次。缓存打破虽然单次代价大，但它是偶发的；而长会话的重发是每一轮都在发生。</p>
+<p>几个反直觉的点。 一是&quot;大输出反而安全&quot;——30k 字符以上会自动落文件，真正的麻烦是那些中等大小、恰好塞满上下文的输出。二是 /compact 有时机问题，休息前做比回来后做便宜。三是 /rewind 比 /compact 更便宜，只要问题出在尾部。四是 @-mention 一次就够，重复 @ 会产生副本。</p>
+<p>核心方法论可以概括为一句话： 用&quot;这段内容会被再发多少轮&quot;来衡量一切。文件、命令输出、CLAUDE.md、MCP 定义，进入上下文的每一样东西都要用这个乘数来看。这个视角比任何单条技巧都更有价值。</p>
+<p>对订阅用户同样适用。 博客特别提醒，虽然订阅用户看不到价格，但相同的请求在消耗额度。所以这不是&quot;API 用户才需要关心的成本优化&quot;，更是所有用户的额度管理。</p>
+<p>一个隐含的信息。 文章里提到的多个细节（/autocompact 200k、Fable 5 不支持关闭 thinking、opusplan、1M 上下文模型、订阅用户一小时缓存）反映了 2026 年中 Claude Code 的产品状态。如果你读到这篇文章时版本已经变化,具体参数可能不同，但底层的成本模型——prefill/decode 的不对称、缓存前缀匹配、上下文重发——是推理架构层面的事实，短期内不会变。</p></div><a class="source" href="https://x.com/shao__meng/status/2095463232031133769" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

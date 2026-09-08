@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="300 AGENTS, ONE GRAPH, AND A LOOP THAT EDITS THE LOOP">
+  <title>300 AGENTS, ONE GRAPH, AND A LOOP THAT EDITS THE LOOP · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Mr. Buzzoni @polydao · 2026-09-08</div><div class="prose"><h1>300 AGENTS, ONE GRAPH, AND A LOOP THAT EDITS THE LOOP</h1>
+<p>Loops, graphs, dynamic workflows and routines - in the order you should actually build them</p>
+<p>I have rebuilt the same agent setup four times this year and thrown three of them away. Each version worked for about a week.</p>
+<p>Then the corrections started repeating: the same duplicate company name merged into the wrong node, the same thin source accepted as evidence, the same instruction retyped on Monday that I had already typed on Friday.</p>
+<p>What ended that cycle was giving corrections a place to live.</p>
+<p>A system improves between runs when two things are true. Something carries forward, and something rejects work before it carries forward. Loop engineering gives you the first.</p>
+<p><img alt="Article image" src="/assets/2026-09-08-300-agents,-one-graph,-and-a-loop-that-edits-the-loop-6a029a894e/01.png"></p>
+<p>Graph engineering gives the memory a shape you can query. Routines make it run without you in the room. Kimi K3&#x27;s Agent Swarm supplies enough parallel capacity - up to three hundred agents on one problem - to make the structure worth building in the first place.</p>
+<p>Fourteen steps, in build order. Every one of them is a file you write or a rule you set, and none of them takes longer than an afternoon.</p>
+<p>Phase</p>
+<p>Steps</p>
+<p>What it produces</p>
+<p>I · The spine</p>
+<p>1-4</p>
+<p>One loop that finishes on its own and refuses bad work</p>
+<p>II · The graph</p>
+<p>5-8</p>
+<p>Memory with a shape, instead of a transcript</p>
+<p>III · Dynamic workflows</p>
+<p>9-11</p>
+<p>A run that picks its own scope from the graph state</p>
+<p>IV · Routines and review</p>
+<p>12-14</p>
+<p>It runs on a schedule and edits its own instructions</p>
+<h1>Phase I · The Spine</h1>
+<p><img alt="Article image" src="/assets/2026-09-08-300-agents,-one-graph,-and-a-loop-that-edits-the-loop-6a029a894e/02.png"></p>
+<h2>1 · Pick the task by frequency times reversibility</h2>
+<p>The first task decides whether the system survives its first bad week. You want something that recurs at least weekly, verifies in under a minute, and costs nothing when it comes back wrong.</p>
+<p>Frequency gives you enough runs to see a pattern. Reversibility gives you room to be wrong in public.</p>
+<p>Competitive tracking, changelog monitoring, inbound lead enrichment and source triage all qualify. Anything that sends, pays or publishes does not, at least not this month.</p>
+<h2>2 · Write the stop condition before you write the prompt</h2>
+<p>Agent setups fail on the same axis over and over: they know how to start and have no idea when they are finished. Write the ending first, in a shape a machine can evaluate.</p>
+<p>STOP when either is true:
+  - 40 nodes verified at 2+ independent sources each
+  - 3 full passes completed with no new verified node
+HARD CAPS: 300 agents · 45 min wall clock · 2 retries per node
+ON CAP HIT: write 40-runs record, escalate the unfinished list, exit</p>
+<p>A stop condition made of counts rather than adjectives is the difference between a loop and a runaway process. &quot;Until the research is thorough&quot; is not a stop condition.</p>
+<h2>3 · Move the work step out of the prompt and into SKILL.md</h2>
+<p>A prompt is a sample of your intent. A file is the intent itself, versioned and reusable, and the swarm loads it before anything else.</p>
+<h1>SKILL.md · entity research</h1>
+<p>STEPS: 1 identify → 2 pull primary sources → 3 extract fields → 4 self-check → 5 return
+DECISION RULES:
+  - filings and first-party docs outrank coverage of them
+  - conflicting numbers: return both with dates, never average
+SELF-CHECK before returning:
+  - every field traces to a source line
+  - confidence below 0.6 means return it flagged, not dropped
+OUTPUT: the return schema in SCHEMA.md, nothing else</p>
+<p>The self-check section is what keeps three hundred agents from returning three hundred formats. It is cheap, it runs inside the agent, and it catches the mechanical mistakes before they reach your gate.</p>
+<h2>4 · Add the gate, and make sure the agent does not control it</h2>
+<p>An agent rereading its own output sees every reason it wrote things that way, so it approves. That holds for K3, for Claude, for every model on the board. A working gate has to be something outside the run.</p>
+<p>Gate type</p>
+<p>What it catches</p>
+<p>Cost to build</p>
+<p>Deterministic script</p>
+<p>Schema breaks, missing fields, dead links, count mismatches</p>
+<p>20 minutes, runs free forever</p>
+<p>Fresh-context verifier</p>
+<p>Thin evidence, wrong entity, invented relationships</p>
+<p>One prompt, one extra call per node</p>
+<p>Threshold rule</p>
+<p>Anything below the confidence bar you set in SCHEMA.md</p>
+<p>One line</p>
+<p>Human queue</p>
+<p>The small pile that failed twice</p>
+<p>Your five minutes a day</p>
+<p>Run them in that order. The script is free, so it should reject everything it can before a single token gets spent on verification.</p>
+<h1>Phase II · The Graph</h1>
+<p><img alt="Article image" src="/assets/2026-09-08-300-agents,-one-graph,-and-a-loop-that-edits-the-loop-6a029a894e/03.jpg"></p>
+<h2>5 · Decide what a node is, in writing</h2>
+<p>One line in SCHEMA.md determines every question the system can answer later. A node is a company, or a person, or a filing, or a protocol. Pick one primary type per graph and treat the rest as attributes.</p>
+<h1>SCHEMA.md</h1>
+<p>NODE TYPES:  company · person · filing · vendor · protocol
+EDGE TYPES:  shared_investor · shared_vendor · shared_filing
+             depends_on · supersedes · contradicts
+THRESHOLD:   drop candidate edges below 0.6 confidence
+VERIFIED:    a node counts at 2 independent sources</p>
+<p>Write it once and every future run against every market produces graphs that merge and compare the same way.</p>
+<h2>6 · Write the alias table before the first launch</h2>
+<p>&quot;Block&quot;, &quot;Square&quot; and &quot;Block Inc&quot; arriving as three nodes splits one cluster into three, and every query you run afterward inherits that error. Ten minutes of aliases.csv protects a run that puts three hundred agents in the field.</p>
+<p>It lives above the graph, not inside it, because it is an input to every future launch. Each duplicate that slips through gets fixed here once.</p>
+<p>canonical,alias
+Block Inc,Block
+Block Inc,Square
+Alphabet Inc,Google</p>
+<h2>7 · Fix the return schema so the merge stays deterministic</h2>
+<p>Three hundred agents replying in prose overflows any orchestrator you point them at. Three hundred agents replying in a fixed shape merge without a judgment call and cost a fraction of the tokens.</p>
+<p>RETURN (per agent, nothing else):
+  node_id · label · type
+  sources: [max 3, url + date]
+  candidate_edges: [target label + relation type + evidence line]
+  confidence: 0-1</p>
+<p><img alt="Article image" src="/assets/2026-09-08-300-agents,-one-graph,-and-a-loop-that-edits-the-loop-6a029a894e/04.png"></p>
+<h2>8 · Land every node before you draw a single edge</h2>
+<p>A sequential tool notices connections on the way through and tilts the whole map toward whatever it read first.</p>
+<p>The swarm materializes the complete node set, then reasons across all of it at once. Keep that ordering, and give every edge a source line:</p>
+<p>{ &quot;from&quot;: &quot;n041&quot;, &quot;to&quot;: &quot;n077&quot;, &quot;type&quot;: &quot;shared_processor&quot;,
+  &quot;evidence&quot;: &quot;sec:0001 p.14&quot;, &quot;confidence&quot;: 0.86 }</p>
+<p>The evidence field is what lets you walk a client through a claim instead of asking them to trust it.</p>
+<h1>Phase III · Dynamic Workflows</h1>
+<p>This is the phase people skip, and it is where a static automation turns into something that responds to its own state.</p>
+<h2>9 · Make the launch block a query, not a list</h2>
+<p>A fixed list of forty companies is a script. A launch block that reads the graph first is a workflow, because next week it dispatches a different set of agents without you editing anything.</p>
+<p>That last clause is the whole point of having a graph underneath: the system ranks its own work by structural importance instead of by row order.</p>
+<p>LAUNCH: dispatch one agent per node WHERE
+  status = unverified
+  OR last_checked &gt; 30 days
+  OR inbound_edges &gt;= 3 AND confidence &lt; 0.8
+CAP: 300. If the query returns more, take the highest inbound_edges first.</p>
+<h2>10 · Route by node state instead of running one path for everything</h2>
+<p>Node state</p>
+<p>Route</p>
+<p>Why</p>
+<p>Verified, fresh</p>
+<p>Skip entirely</p>
+<p>Already paid for, no reason to re-research</p>
+<p>Verified, stale</p>
+<p>One agent, delta check only</p>
+<p>Cheap, catches what changed</p>
+<p>Thin (1 source)</p>
+<p>One agent, sources only</p>
+<p>Targeted, not a full rerun</p>
+<p>Contradicted</p>
+<p>Two agents with different starting sources</p>
+<p>Disagreement needs independent looks</p>
+<p>New</p>
+<p>Full research pass</p>
+<p>Nothing to reuse yet</p>
+<p>This table is why the second run costs a fraction of the first. Skipping settled work is the entire economics of the setup.</p>
+<p><img alt="Article image" src="/assets/2026-09-08-300-agents,-one-graph,-and-a-loop-that-edits-the-loop-6a029a894e/05.png"></p>
+<h2>11 · Branch on the verdict, and cap the retries</h2>
+<p>gate pass         → merge into 20-graph, mark verified
+gate fail (1st)   → retry once, with the failure reason appended to the task
+gate fail (2nd)   → write to 30-queries/needs-human.md, stop touching it
+script fail       → never retried, the return was malformed, log and move on</p>
+<p>Retrying a failure without telling the agent what failed is how a loop burns a budget on the same mistake. Passing the reason back turns a retry into a correction.</p>
+<h1>Phase IV · Routines and the Review Loop</h1>
+<p><img alt="Article image" src="/assets/2026-09-08-300-agents,-one-graph,-and-a-loop-that-edits-the-loop-6a029a894e/06.png"></p>
+<h2>12 · Schedule it, then add the event trigger</h2>
+<p>ROUTINE weather-check
+  schedule: Mon 07:00 Europe/Warsaw
+  launch:   00-launches/mobile-payments.md
+  budget:   120 agents, 30 min
+  on-finish: write 40-runs record, post the diff to me
+TRIGGER on new filing in the watched set → run the same launch, scoped to that entity</p>
+<p>The schedule sets a floor and the event trigger handles the spikes.</p>
+<p>Match the interval to how fast the underlying data actually moves; a market that changes monthly does not need a daily run, and paying for one is the most common way people conclude that agents are expensive.</p>
+<h2>13 · Give corrections a permanent home in CONSTRAINTS.md</h2>
+<p>This file is the reason the system improves rather than merely repeats. Every time you correct something, the correction goes here instead of into a chat message that disappears.</p>
+<h1>CONSTRAINTS.md</h1>
+<p>2026-08-19 · press releases are not independent sources. Two releases = 1 source.
+2026-08-24 · &quot;acquired by&quot; needs a filing or a company statement, never coverage.
+2026-08-29 · subsidiaries roll up to the parent node unless they file separately.</p>
+<p>Loaded at the top of every launch, three lines long at week one and thirty by month three. Each one is a mistake that will not be made again by any agent in any future run.</p>
+<h2>14 · Run the meta-loop that edits your own files</h2>
+<p>The last step is the one that makes the whole thing self-improving. Once a week, one agent reads the run history and proposes changes to the files you own.
+Keep the approval step. An agent that can edit its own constraints without review will eventually edit away the constraint that was inconvenient, and it will be able to explain why that was reasonable.</p>
+<p>WEEKLY REVIEW (one agent, fresh context):
+  read: 40-runs/* from the last 7 days
+  find: failure reasons appearing 2+ times
+        nodes escalated to human more than once
+        alias collisions caught at merge
+  propose: edits to SKILL.md, SCHEMA.md, aliases.csv, CONSTRAINTS.md
+  output:  a diff. You approve or reject. It never writes to those files itself.</p>
+<p><img alt="Article image" src="/assets/2026-09-08-300-agents,-one-graph,-and-a-loop-that-edits-the-loop-6a029a894e/07.jpg"></p>
+<h2>The Files, in One Place</h2>
+<p>graph-workspace/
+├── SKILL.md          you write it    · the procedure, loaded first
+├── SCHEMA.md         you write it    · node types, edge types, thresholds
+├── CONSTRAINTS.md    you write it    · corrections that carry forward
+├── aliases.csv       you write it    · canonical names, checked before merge
+├── 00-launches/      you write it    · one launch query per question
+├── 10-returns/       the swarm writes
+├── 20-graph/         the swarm writes · nodes.jsonl · edges.jsonl · graph.md
+├── 30-queries/       you ask, it answers · includes needs-human.md
+└── 40-runs/          append only     · the input to step 14</p>
+<p>One author per directory. Numeric prefixes fix the write order, so returns never overwrite launches and the graph never overwrites returns.</p>
+<p><img alt="Article image" src="/assets/2026-09-08-300-agents,-one-graph,-and-a-loop-that-edits-the-loop-6a029a894e/08.jpg"></p>
+<p>40-runs is append only, because it is the file that answers &quot;why does the graph say that&quot; six weeks later.</p>
+<h2>What It Costs and What It Pays</h2>
+<p>Channel</p>
+<p>What it pays</p>
+<p>What you need standing first</p>
+<p>A market map sold as a deliverable</p>
+<p>Replaces an analyst contract that runs into four figures, delivered in an afternoon</p>
+<p>One graph of a market you know, built end to end</p>
+<p>Retainer on a live graph</p>
+<p>Monthly fee to re-run, flag new edges, re-verify what moved</p>
+<p>The first client&#x27;s graph already running on a schedule</p>
+<p>The workspace as a product</p>
+<p>The fourteen steps packaged for someone else&#x27;s domain</p>
+<p>This structure, tested on two different markets</p>
+<p>The third one is the actual business. The steps do not change between domains; the schema and the alias table do.</p>
+<p>Anyone who has built two of these can build the third for someone else in a morning, and step 14 means the one they hand over keeps getting better after they walk away.</p>
+<h2>The Short Version</h2>
+<p>Steps 1 to 4 give you a loop that finishes. Steps 5 to 8 give it memory with a shape. Steps 9 to 11 let it choose its own work. Steps 12 to 14 make it run without you and rewrite its own instructions from its own failures.</p>
+<p>The first run is research. The twelfth is an asset, and the gap between them is four files you wrote in an afternoon.</p>
+<p><img alt="Article image" src="/assets/2026-09-08-300-agents,-one-graph,-and-a-loop-that-edits-the-loop-6a029a894e/09.jpg"></p>
+<p>And if you found this useful:</p>
+<ul>
+<li>
+<p>Save this article. The links change and new repos pop up weekly, you&#x27;ll need this as a reference</p>
+</li>
+<li>
+<p>For weekly deep dives into AI architecture, quant trading, and the agent economy, follow me: @polydao</p>
+</li>
+<li>
+<p>Join the TG Channel: Buzzoni Notes - here I share my raw prompts, custom skills, and alpha that&#x27;s too early for X</p>
+</li>
+</ul></div><a class="source" href="https://x.com/polydao/status/2096128417108287566" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>
