@@ -1,0 +1,852 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Harness Engineering: The Complete Guide to Building AI Agents That Don&#x27;t Fall Apart">
+  <title>Harness Engineering: The Complete Guide to Building AI Agents That Don&#x27;t Fall Apart · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Lunar @LunarResearcher · 2026-09-08</div><div class="prose"><h1>Harness Engineering: The Complete Guide to Building AI Agents That Don&#x27;t Fall Apart</h1>
+<p>Most people are trying to improve AI agents at the wrong layer.</p>
+<p>When an agent fails, they rewrite the prompt.</p>
+<p>When it fails again, they add more instructions.</p>
+<p>Before we start:</p>
+<p>Follow my Substack for fresh AI alpha, agent workflows, and step-by-step guides before they hit X: https://substack.com/@lunarresearcher</p>
+<p>Then they switch models, add more tools, increase the context window, and hope the next run behaves differently.</p>
+<p>But many agent failures are not reasoning failures.</p>
+<p>They are environment failures.</p>
+<p>The agent did not know which files mattered.</p>
+<p>It used the right tool in the wrong place.</p>
+<p>It lost the decisions made in the previous session.</p>
+<p>It claimed success without running the checks.</p>
+<p>It repeated an action after a partial failure.</p>
+<p>It had permission to do something that should have required approval.</p>
+<p>The model was not necessarily the problem. The system around the model was incomplete.</p>
+<p>That system is the harness.</p>
+<p>And designing it is becoming its own engineering discipline.</p>
+<p>Harness Engineering is the practice of building the environment that turns model intelligence into reliable work.</p>
+<p>A prompt changes one attempt.</p>
+<p>A harness changes every attempt.</p>
+<p>This guide explains how to build one.</p>
+<p><img alt="Article image" src="/assets/2026-09-08-harness-engineering-the-complete-guide-to-building-ai-agents-d385de5688/01.jpg"></p>
+<h2>1. The Model Is Not the Agent</h2>
+<p>A model can reason, generate, compare, and choose.</p>
+<p>But an agent must also interact with a real environment.</p>
+<p>It needs to:</p>
+<ul>
+<li>
+<p>understand the task</p>
+</li>
+<li>
+<p>find the relevant context</p>
+</li>
+<li>
+<p>select and use tools</p>
+</li>
+<li>
+<p>preserve state</p>
+</li>
+<li>
+<p>respect permissions</p>
+</li>
+<li>
+<p>inspect the result</p>
+</li>
+<li>
+<p>recover from failure</p>
+</li>
+<li>
+<p>prove that the work is complete</p>
+</li>
+</ul>
+<p>The model is the reasoning engine inside that system.</p>
+<p>The harness is everything that makes the reasoning operational.</p>
+<p>latex
+user request
+     |
+     v
++-----------------------------+
+|           HARNESS           |
+| contract | context | policy |
+| tools    | state   | checks |
+| traces   | recovery          |
++-----------------------------+
+     |
+     v
+    model
+     |
+     v
+real environment</p>
+<p>A powerful model inside a weak harness is still a weak agent.</p>
+<p><img alt="Article image" src="/assets/2026-09-08-harness-engineering-the-complete-guide-to-building-ai-agents-d385de5688/02.jpg"></p>
+<p>It may produce impressive individual responses, but it will behave inconsistently across long tasks, changing environments, and partial failures.</p>
+<p>The goal of harness engineering is not to remove uncertainty from the model.</p>
+<p>It is to contain that uncertainty inside a system that can observe, verify, and recover.</p>
+<h2>2. Start With a Task Contract</h2>
+<p>Most agent tasks begin as vague intent:</p>
+<p>Improve the onboarding flow.</p>
+<p>That sentence may be enough for a conversation.</p>
+<p>It is not enough for autonomous execution.</p>
+<p>Before the agent acts, the harness should convert the request into a task contract.</p>
+<p>A useful contract answers five questions:</p>
+<p><img alt="Article image" src="/assets/2026-09-08-harness-engineering-the-complete-guide-to-building-ai-agents-d385de5688/03.jpg"></p>
+<ul>
+<li>
+<p>What outcome must exist?</p>
+</li>
+<li>
+<p>What is inside the scope?</p>
+</li>
+<li>
+<p>What must not change?</p>
+</li>
+<li>
+<p>What evidence proves completion?</p>
+</li>
+<li>
+<p>Which actions require human approval?</p>
+</li>
+</ul>
+<p>yaml
+objective: reduce onboarding drop-off</p>
+<p>scope:
+  - signup flow
+  - onboarding analytics</p>
+<p>constraints:
+  - do not change authentication
+  - preserve existing mobile behavior</p>
+<p>acceptance:
+  - tests pass
+  - analytics event is emitted
+  - screenshots cover desktop and mobile</p>
+<p>approval_required:
+  - production deployment
+  - database migration</p>
+<p>This changes the agent&#x27;s question from:</p>
+<p>What should I do next?</p>
+<p>to:</p>
+<p>What action moves the environment toward the contracted outcome?</p>
+<p>Without a contract, the agent optimizes for plausible activity.</p>
+<p>With a contract, it can optimize for verified completion.</p>
+<h2>3. Give the Agent a Map, Not a Manual</h2>
+<p>Dumping the entire repository, documentation set, and conversation history into context is not good context engineering.</p>
+<p>It is context flooding.</p>
+<p><img alt="Article image" src="/assets/2026-09-08-harness-engineering-the-complete-guide-to-building-ai-agents-d385de5688/04.jpg"></p>
+<p>The harness should provide a small map first, then let the agent retrieve details when they become relevant.</p>
+<p>latex
+PROJECT MAP</p>
+<p>product rules     -&gt; docs/product/
+architecture      -&gt; docs/architecture.md
+frontend          -&gt; apps/web/
+backend           -&gt; services/api/
+tests             -&gt; tests/
+commands          -&gt; docs/commands.md
+release rules     -&gt; docs/release.md</p>
+<p>This is progressive disclosure:</p>
+<p>latex
+task
+  -&gt; project map
+      -&gt; relevant subsystem
+          -&gt; exact files
+              -&gt; local instructions</p>
+<p>The context should expand because the task requires it, not because the information exists.</p>
+<p>A good context compiler decides:</p>
+<ul>
+<li>
+<p>what is always needed</p>
+</li>
+<li>
+<p>what can be retrieved later</p>
+</li>
+<li>
+<p>what has become stale</p>
+</li>
+<li>
+<p>what can be summarized</p>
+</li>
+<li>
+<p>what must remain verbatim</p>
+</li>
+</ul>
+<p>The objective is not maximum context.</p>
+<p>It is maximum signal per token.</p>
+<h2>4. Build a Tool Gateway, Not a Tool Pile</h2>
+<p>Giving an agent twenty tools does not make it capable.</p>
+<p>It gives the agent twenty ways to make a mistake.</p>
+<p><img alt="Article image" src="/assets/2026-09-08-harness-engineering-the-complete-guide-to-building-ai-agents-d385de5688/05.jpg"></p>
+<p>Every tool should have a clear contract:</p>
+<p>latex
+TOOL: edit_file</p>
+<p>inputs:
+  path
+  patch</p>
+<p>preconditions:
+  path exists
+  path is inside allowed workspace</p>
+<p>success evidence:
+  patch applied
+  resulting diff returned</p>
+<p>failure behavior:
+  no partial overwrite
+  structured error returned</p>
+<p>risk class:
+  reversible</p>
+<p>The harness should control how tools are exposed and used.</p>
+<p>It can:</p>
+<ul>
+<li>
+<p>hide irrelevant tools</p>
+</li>
+<li>
+<p>validate arguments</p>
+</li>
+<li>
+<p>restrict paths and domains</p>
+</li>
+<li>
+<p>attach timeouts</p>
+</li>
+<li>
+<p>make retries idempotent</p>
+</li>
+<li>
+<p>normalize outputs</p>
+</li>
+<li>
+<p>require confirmation for risky actions</p>
+</li>
+<li>
+<p>return evidence, not just &quot;success&quot;</p>
+</li>
+</ul>
+<p>This creates an important separation:</p>
+<p>latex
+model decides intent
+gateway validates action
+tool changes environment
+sensor observes result</p>
+<p>The model can propose an action.</p>
+<p>The tool gateway decides whether that action is valid enough to execute.</p>
+<h2>5. Separate the Brain, the Hands, and the History</h2>
+<p>Many fragile agents mix everything into one growing transcript.</p>
+<p>Reasoning, tool calls, files, decisions, errors, and old observations all compete for the same context window.</p>
+<p>A stronger system separates three responsibilities:</p>
+<p><img alt="Article image" src="/assets/2026-09-08-harness-engineering-the-complete-guide-to-building-ai-agents-d385de5688/06.jpg"></p>
+<p>latex
+BRAIN
+plans, reasons, chooses</p>
+<p>HANDS
+execute tools inside a controlled environment</p>
+<p>HISTORY
+stores durable facts, decisions, and run state</p>
+<p>The model does not need every raw event in active context.</p>
+<p>It needs the right current state.</p>
+<p>The sandbox does not need to understand the entire objective.</p>
+<p>It needs to safely execute a bounded action.</p>
+<p>The session log does not need to reason.</p>
+<p>It needs to preserve what happened after the current context disappears.</p>
+<p>This separation makes long-running agents easier to resume, inspect, and repair.</p>
+<p>It also lets you replace one part without rebuilding the entire system.</p>
+<h2>6. Memory Must Become Durable State</h2>
+<p>Conversation history is not reliable memory.</p>
+<p>It is an event stream.</p>
+<p>Useful memory should be converted into explicit state.</p>
+<p><img alt="Article image" src="/assets/2026-09-08-harness-engineering-the-complete-guide-to-building-ai-agents-d385de5688/07.jpg"></p>
+<p>At minimum, preserve four categories:</p>
+<p>latex
+FACTS
+stable information discovered about the environment</p>
+<p>DECISIONS
+choices made and the reason behind them</p>
+<p>PROGRESS
+completed, active, blocked, and remaining work</p>
+<p>LESSONS
+failures that should change future behavior</p>
+<p>For example:</p>
+<p>yaml
+facts:
+  - checkout validation lives in services/orders</p>
+<p>decisions:
+  - reuse the existing validation pipeline
+  - reason: avoids a second source of truth</p>
+<p>progress:
+  completed:
+    - added server-side rule
+  remaining:
+    - update integration test</p>
+<p>lessons:
+  - local test command requires TEST_DB_URL</p>
+<p>This is far more useful than replaying fifty pages of transcript and hoping the model notices the important line.</p>
+<p>Store raw history for auditability.</p>
+<p>Compile durable state for execution.</p>
+<h2>7. Completion Requires Evidence</h2>
+<p>An agent saying &quot;done&quot; is not evidence that the task is done.</p>
+<p>It is only another model output.</p>
+<p><img alt="Article image" src="/assets/2026-09-08-harness-engineering-the-complete-guide-to-building-ai-agents-d385de5688/08.jpg"></p>
+<p>Completion must be decided by observable changes in the environment.</p>
+<p>latex
+claim                         evidence</p>
+<hr>
+<p>&quot;the bug is fixed&quot;            failing test now passes
+&quot;the page works&quot;              browser flow completed
+&quot;the migration is safe&quot;       dry run and rollback pass
+&quot;the report is correct&quot;       values match source data
+&quot;the task is complete&quot;        every acceptance check passes</p>
+<p>The harness should run the cheapest deterministic checks first.</p>
+<p>latex
+syntax
+  -&gt; types
+      -&gt; focused tests
+          -&gt; integration tests
+              -&gt; visual or semantic review
+                  -&gt; human approval</p>
+<p>Do not use another model where a compiler, schema, checksum, query, or test can answer the question.</p>
+<p>Use models for ambiguity.</p>
+<p>Use code for plumbing.</p>
+<p>A model can propose that the task is complete.</p>
+<p>Only the environment can prove it.</p>
+<h2>8. Verification Should Attack the Result</h2>
+<p>Workers and evaluators should not share the same objective.</p>
+<p>The worker tries to create the strongest solution.</p>
+<p>The evaluator tries to find the reason it should be rejected.</p>
+<p><img alt="Article image" src="/assets/2026-09-08-harness-engineering-the-complete-guide-to-building-ai-agents-d385de5688/09.jpg"></p>
+<p>latex
+worker
+  -&gt; produces candidate</p>
+<p>verifier
+  -&gt; checks contract
+  -&gt; searches for missing cases
+  -&gt; tests unsupported claims
+  -&gt; attempts to break result</p>
+<p>survives
+  -&gt; accept</p>
+<p>fails
+  -&gt; return targeted evidence</p>
+<p>This asymmetry matters.</p>
+<p>If you ask the same agent, in the same context, to &quot;double-check its work,&quot; it often preserves the assumptions that created the mistake.</p>
+<p>A useful verification stage should have:</p>
+<ul>
+<li>
+<p>an explicit rejection rubric</p>
+</li>
+<li>
+<p>access to the produced artifact</p>
+</li>
+<li>
+<p>access to the acceptance contract</p>
+</li>
+<li>
+<p>independent tools or fresh context when needed</p>
+</li>
+<li>
+<p>permission to reject without repairing</p>
+</li>
+</ul>
+<p>Verification is not a second opinion.</p>
+<p>It is an attempted disproof.</p>
+<h2>9. The Model Proposes, the Policy Authorizes</h2>
+<p>Some rules should never depend on whether the model remembers them.</p>
+<p>latex
+never publish without approval
+never expose a secret
+never write outside the workspace
+never exceed the spend cap
+never mark tests passed unless they ran</p>
+<p>These are not prompt suggestions.</p>
+<p>They are policy.</p>
+<p>The safest design keeps policy outside the reasoning loop.</p>
+<p><img alt="Article image" src="/assets/2026-09-08-harness-engineering-the-complete-guide-to-building-ai-agents-d385de5688/10.jpg"></p>
+<p>latex
+LOW RISK
+read files, search, inspect
+-&gt; automatic</p>
+<p>REVERSIBLE CHANGE
+edit workspace, run tests
+-&gt; automatic with trace</p>
+<p>EXTERNAL EFFECT
+send message, deploy, purchase
+-&gt; explicit approval</p>
+<p>IRREVERSIBLE OR SENSITIVE
+delete data, rotate credentials, publish globally
+-&gt; hard gate or prohibited</p>
+<p>The stronger the consequence, the harder the gate.</p>
+<p>Autonomy is not the absence of control.</p>
+<p>It is the ability to operate freely inside a clearly enforced boundary.</p>
+<h2>10. Recovery Should Target the Failure Class</h2>
+<p>The most common recovery strategy is:</p>
+<p>Something failed. Try again.</p>
+<p>That is not recovery.</p>
+<p>It is repetition.</p>
+<p><img alt="Article image" src="/assets/2026-09-08-harness-engineering-the-complete-guide-to-building-ai-agents-d385de5688/11.jpg"></p>
+<p>The harness should classify the failure before selecting the next action.</p>
+<p>latex
+tool timeout
+-&gt; retry with backoff</p>
+<p>invalid arguments
+-&gt; repair the tool call</p>
+<p>missing context
+-&gt; retrieve specific source</p>
+<p>failed test
+-&gt; inspect failing behavior</p>
+<p>permission denied
+-&gt; request approval or choose safe path</p>
+<p>contradictory requirements
+-&gt; escalate to human</p>
+<p>repeated unchanged failure
+-&gt; stop the loop</p>
+<p>A retry should change at least one relevant condition.</p>
+<p>Otherwise the system is paying to reproduce the same failure.</p>
+<p>A bounded agent loop looks like this:</p>
+<p>latex
+observe
+  -&gt; decide
+      -&gt; act
+          -&gt; measure
+              -&gt; accept
+              -&gt; repair
+              -&gt; escalate
+              -&gt; stop</p>
+<p>Every loop needs a budget:</p>
+<ul>
+<li>
+<p>maximum attempts</p>
+</li>
+<li>
+<p>maximum time</p>
+</li>
+<li>
+<p>maximum spend</p>
+</li>
+<li>
+<p>maximum destructive scope</p>
+</li>
+<li>
+<p>escalation condition</p>
+</li>
+</ul>
+<p>Reliable agents know how to continue.</p>
+<p>They also know when continuing is no longer rational.</p>
+<h2>11. Instructions Should Become Infrastructure</h2>
+<p>Agent instructions are useful when they explain local reality.</p>
+<p>But instructions alone are weak enforcement.</p>
+<p>If a rule matters repeatedly, move it down the stack.</p>
+<p>latex
+&quot;use the formatter&quot;
+-&gt; run formatter automatically</p>
+<p>&quot;do not import across layers&quot;
+-&gt; add architecture test</p>
+<p>&quot;include a migration rollback&quot;
+-&gt; require rollback file in CI</p>
+<p>&quot;do not modify generated files&quot;
+-&gt; block writes to generated paths</p>
+<p>&quot;cite every external claim&quot;
+-&gt; validate citation coverage</p>
+<p>This creates an instruction ladder:</p>
+<p>latex
+explanation
+  -&gt; checklist
+      -&gt; template
+          -&gt; automated check
+              -&gt; enforced policy</p>
+<p>Move important knowledge as far down that ladder as practical.</p>
+<p>The prompt should explain judgment.</p>
+<p>The harness should enforce invariants.</p>
+<h2>12. Observe the Run, Not Just the Final Answer</h2>
+<p>A clean final artifact can hide a terrible process.</p>
+<p>The agent may have:</p>
+<ul>
+<li>
+<p>accessed the wrong data</p>
+</li>
+<li>
+<p>ignored a failed command</p>
+</li>
+<li>
+<p>retried an external action twice</p>
+</li>
+<li>
+<p>consumed ten times the expected budget</p>
+</li>
+<li>
+<p>reached the right answer for the wrong reason</p>
+</li>
+</ul>
+<p>You need traces that make the run reconstructable.</p>
+<p>latex
+09:14  contract created
+09:15  context source loaded: architecture.md
+09:17  file edited: checkout.ts
+09:18  focused test failed: duplicate coupon
+09:21  implementation repaired
+09:22  focused test passed
+09:24  integration test passed
+09:25  external deployment blocked: approval required</p>
+<p>A useful trace records:</p>
+<ul>
+<li>
+<p>state transitions</p>
+</li>
+<li>
+<p>context sources</p>
+</li>
+<li>
+<p>tool inputs and outputs</p>
+</li>
+<li>
+<p>environment changes</p>
+</li>
+<li>
+<p>verification results</p>
+</li>
+<li>
+<p>retry reasons</p>
+</li>
+<li>
+<p>approval decisions</p>
+</li>
+<li>
+<p>cost and latency</p>
+</li>
+</ul>
+<p>The goal is not surveillance.</p>
+<p>The goal is local repair.</p>
+<p>When a run fails at step 18, you should be able to restart from a trustworthy checkpoint instead of replaying the entire task.</p>
+<h2>13. Every Run Needs a Change Receipt</h2>
+<p>Long agent transcripts are difficult to review.</p>
+<p>At the end of a run, the harness should compile a small change receipt.</p>
+<p>latex
+OBJECTIVE
+Fix duplicate coupon application during checkout.</p>
+<p>CHANGED
+- checkout validation logic
+- focused regression test</p>
+<p>VERIFIED
+- lint passed
+- unit tests passed
+- checkout integration test passed</p>
+<p>NOT VERIFIED
+- production payment provider</p>
+<p>DECISIONS
+- preserved existing coupon priority order</p>
+<p>RISKS
+- legacy mobile client was not available locally</p>
+<p>APPROVAL NEEDED
+- deploy to staging</p>
+<p>The receipt is not a summary of what the model said.</p>
+<p>It is a summary of what the system can prove.</p>
+<p>This gives humans a compact review surface and gives the next agent session a trustworthy starting point.</p>
+<p>The best handoff is not &quot;here is the conversation.&quot;</p>
+<p>It is &quot;here is the state, the evidence, and the unresolved risk.&quot;</p>
+<h2>14. Every Failure Should Upgrade the Harness</h2>
+<p>The weakest teams fix the failed output.</p>
+<p>The strongest teams also fix the system that allowed it.</p>
+<p>After a failure, ask:</p>
+<p>latex
+Was the task contract ambiguous?
+Was important context invisible?
+Was the wrong tool exposed?
+Was a precondition missing?
+Was the result unverifiable?
+Was policy left inside the prompt?
+Was recovery too broad?
+Was the trace insufficient?</p>
+<p>Then convert the lesson into a reusable improvement.</p>
+<p>latex
+failure
+  -&gt; diagnosis
+      -&gt; new sensor, rule, map, test, or tool contract
+          -&gt; future runs improve automatically</p>
+<p>This is the harness flywheel.</p>
+<p>The system becomes more reliable because failures leave infrastructure behind.</p>
+<p>A corrected answer helps one run.</p>
+<p>A corrected harness helps every future run.</p>
+<p><img alt="Article image" src="/assets/2026-09-08-harness-engineering-the-complete-guide-to-building-ai-agents-d385de5688/12.jpg"></p>
+<h2>15. Harnesses Decay Too</h2>
+<p>More harness is not always better.</p>
+<p>Models improve. Tools improve. Tasks change. Old safeguards can become unnecessary friction.</p>
+<p>A workaround created for yesterday&#x27;s model may prevent today&#x27;s model from using a better strategy.</p>
+<p>This creates harness decay:</p>
+<p>latex
+old model limitation
+  -&gt; harness workaround
+      -&gt; model improves
+          -&gt; workaround remains
+              -&gt; system becomes slower or less capable</p>
+<p>Treat harness components like production code.</p>
+<p>Measure whether they still provide lift.</p>
+<p>For every router, evaluator, memory layer, and retry rule, ask:</p>
+<ul>
+<li>
+<p>Which failure does this prevent?</p>
+</li>
+<li>
+<p>How often does that failure still occur?</p>
+</li>
+<li>
+<p>What latency and complexity does this add?</p>
+</li>
+<li>
+<p>Can the same result now be achieved more simply?</p>
+</li>
+<li>
+<p>What happens if we remove it?</p>
+</li>
+</ul>
+<p>The best harness is not the largest one.</p>
+<p>It is the smallest system that reliably closes the gap between intent and evidence.</p>
+<p>Build to delete.</p>
+<h2>16. The Minimum Viable Harness</h2>
+<p>You do not need an orchestration platform to begin.</p>
+<p>Build the harness in layers.</p>
+<p>Level 1: A bounded task</p>
+<ul>
+<li>
+<p>objective</p>
+</li>
+<li>
+<p>scope</p>
+</li>
+<li>
+<p>constraints</p>
+</li>
+<li>
+<p>acceptance checks</p>
+</li>
+</ul>
+<p>Level 2: A legible environment</p>
+<ul>
+<li>
+<p>project map</p>
+</li>
+<li>
+<p>commands</p>
+</li>
+<li>
+<p>local instructions</p>
+</li>
+<li>
+<p>known dependencies</p>
+</li>
+</ul>
+<p>Level 3: Controlled actions</p>
+<ul>
+<li>
+<p>typed tools</p>
+</li>
+<li>
+<p>argument validation</p>
+</li>
+<li>
+<p>path and permission boundaries</p>
+</li>
+<li>
+<p>structured results</p>
+</li>
+</ul>
+<p>Level 4: Durable execution</p>
+<ul>
+<li>
+<p>explicit run state</p>
+</li>
+<li>
+<p>checkpoints</p>
+</li>
+<li>
+<p>decisions</p>
+</li>
+<li>
+<p>lessons</p>
+</li>
+</ul>
+<p>Level 5: Evidence</p>
+<ul>
+<li>
+<p>deterministic checks</p>
+</li>
+<li>
+<p>adversarial verification</p>
+</li>
+<li>
+<p>change receipt</p>
+</li>
+</ul>
+<p>Level 6: Recovery and learning</p>
+<ul>
+<li>
+<p>failure classification</p>
+</li>
+<li>
+<p>bounded retries</p>
+</li>
+<li>
+<p>escalation</p>
+</li>
+<li>
+<p>harness updates from recurring failures</p>
+</li>
+</ul>
+<p>Build the smallest layer that eliminates the failure you actually have.</p>
+<p>Do not begin with a multi-agent architecture because a single prompt occasionally needs clarification.</p>
+<p>Complexity should be earned by observed failure.</p>
+<h2>17. A Reusable Harness Specification</h2>
+<p>Before giving an agent meaningful autonomy, define this:</p>
+<p>latex
+AGENT HARNESS SPEC</p>
+<ol>
+<li>
+<p>CONTRACT
+   objective:
+   scope:
+   constraints:
+   acceptance evidence:</p>
+</li>
+<li>
+<p>CONTEXT
+   always-loaded map:
+   retrieval sources:
+   local instructions:
+   freshness rules:</p>
+</li>
+<li>
+<p>TOOLS
+   allowed tools:
+   preconditions:
+   side effects:
+   success evidence:
+   timeout and retry policy:</p>
+</li>
+<li>
+<p>STATE
+   facts:
+   decisions:
+   progress:
+   lessons:
+   checkpoint format:</p>
+</li>
+<li>
+<p>POLICY
+   automatic actions:
+   approval-required actions:
+   prohibited actions:
+   budget limits:</p>
+</li>
+<li>
+<p>VERIFICATION
+   deterministic checks:
+   adversarial checks:
+   acceptance rule:</p>
+</li>
+<li>
+<p>RECOVERY
+   failure classes:
+   retry limits:
+   escalation conditions:
+   safe rollback:</p>
+</li>
+<li>
+<p>OBSERVABILITY
+   trace events:
+   metrics:
+   final change receipt:</p>
+</li>
+</ol>
+<p>If these fields are undefined, the agent is not autonomous.</p>
+<p>It is improvising.</p>
+<h2>18. Measure the System at the Right Level</h2>
+<p>Token count is not the final metric.</p>
+<p>Neither is the number of tasks attempted.</p>
+<p>The useful unit is accepted work.</p>
+<p>A practical metric is:</p>
+<p>latex
+accepted outputs</p>
+<hr>
+<p>human review minutes + run cost</p>
+<p>Also track:</p>
+<ul>
+<li>
+<p>first-pass acceptance rate</p>
+</li>
+<li>
+<p>recovery rate after tool failure</p>
+</li>
+<li>
+<p>repeated failure rate</p>
+</li>
+<li>
+<p>human interventions per task</p>
+</li>
+<li>
+<p>unsupported completion claims</p>
+</li>
+<li>
+<p>time from request to verified outcome</p>
+</li>
+<li>
+<p>harness overhead by component</p>
+</li>
+</ul>
+<p>This prevents a common illusion:</p>
+<p>An agent can look highly productive while creating expensive review work.</p>
+<p>The objective is not more agent activity.</p>
+<p>It is more trusted outcomes per unit of human attention.</p>
+<h2>19. When You Do Not Need a Heavy Harness</h2>
+<p>Not every model call needs an operating system.</p>
+<p>Use a simple prompt when:</p>
+<ul>
+<li>
+<p>the task is short</p>
+</li>
+<li>
+<p>the output is easy to inspect</p>
+</li>
+<li>
+<p>failure is cheap</p>
+</li>
+<li>
+<p>no external side effect occurs</p>
+</li>
+<li>
+<p>the user remains in the loop</p>
+</li>
+</ul>
+<p>Add a harness when:</p>
+<ul>
+<li>
+<p>work spans multiple tools or sessions</p>
+</li>
+<li>
+<p>the environment can change</p>
+</li>
+<li>
+<p>actions have real consequences</p>
+</li>
+<li>
+<p>completion is difficult to judge manually</p>
+</li>
+<li>
+<p>the same failure appears repeatedly</p>
+</li>
+<li>
+<p>human review becomes the bottleneck</p>
+</li>
+</ul>
+<p>The purpose of a harness is not to make a demo look sophisticated.</p>
+<p>It is to make real work dependable.</p>
+<h2>The Real Shift</h2>
+<p>The first generation of AI products was built around prompts.</p>
+<p>The next generation is being built around environments.</p>
+<p>The question is no longer only:</p>
+<p>How do we make the model answer better?</p>
+<p>It is:</p>
+<p>How do we build a system where good actions are easy, dangerous actions are controlled, failures are visible, and completion is provable?</p>
+<p>That is the shift from prompt engineering to harness engineering.</p>
+<p>The model supplies intelligence.</p>
+<p>The harness supplies structure.</p>
+<p>Together they produce reliable execution.</p>
+<p>If your agent keeps falling apart, stop adding adjectives to the prompt.</p>
+<p>Build the environment it needs to succeed.</p>
+<h2>If You Made It This Far</h2>
+<p>Bookmark this guide.</p>
+<p>Follow @LunarResearcher on X</p>
+<p>Subscribe to my Substack</p>
+<p>Send this article to someone who is still trying to fix every agent failure with a longer prompt.</p></div><a class="source" href="https://x.com/LunarResearcher/status/2096570562625655088" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>
