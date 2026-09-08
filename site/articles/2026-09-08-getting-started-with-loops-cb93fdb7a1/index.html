@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Getting started with loops">
+  <title>Getting started with loops · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">ClaudeDevs @ClaudeDevs · 2026-09-08</div><div class="prose"><h1>Getting started with loops</h1>
+<p>There’s a lot of talk right now about &quot;designing loops&quot; instead of prompting your coding agent. If you spend some time on X trying to pin down what a loop actually is, you&#x27;ll come across multiple different answers.</p>
+<p>On the Claude Code team, we define loops as agents repeating cycles of work until a stop condition is met. We categorize a few different types of loops based on:</p>
+<ul>
+<li>
+<p>How they are triggered</p>
+</li>
+<li>
+<p>How they are stopped</p>
+</li>
+<li>
+<p>What Claude Code primitive is used</p>
+</li>
+<li>
+<p>What type of task is most appropriate for each.</p>
+</li>
+</ul>
+<p>We’ll cover the main loop types, when to use each, and how to maintain code quality while managing token usage. Not all tasks require complex loops; start with the simplest solution and use these patterns selectively.</p>
+<h2>Turn-based loops</h2>
+<p><img alt="Article image" src="/assets/2026-09-08-getting-started-with-loops-cb93fdb7a1/01.jpg"></p>
+<ul>
+<li>
+<p>Triggered by: A user prompt.</p>
+</li>
+<li>
+<p>Stop criteria: Claude judges it has completed the task or needs additional context.</p>
+</li>
+<li>
+<p>Best used for: Shorter tasks that are not part of a regular process or schedule.</p>
+</li>
+<li>
+<p>Managed usage by: Write specific prompts and improve verification using skills to reduce the number of turns.‍</p>
+</li>
+</ul>
+<p>Every prompt you send starts a manual loop with you directing each turn. Claude gathers context, takes action, checks its work, repeats if needed, and responds. We call this the agentic loop.</p>
+<p>For example, ask Claude to create a like button. It reads your code, makes the edit, runs the tests, and hands back something it believes works. You then manually check the work, and write the next prompt.</p>
+<p>You can improve the verification step by encoding your manual steps as a SKILL.md so Claude can check more of its own work, end-to-end. This should include tools or connectors to allow Claude to see, measure or interact with the result. The more quantitative the checks are, the easier it is for Claude to self-verify.</p>
+<p>For example, in your SKILL.md file you may specify:</p>
+<h2>markdown</h2>
+<p>name: verify-frontend-change 
+description: Verify any UI change end-to-end before declaring it done. </p>
+<hr>
+<h1>Verifying frontend changes</h1>
+<p>Never report a UI change as complete based on a successful edit alone. Verify it the way a human reviewer would: </p>
+<ol>
+<li>
+<p>Start the dev server and open the edited page in the browser. </p>
+</li>
+<li>
+<p>Interact with the change directly. For a new control (button, input, toggle): click it, confirm the expected state change, and screenshot before/after. </p>
+</li>
+<li>
+<p>Check the browser console: zero new errors or warnings. </p>
+</li>
+<li>
+<p>Use the Chrome Devtools MCP, run a performance trace and audit Core Web Vitals.</p>
+</li>
+</ol>
+<p>If any step fails, fix the issue and rerun from step 1 — do not hand back partially verified work.</p>
+<h2>Goal-based loop (/goal)</h2>
+<p><img alt="Article image" src="/assets/2026-09-08-getting-started-with-loops-cb93fdb7a1/02.jpg"></p>
+<ul>
+<li>
+<p>Triggered by: A manual prompt in real-time.</p>
+</li>
+<li>
+<p>Stop criteria: Goal achieved OR maximum number of turns reached.</p>
+</li>
+<li>
+<p>Best used for: Tasks that have verifiable exit criteria.</p>
+</li>
+<li>
+<p>Managed usage by: Setting a specific completion criteria and explicit turn caps, “stop after 5 tries.”</p>
+</li>
+</ul>
+<p>Sometimes, a single turn is not enough, especially for more complex tasks. Agents do better when they can iterate. You can extend how long Claude keeps iterating by defining what done looks like with /goal.</p>
+<p>When you define the success criteria, Claude doesn’t have to make a determination on what is “good enough” and end the loop early. Each time Claude tries to stop, an evaluator model checks your condition and sends it back to work until the goal is met or a number of turns you define is reached.</p>
+<p>This is why deterministic criteria, such as number of tests passed or clearing a certain score threshold, are so effective.</p>
+<p>For example:</p>
+<p>bash
+/goal get the homepage Lighthouse score to 90 or above, stop after 5 tries.</p>
+<h2>Time-based loop (/loop and /schedule)</h2>
+<ul>
+<li>
+<p>Triggered by: A specified time interval.</p>
+</li>
+<li>
+<p>Stop criteria: You cancel it, or the work completes (the PR merges, the queue is empty).</p>
+</li>
+<li>
+<p>Best used for: For recurring work, or interfacing with external environments / systems.</p>
+</li>
+<li>
+<p>Managed usage by: Set longer intervals or react based on events rather than time.</p>
+</li>
+</ul>
+<p>Some agentic work is recurring: the task stays the same and only the inputs change. For example, summarizing Slack messages every morning. Other work depends on external systems, and a simple way to interface with one is to check it on an interval and react to what changed. For example, a PR which may receive code reviews or fail CI.</p>
+<p>For these, you can trigger when Claude runs with <code>/loop</code> which re-runs a prompt on an interval. For example:</p>
+<p>bash
+/loop 5m check my PR, address review comments, and fix failing CI</p>
+<p><code>/loop</code> runs on your computer, so if you turn it off, it stops. You can move the loop to the cloud by creating a routine with  <code>/schedule</code>.</p>
+<h2>Proactive loops</h2>
+<p><img alt="Article image" src="/assets/2026-09-08-getting-started-with-loops-cb93fdb7a1/03.jpg"></p>
+<ul>
+<li>
+<p>Triggered by: An event or schedule, with no human in real time.</p>
+</li>
+<li>
+<p>Stop criteria: Each task exits when its goal is met. The routine itself runs until you turn it off.</p>
+</li>
+<li>
+<p>Best used for: Recurring streams of well-defined work: bug reports, issue triage, migrations, dependency upgrades, etc.</p>
+</li>
+<li>
+<p>Managed usage by: Routing routines to smaller, faster models and using the most capable model for judgment calls.</p>
+</li>
+</ul>
+<p>The primitives above, along with other Claude Code features like auto mode and dynamic workflows (research preview) can be composed into a loop for long-running work.</p>
+<p>For example, to handle incoming feedback, you can use:</p>
+<ul>
+<li>
+<p><code>/schedule</code> (research preview) to run a routine that checks for new reports</p>
+</li>
+<li>
+<p><code>/goal</code> to define what done looks and skills to document how to verify it</p>
+</li>
+<li>
+<p>Dynamic workflows to orchestrate agents that triage each report, fix it, and review the fix</p>
+</li>
+<li>
+<p>Auto mode so the routine runs without stopping to ask for permission</p>
+</li>
+</ul>
+<p>Putting it together, a prompt could look like this:</p>
+<p>bash
+/schedule every hour: check the project-feedback channel for bug reports. /goal: don&#x27;t stop until every report found this run is triaged, actioned, and responded to. When fixing a bug, use a workflow to explore three solutions in parallel worktrees and have a judge adversarially review them.</p>
+<h2>Maintaining code quality</h2>
+<p>The quality of a loop’s output depends on the system around it. When designing the system:</p>
+<ul>
+<li>
+<p>Keep the codebase itself clean: Claude follows patterns and conventions that already exist in your codebase.</p>
+</li>
+<li>
+<p>Give Claude a way to verify its own work: Encode what good looks like for you and your team with skills.</p>
+</li>
+<li>
+<p>Make docs easy to reach: Frameworks and libraries docs have up-to-date best practices.</p>
+</li>
+<li>
+<p>Use a second agent for code reviews: A reviewer with fresh context is less biased and not influenced by the main agent’s reasoning. You can use the built-in <code>/code-review</code> skill or Code Review for Github.</p>
+</li>
+</ul>
+<p>When an individual result doesn’t meet the standard, don’t stop at fixing the individual issue, try to encode it to improve the system for all future iterations.</p>
+<h2>Managing token usage</h2>
+<p>To manage token usage, loops should have clear boundaries:</p>
+<ul>
+<li>
+<p>Choose the right primitive and model for the job: Smaller tasks don’t need multiple agents or loops. Some tasks can use cheaper and faster models.</p>
+</li>
+<li>
+<p>Define clear success and stop criteria: Be specific about what done looks like so Claude can arrive at the solution sooner (but not too soon).</p>
+</li>
+<li>
+<p>Pilot before a large run: Dynamic workflows can spawn hundreds of agents. Gauge usage on a smaller slice of the work first.</p>
+</li>
+<li>
+<p>Use scripts for deterministic work: Running a script is cheaper than reasoning through the steps. For example, a PDF skill can ship a form-filling script that Claude runs each time, instead of re-deriving the code.</p>
+</li>
+<li>
+<p>Don’t run routines more often that you need to: Match the interval to how often the thing you’re watching changes</p>
+</li>
+<li>
+<p>Review usage: The <code>/usage</code> command breaks down recent usage by skills, subagents, and MCPs, <code>/goal</code> with no arguments shows number of turns and token usage so far, <code>/workflows</code> shows each agent’s token usage and you can stop an agent at any time.</p>
+</li>
+</ul>
+<h2>Getting started</h2>
+<p>To summarize:</p>
+<p>Loop</p>
+<p>You hand off</p>
+<p>Use it when</p>
+<p>Reach for</p>
+<p>Turn-based</p>
+<p>The check</p>
+<p>You&#x27;re exploring or deciding</p>
+<p>Custom verification skills</p>
+<p>Goal-based</p>
+<p>The stop condition</p>
+<p>You know what done looks like</p>
+<p>/goal</p>
+<p>Time-based</p>
+<p>The trigger</p>
+<p>The work happens outside your project on a schedule</p>
+<p>/loop, /schedule</p>
+<p>Proactive</p>
+<p>The prompt</p>
+<p>The work is recurring and well-defined</p>
+<p>All of the above, and dynamic workflows</p>
+<p>To get started with loops, look at the work you already do. Pick one task where you’re the bottleneck and ask which piece you could hand off: can you write the verification check? Is the goal clear enough? Does the work arrive on a schedule?</p>
+<p>Once you have an idea, run the loop, observe the results like where it stalls or over-reaches, and don’t be afraid to iterate on it.</p>
+<p>For more information, read the Claude Code docs on running agents in parallel, as well as the loop, schedule, goal, and dynamic workflows pages.</p>
+<p>This article was written by @delba_oliveira</p></div><a class="source" href="https://x.com/ClaudeDevs/status/2074208949205881033" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>
