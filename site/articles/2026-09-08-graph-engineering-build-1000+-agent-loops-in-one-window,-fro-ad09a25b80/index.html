@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Graph Engineering: build 1000+ agent loops in one window, from one prompt (full 5-step course)">
+  <title>Graph Engineering: build 1000+ agent loops in one window, from one prompt (full 5-step course) · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">codila @0xCodila · 2026-09-08</div><div class="prose"><h1>Graph Engineering: build 1000+ agent loops in one window, from one prompt (full 5-step course)</h1>
+<p>THE Loop Engineering&#x27;s successor and the workflow that runs your agents 10x wider...</p>
+<p>Most people who build a multi-step agent end up with a straight line</p>
+<p>step one, step two, step three. Each one waiting for the last to finish before it starts</p>
+<p>Here&#x27;s what almost nobody checks: half those steps never needed to wait</p>
+<p>They just queue, one job at a time, until the context window fills and the agent forgets what it was doing</p>
+<ul>
+<li>
+<p>It wasn&#x27;t slow because the model was weak</p>
+</li>
+<li>
+<p>It was slow because you drew a line where the work was a graph</p>
+</li>
+</ul>
+<p>This guide takes you from that line to a graph that fans out across a fleet and checks its own work</p>
+<p>Five steps. By Step 2 you&#x27;ll have built one -  It gets you a working graph and names the traps that break real ones and I&#x27;ll flag where the hard parts begin</p>
+<p>before the alpha -  subscribe to my substack for more fresh alpha ↓</p>
+<p>https://substack.com/@0xcodila</p>
+<h2>Chapter 0 - What graph engineering actually is</h2>
+<p>A month ago the field was talking about loops.</p>
+<p>Peter Steinberger caught it in nine words:</p>
+<p>Peter Steinberger 🦞
+@steipete
+·
+Jul 18
+Are we still talking loops or did we shift to graphs yet?
+1.2K
+1K
+7.7K
+3.1M</p>
+<p>A loop is one cycle of getting better:</p>
+<p>try something → check the result → adjust → go again</p>
+<p>That&#x27;s the atom: a single agent improving one thing on repeat</p>
+<p>(If you&#x27;ve read my Loop Engineering piece, this is that)</p>
+<p>codila
+@0xCodila
+·
+Jul 1
+ Article
+Loop Engineering: The Karpathy Method - and the workflow that just made it 5x better 
+Most people use AI the same way they used Google in 2005</p>
+<ul>
+<li>Type something, read what comes back, type again</li>
+</ul>
+<p>The AI sits there doing nothing until you push it - you are the engine - The AI is a...
+57
+331
+1.8K
+4.8M</p>
+<p>But the single loop has a known failure  - a support team ties a feedback loop to one metric: ticket resolution rate</p>
+<p>The number climbs for months while satisfaction drops. The bot learned to close tickets fast instead of solving them</p>
+<p>That&#x27;s Goodhart&#x27;s law. A loop can only see its own metric. It can&#x27;t ask whether the target is right, or notice its own measurement drifting.</p>
+<p>The answer isn&#x27;t a better loop. It&#x27;s a graph of loops - a network where cycles watch and correct each other</p>
+<p>For agents, that means one thing:</p>
+<p>Stop writing one agent that does everything in a line - design the shape of the work - what runs before what, what runs at the same time, what waits.</p>
+<p>Nodes do the thinking. Edges carry the results</p>
+<p><img alt="Article image" src="/assets/2026-09-08-graph-engineering-build-1000+-agent-loops-in-one-window,-fro-ad09a25b80/01.png"></p>
+<p>And Claude Code shipped the tooling to build these directly: dynamic workflows</p>
+<h2>Step 1 - See the edges that aren&#x27;t there</h2>
+<p>A graph has two parts:</p>
+<ul>
+<li>
+<p>A node is one unit of work: one agent, one job, one input, one output</p>
+</li>
+<li>
+<p>An edge is a dependency: this node&#x27;s output feeds that node&#x27;s input</p>
+</li>
+</ul>
+<p>The mistake everyone makes is treating &quot;and then&quot; as an edge.</p>
+<p>&quot;Summarize this file and then tell me the weather&quot;</p>
+<p>The weather doesn&#x27;t read the summary.</p>
+<p>Those are two independent jobs a linear script chains for no reason. Each one waits on the last for nothing</p>
+<p><img alt="Article image" src="/assets/2026-09-08-graph-engineering-build-1000+-agent-loops-in-one-window,-fro-ad09a25b80/02.png"></p>
+<p>The habit that starts everything:</p>
+<p>For every &quot;and then,&quot; ask - does the next step actually read the previous step&#x27;s output?</p>
+<ul>
+<li>
+<p>If yes → real edge. Keep the order.</p>
+</li>
+<li>
+<p>If no → no edge. The wait is wasted. Run them side by side.</p>
+</li>
+</ul>
+<p>If no data crosses between two boxes, they&#x27;re independent.</p>
+<p>That independence is what you&#x27;ll exploit for the rest of this guide</p>
+<p>Your plain &quot;do A, then B, then C&quot; agent is already a graph -  just the saddest one: a single chain where if C stalls, D never happens.</p>
+<h2>Step 2 - Build your first graph (start to finish)</h2>
+<p>Enough theory. Build one and watch it run.</p>
+<p>Before you start:</p>
+<ul>
+<li>
+<p>Claude Code v2.1.154+ (check with claude --version)</p>
+</li>
+<li>
+<p>A paid plan. On Max, Team, or Enterprise, workflows are on by default. On Pro, switch on the Dynamic workflows row in /config</p>
+</li>
+</ul>
+<ol>
+<li>Open a repo you know.</li>
+</ol>
+<p>A real one, so the result means something.</p>
+<ol start="2">
+<li>Paste this prompt (off by Anthropic):</li>
+</ol>
+<p>Create a workflow to audit every route file under src/routes/
+for missing auth checks. Spawn one agent per file, then run an
+independent verifier on each finding before reporting.
+Analyze a maximum of 20 files to start.</p>
+<p>Swap src/routes/ for where your files live. The &quot;max 20&quot; line keeps your first run cheap.</p>
+<ol start="3">
+<li>Watch &quot;workflow&quot; light up.</li>
+</ol>
+<p>Claude Code highlights it: &quot;Dynamic workflow requested.&quot; That&#x27;s your signal a graph is building, not a normal chat</p>
+<ol start="4">
+<li>Approve the plan.</li>
+</ol>
+<p>Claude writes a JavaScript orchestration script and shows the phases first. Read them, pick &quot;Yes, run it.&quot;</p>
+<ol start="5">
+<li>Let the fleet run.</li>
+</ol>
+<p>One agent per file, in parallel, while your session stays free.</p>
+<p>Type /workflows to watch it live: scope, fan-out, verify, synthesize.</p>
+<ol start="6">
+<li>Read the one answer.</li>
+</ol>
+<p>Not twenty separate chats. One report - because the intermediate results lived in the script&#x27;s variables, not your context.</p>
+<p>That&#x27;s a graph. A dozen agents, from one sentence.</p>
+<p><img alt="Article image" src="/assets/2026-09-08-graph-engineering-build-1000+-agent-loops-in-one-window,-fro-ad09a25b80/03.png"></p>
+<p>About the &quot;zero tokens&quot; claim you&#x27;ll hear</p>
+<p>The coordination script is code
+So passing results between agents doesn&#x27;t re-spend context the way a chat handoff does.</p>
+<p>But the agents still cost usage. A workflow costs meaningfully more than a normal session.</p>
+<p>The saving is in coordination, not the work. Start scoped, watch usage, then widen.</p>
+<ul>
+<li>Make it yours</li>
+</ul>
+<p>When a run is good, press s.</p>
+<p>It saves to ~/.claude/workflows, re-runnable by name</p>
+<p>Now change the task and keep the shape. Swap &quot;missing auth checks&quot; for &quot;unhandled promises,&quot; or &quot;functions over 100 lines</p>
+<h2>How far this scales (article name)</h2>
+<p>One workflow run can fan out to 1,000 agents, with up to 16 working at once</p>
+<p>That&#x27;s where &quot;1000+ loops in one window&quot; comes from - not a metaphor, the feature&#x27;s actual ceiling</p>
+<ul>
+<li>And the scale is the point</li>
+</ul>
+<p>A thousand agents means a job no single context could ever hold - a whole codebase audited at once, a migration that touches every file, a search that runs a thousand angles in parallel</p>
+<p>The 16-at-once limit just means the fleet moves in waves, chewing through all thousand without you babysitting a single one</p>
+<p>Start at 20 to see how a run behaves and what it costs - then open it up - because this is the ceiling nobody else is building against</p>
+<h2>Step 3 - The part that actually breaks</h2>
+<p>You built a graph. Here&#x27;s where real ones fall over.</p>
+<p>Two failures matter most</p>
+<ul>
+<li>Failure one: the graph agrees with itself</li>
+</ul>
+<p>When an agent checks its own work, it goes easy on itself. Models prefer their own outputs</p>
+<p>So you put a verifier on the edge - a separate node that confirms a finding before it flows downstream.</p>
+<p>The catch nobody names: the verifier needs clean context</p>
+<p>Hand it the same conversation the executor had, and it isn&#x27;t verifying. It&#x27;s agreeing with itself in a different font</p>
+<p>A graph of agents sharing one context is a single loop in a costume. It fails the same way - later, more expensively, with more green lights on the way down</p>
+<p>So the verifier is a fresh node -  Own context - Checking a real signal - not &quot;did the agent say it&#x27;s done,&quot; but &quot;does the test actually pass&quot;</p>
+<p><img alt="Article image" src="/assets/2026-09-08-graph-engineering-build-1000+-agent-loops-in-one-window,-fro-ad09a25b80/04.png"></p>
+<ul>
+<li>Failure two: agents stepping on each other</li>
+</ul>
+<p>This isn&#x27;t hypothetical</p>
+<p>When Bun&#x27;s team first fanned a large port across many agents, the run failed operationally and agents used shared git commands in one workspace and overwrote each other</p>
+<p>The fix was structural, not clever prompting. They forbade the unsafe commands and gave each group its own isolated worktree</p>
+<p>That&#x27;s the real lesson of parallelism - two agents writing the same file race</p>
+<p>Before you fan out, answer three questions:</p>
+<ul>
+<li>
+<p>Where does each agent work?</p>
+</li>
+<li>
+<p>How do results merge?</p>
+</li>
+<li>
+<p>What happens when two disagree?</p>
+</li>
+</ul>
+<p><img alt="Article image" src="/assets/2026-09-08-graph-engineering-build-1000+-agent-loops-in-one-window,-fro-ad09a25b80/05.png"></p>
+<p>A graph without that plan doesn&#x27;t scale - It fails faster</p>
+<h2>Step 4 - Six graphs to build this week</h2>
+<p>The method: find the real edges → fan out → verify on independent context → isolate the workers</p>
+<p>///</p>
+<p>Each of these is that same shape, aimed at a new job. Change the task line and go:</p>
+<ul>
+<li>
+<p>Security sweep - one agent per file hunting missing auth, a verifier confirming each hit (the one you built)</p>
+</li>
+<li>
+<p>Cited report with /deep-research - ships already: splits your question into angles, searches in parallel, agents refute each other before writing</p>
+</li>
+<li>
+<p>Port a module - file by file, tests as a gate, failures looped back</p>
+</li>
+<li>
+<p>Adversarial diff review - routed by size: small change → one pass; big one → full parallel audit</p>
+</li>
+<li>
+<p>Scheduled ecosystem scan - save once, re-run by name</p>
+</li>
+<li>
+<p>Discovery of unknown size - finders run in parallel, each result checked against everything seen, looping until two rounds find nothing new</p>
+</li>
+</ul>
+<p>///</p>
+<p>What the ceiling looks like</p>
+<p>https://simonwillison.net/2026/Jul/8/rewriting-bun-in-rust/</p>
+<p>Bun&#x27;s Zig-to-Rust port ran on this exact machinery.</p>
+<p>Around 50 workflows, a peak of 64 agents in parallel. Roughly 535,000 lines of Zig turned into over a million lines of Rust, in 11 days.</p>
+<p>It also cost about $165,000 in usage, It needed a human designing and monitoring the whole thing
+And it drew public criticism over whether that much AI-authored code can be safely reviewed.</p>
+<p>The scale is real. So is the price, and the supervision</p>
+<h2>Step 5 - The anchors that keep a graph honest</h2>
+<p>Topology alone doesn&#x27;t buy truth</p>
+<p>A network of agents all confirming each other, none of them touching anything real, fails exactly like the single loop did - just with more moving parts</p>
+<p>The graph needs anchors: nodes that can&#x27;t be argued with</p>
+<ul>
+<li>
+<p>Tests that actually ran - not &quot;should pass,&quot; did pass</p>
+</li>
+<li>
+<p>A verifier on evidence, not vibes</p>
+</li>
+<li>
+<p>Frozen rules the agents are never allowed to tune - because they&#x27;re the ones an optimizer would weaken</p>
+</li>
+</ul>
+<p><img alt="Article image" src="/assets/2026-09-08-graph-engineering-build-1000+-agent-loops-in-one-window,-fro-ad09a25b80/06.png"></p>
+<p>The graph is only as honest as the things in it that refuse to move</p>
+<h2>When a graph is the wrong choice</h2>
+<p>Most tasks are not graphs. Reaching for one when you don&#x27;t need it just burns money and adds ways to fail.</p>
+<p>Skip the graph when:</p>
+<ul>
+<li>
+<p>The task is small or isolated. Adding a function, fixing one bug. A workflow is pure overhead here - a single agent is faster and cheaper.</p>
+</li>
+<li>
+<p>You need tight oversight. If you want to read and approve every step before the next one runs, a graph&#x27;s whole point (running wide without you) works against you.</p>
+</li>
+<li>
+<p>You don&#x27;t know what you&#x27;re looking for yet. Exploratory work wants one agent you can steer, not a fleet committed to a plan before you understand the problem.</p>
+</li>
+<li>
+<p>The steps genuinely depend on each other. If every step reads the last step&#x27;s output, it&#x27;s a real chain. Parallelism has nothing to grab. Forcing a graph onto a truly sequential task just adds coordination cost for zero speedup.</p>
+</li>
+</ul>
+<p>The tell is Step 1. If you can&#x27;t find two boxes with no arrow between them, there&#x27;s no graph to build. It&#x27;s a loop, and a loop is fine.</p>
+<p>A graph is a tool for width - independent work, done at once
+When the work isn&#x27;t wide, the line was never the problem...</p>
+<h2>The shift</h2>
+<p>A prompter asks a question. An architect draws a graph.</p>
+<p>The linear agent was never the ceiling.</p>
+<p>It was the first shape - the one everyone reaches for because it matches how we type: one line, one thing at a time.</p>
+<p>Once you see the nodes and edges, you stop asking the agent to do more and start asking the graph to do it wider:</p>
+<ul>
+<li>
+<p>Fan out where the work is independent</p>
+</li>
+<li>
+<p>Gate the edges where confidence matters</p>
+</li>
+<li>
+<p>Freeze the nodes that hold the truth</p>
+</li>
+</ul>
+<p>Most people will keep queueing steps in a line.</p>
+<p>The few who learn to draw the graph, and to respect what breaks it, will run a fleet.</p>
+<p>Draw the graph. Stay the architect.</p>
+<p>Start with the prerequisite: Loop Engineering - the single loop this is built on</p>
+<p>@0xCodila</p></div><a class="source" href="https://x.com/0xCodila/status/2079597821511020996" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>
