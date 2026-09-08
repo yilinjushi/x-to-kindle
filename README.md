@@ -12,6 +12,9 @@ Every extracted article is also preserved as Markdown with locally downloaded im
 - Cloudflare Pages output directory: `site`
 - No build command is required because the delivery workflows regenerate the HTML before committing.
 - To publish recent bookmarks without sending them to Kindle, run the `Publish Bookmarks To Blog` workflow.
+- Blog synchronization also runs hourly at minute 17 (UTC), scanning the latest 50 bookmarks. GitHub scheduling and Pages deployment can add delay; saving a bookmark does not instantly update the site.
+- Blog sync includes short posts and skips URLs already present in the archive, independently of Kindle sent history. Manual runs default to 15 bookmarks; increase `count` for a larger backlog.
+- Failed extractions make the sync fail visibly; successful archives are still committed so the next run can retry only missing items.
 
 ## What counts as a long article
 

@@ -1,6 +1,8 @@
 name: Publish Bookmarks To Blog
 
 on:
+  schedule:
+    - cron: "17 * * * *"
   workflow_dispatch:
     inputs:
       count:
@@ -45,9 +47,12 @@ jobs:
           EOF
 
       - name: Archive recent bookmarks without Kindle delivery
-        run: python fetch_bookmarks.py --archive-only --count "${{ inputs.count }}"
+        env:
+          BOOKMARK_COUNT: ${{ inputs.count || '50' }}
+        run: python fetch_bookmarks.py --archive-only --count "$BOOKMARK_COUNT"
 
       - name: Commit archive and site updates
+        if: ${{ !cancelled() }}
         shell: bash
         run: |
           git add archive/ site/
