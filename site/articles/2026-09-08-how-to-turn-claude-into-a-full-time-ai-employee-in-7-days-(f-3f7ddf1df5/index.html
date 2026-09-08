@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="How to Turn Claude Into a Full-Time AI Employee in 7 Days (Full Course)">
+  <title>How to Turn Claude Into a Full-Time AI Employee in 7 Days (Full Course) · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Khairallah AL-Awady @eng_khairallah1 · 2026-09-08</div><div class="prose"><h1>How to Turn Claude Into a Full-Time AI Employee in 7 Days (Full Course)</h1>
+<p>There are two types of people using Claude right now.</p>
+<p>Bookmark &amp; Save this :)</p>
+<p>The first type opens Claude, asks a question, copies the answer, pastes it somewhere, and moves on. They do this ten times a day. They think they are being productive.</p>
+<p>The second type has Claude running autonomously in the background, handling entire workflows, producing finished outputs, and delivering results to their inbox before they wake up. They barely touch Claude directly anymore. The system handles it.</p>
+<p>The difference between these two people is not intelligence. It is not technical skill. It is not how much they pay for their subscription.</p>
+<p>It is setup.</p>
+<p>The second person spent seven days building a system. Now that system works for them every single day without additional effort.</p>
+<p>Here is exactly what they did, day by day, so you can do it too.</p>
+<h2>Day 1: Define the Role</h2>
+<p>Before you touch any tool, write a one-page document that answers these questions:</p>
+<p>What is this AI employee responsible for? Not &quot;everything.&quot; One specific area. Content research. Customer support triage. Market analysis. Data processing. Code review. Financial reporting. Pick one.</p>
+<p>What does a perfect work day look like for this employee? Walk through it hour by hour. &quot;At 8am, check for new customer tickets. Categorize by urgency. Draft responses for low-complexity tickets. Flag high-complexity tickets for human review. At 10am, compile a summary of morning activity. At 2pm, check for follow-ups needed.&quot;</p>
+<p>What decisions can it make on its own? &quot;It can categorize tickets. It can draft responses for billing questions. It can update the tracking spreadsheet.&quot;</p>
+<p>What decisions should it escalate? &quot;It should never promise refunds. It should never share customer data externally. It should flag any ticket mentioning legal action.&quot;</p>
+<p>What does &quot;good work&quot; look like? Define the quality standard. Include examples if you have them. &quot;A good ticket response is under 100 words, addresses the specific issue, includes a next step, and matches our brand voice.&quot;</p>
+<p>This document is your system prompt. Everything else builds on it.</p>
+<h2>Day 2: Choose Your Interface</h2>
+<p>Claude has three main interfaces and each one serves a different purpose.</p>
+<p>Claude Chat — the basic interface. You type, Claude responds. This is where most people stop. It is useful for one-off questions and brainstorming but it is not where you build an employee.</p>
+<p>Claude Cowork — the autonomous work interface. Claude can read and write files on your computer, execute multi-step workflows, and run scheduled tasks. This is where non-technical users should build their AI employee.</p>
+<p>Claude Code — the developer interface. Claude runs in your terminal, accesses your codebase, executes commands, and connects to external services through APIs and MCP. This is the most powerful option but requires technical comfort.</p>
+<p>If you are non-technical, start with Cowork. If you are a developer, start with Claude Code.</p>
+<p>Both can produce a fully functional AI employee. The difference is how much customization and automation you get.</p>
+<h2>Day 3: Build Your First Workflow</h2>
+<p>Take the role document from Day 1 and convert it into an actionable workflow.</p>
+<p>A workflow has four components:</p>
+<p>Trigger: what starts it. A schedule (daily at 9am), a manual command (/run-report), or an event (new issue filed in GitHub).</p>
+<p>Inputs: what data the workflow needs. Files in a specific folder, data from a connected service, information from the web.</p>
+<p>Process: the step-by-step instructions. What Claude reads, analyzes, creates, and delivers.</p>
+<p>Output: what the finished product looks like and where it goes. A document in Google Drive, a message in Slack, an email summary.</p>
+<p>Build one workflow today. Just one. The simplest, most impactful one from your role document.</p>
+<p>For a content research employee, that might be:</p>
+<p>Trigger: Daily at 8am Inputs: List of 5 competitor accounts on X, list of 10 trending hashtags in niche Process: Check each account for posts in the last 24 hours. Check each hashtag for high-performing posts. Extract the hooks, topics, and engagement metrics. Compile into a briefing. Output: Markdown file saved to /Daily-Briefs folder with today&#x27;s date</p>
+<p>Set it up. Run it. See what comes back.</p>
+<h2>Day 4: Add Memory and Context</h2>
+<p>A new employee who knows nothing about your business produces generic work. An employee who understands your history, your standards, and your preferences produces excellent work.</p>
+<p>Claude Cowork now supports memory across sessions. Claude Code has CLAUDE.md files that serve as persistent context. And Claude Managed Agents has built-in memory with the new Dreaming feature.</p>
+<p>Create a context document that contains:</p>
+<p>About your business: what you do, who you serve, what your goals are.</p>
+<p>Your standards: quality criteria, brand voice guidelines, formatting preferences.</p>
+<p>Your history: examples of past work that met your standard. Include 2-3 examples so Claude can pattern-match.</p>
+<p>Your tools: what services you use (Slack, Google Drive, Linear, GitHub) and how Claude should interact with them.</p>
+<p>Your rules: explicit do&#x27;s and don&#x27;ts. Things Claude should always include. Things Claude should never do.</p>
+<p>Load this context at the start of every session or — better — save it as a persistent context file that Claude reads automatically.</p>
+<p>The more context you give, the more your AI employee performs like someone who has worked with you for years rather than someone you just met.</p>
+<h2>Day 5: Connect Your Tools</h2>
+<p>An employee that can only read and write local files is useful but limited.</p>
+<p>An employee that can read your email, check your calendar, post to Slack, update your project board, and save documents to Google Drive is transformational.</p>
+<p>Claude supports connectors for:</p>
+<ul>
+<li>
+<p>Gmail and Google Calendar</p>
+</li>
+<li>
+<p>Google Drive and Google Docs</p>
+</li>
+<li>
+<p>Slack</p>
+</li>
+<li>
+<p>Notion</p>
+</li>
+<li>
+<p>Microsoft 365 (Outlook, OneDrive, SharePoint)</p>
+</li>
+<li>
+<p>GitHub</p>
+</li>
+<li>
+<p>Linear</p>
+</li>
+</ul>
+<p>Connect every tool your AI employee needs to do its job.</p>
+<p>If your AI employee is a content researcher, connect it to Google Drive (for saving reports), Slack (for posting daily briefings to a channel), and give it web access (for monitoring competitors).</p>
+<p>If your AI employee is a code reviewer, connect it to GitHub (for reading PRs and posting comments), Slack (for notifying the team), and Linear (for updating issue status).</p>
+<p>Each connector multiplies what your AI employee can do.</p>
+<h2>Day 6: Build Your Routine Stack</h2>
+<p>By now you have one workflow running. Day 6 is about building three more.</p>
+<p>Look at your role document from Day 1. Identify the three most time-consuming recurring tasks beyond the one you already automated.</p>
+<p>Build a workflow for each one.</p>
+<p>By the end of Day 6, you should have four routines running:</p>
+<ul>
+<li>
+<p>One daily workflow (the one from Day 3)</p>
+</li>
+<li>
+<p>One weekly workflow (something that runs every Friday or Monday)</p>
+</li>
+<li>
+<p>One event-triggered workflow (something that fires when a specific thing happens)</p>
+</li>
+<li>
+<p>One on-demand workflow (something you trigger manually when you need it)</p>
+</li>
+</ul>
+<p>Four workflows, each saving you 30 minutes to 2 hours per occurrence. That is 4-10 hours saved per week. Every week. Without additional effort.</p>
+<h2>Day 7: Review, Refine, and Set the Standard</h2>
+<p>Run all four workflows manually one more time. Watch the output carefully.</p>
+<p>For each workflow, ask:</p>
+<p>Did it produce the output I expected? If not, what part of the prompt needs to be more specific?</p>
+<p>Did it miss anything important? If so, add explicit instructions for what was missed.</p>
+<p>Did it include anything unnecessary? If so, add constraints to eliminate the noise.</p>
+<p>Did it handle edge cases well? If not, add error handling instructions for the specific scenarios that caused problems.</p>
+<p>Update every prompt based on what you learned. This refinement step is what separates a system that kind of works from a system that works reliably.</p>
+<p>Then set a weekly calendar reminder. Every Friday at 4pm: review AI employee output, update prompts, add one new workflow.</p>
+<p>This is the compounding effect. The person who refines their system every week for three months has something that is dramatically more powerful than the person who set it up once and never touched it again.</p>
+<h2>What Your First Month Looks Like</h2>
+<p>Week 1 (the 7 days above): Four workflows running, saving 4-10 hours per week.</p>
+<p>Week 2: Refine all four workflows. Add one new one. Time saved increases.</p>
+<p>Week 3: Refine again. Add another workflow. Your AI employee now handles 6 distinct tasks.</p>
+<p>Week 4: By now your system is reliable enough that you stop thinking about it. You check outputs, make occasional adjustments, and spend the saved time on work that actually requires your brain.</p>
+<p>This is the transition from &quot;using AI&quot; to &quot;managing AI.&quot;</p>
+<p>And it is the same transition that separates the person who gets modest value from Claude and the person who gets transformational value.</p>
+<p>Advanced: Build a Review and Improvement System</p>
+<p>Once your AI employee has been running for a few weeks, build a meta-workflow — a routine that reviews the AI employee&#x27;s own performance.</p>
+<p>Every Friday, set up a review session:</p>
+<p>&quot;Review all outputs produced this week. For each workflow, rate the output quality from 1-10. Identify the two weakest outputs and diagnose why they fell short. Was the prompt too vague? Was the data incomplete? Was there an edge case the prompt did not cover? Propose specific prompt changes that would fix each issue. Save the review and proposed changes to /Weekly-Reviews.&quot;</p>
+<p>Then you spend 15 minutes reading the review, approving the changes, and updating the prompts.</p>
+<p>This is the compounding loop that makes your AI employee dramatically better over time. After four weeks of weekly reviews, your system will be producing output that is unrecognizable compared to where it started.</p>
+<p>And with Anthropic&#x27;s new Dreaming feature on Managed Agents, this self-improvement can happen automatically between sessions. The agent reviews its own past performance, extracts patterns, and adjusts its approach — without you needing to do anything.</p>
+<h2>The Five AI Employee Archetypes</h2>
+<p>Based on what is working for people right now, here are the five most common AI employee roles and what each one handles:</p>
+<p>The Content Engine — researches topics, identifies trends, drafts articles, creates social media posts, maintains a content calendar. Best for: content creators, marketers, founders building in public.</p>
+<p>The Operations Manager — triages emails, organizes files, processes invoices, creates reports, manages calendars. Best for: small business owners, freelancers, ops teams.</p>
+<p>The Code Reviewer — reviews pull requests, identifies bugs, suggests improvements, maintains documentation, monitors test coverage. Best for: engineering teams, technical founders, solo developers.</p>
+<p>The Research Analyst — monitors competitors, tracks market trends, summarizes industry news, produces intelligence reports. Best for: strategists, investors, product managers.</p>
+<p>The Customer Support Agent — triages support tickets, drafts responses, categorizes issues, escalates complex cases, maintains a knowledge base. Best for: SaaS companies, e-commerce, service businesses.</p>
+<p>Pick the archetype that matches your biggest time sink. That is your first AI employee.</p>
+<h2>The Real Cost</h2>
+<p>Claude Pro costs $20/month. Claude Max costs $100-200/month for heavier usage.</p>
+<p>A human employee doing the same work costs $3,000 to $8,000 per month minimum.</p>
+<p>And the human employee does not work at 2am, does not run on weekends, and does not get better automatically through Dreaming.</p>
+<p>This is not about replacing humans. It is about handling the work that should not require a human in the first place - the repetitive, process-driven, time-consuming tasks that eat up the best hours of your day.</p>
+<p>Free yourself from that work and you free yourself to do the work that only you can do.</p>
+<h2>The Honest Truth</h2>
+<p>Setting up an AI employee takes seven focused days. Not seven months. Not a degree in computer science. Seven days of following this playbook.</p>
+<p>The people who do it will have a system running by next week that handles real work while they focus on higher-value activities.</p>
+<p>The people who do not will still be copy-pasting from chat windows six months from now.</p>
+<p>The tools are here. The playbook is here. The only variable is whether you actually build it.</p>
+<p>Start today. Day 1 is a piece of paper and a pen. By Day 7, you will have an AI employee that works while you sleep.</p>
+<p>If this helped, follow me @eng_khairallah1 for more AI breakdowns, workflows, and full courses every week. I post content that helps you actually build, not just read.</p>
+<p>hope this was useful for you, Khairallah ❤️</p></div><a class="source" href="https://x.com/eng_khairallah1/status/2054132051536961540" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

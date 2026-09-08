@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="0成本教你开 giffgaff eSIM，保姆教程，有手就行">
+  <title>0成本教你开 giffgaff eSIM，保姆教程，有手就行 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Koda @wadezone · 2026-09-08</div><div class="prose"><h1>0成本教你开 giffgaff eSIM，保姆教程，有手就行</h1>
+<p>现在想在国内搞一张 giffgaff 卡，最麻烦的地方不是注册账号，而是“开卡成本”被越抬越高。</p>
+<p>你如果走实体 SIM，通常要等国际邮寄，时间不稳定；找代开，又要付代开费，还得把账号、验证码、支付环节交给别人，风险也高。</p>
+<p>更尴尬的是，国行 iPhone 本身不支持 eSIM。很多人看到这里就以为这条路断了。</p>
+<p>其实没断。</p>
+<p>这篇我讲一个几乎 0 成本的办法：不用买实体卡，不找人代开，只用电脑里的安卓模拟器，自己把 giffgaff eSIM 开出来。</p>
+<p>关键点是：</p>
+<p>你不需要先让国行 iPhone 支持 eSIM。</p>
+<p>你只需要先拿到 giffgaff eSIM 的激活码。</p>
+<p>模拟器只是开卡工具，不是最终使用设备。</p>
+<p><img alt="Article image" src="/assets/2026-09-08-0成本教你开-giffgaff-esim，保姆教程，有手就行-8aea7729cd/01.jpg"></p>
+<h2>这套方法到底在做什么？</h2>
+<p>一句话：</p>
+<p>→ 用电脑模拟一台支持 eSIM 的安卓手机
+→ 让 giffgaff App 认为设备支持 eSIM
+→ 然后在 App 里购买 eSIM，拿到激活码</p>
+<p>完整链路是：</p>
+<p>→ 电脑
+→ → MuMu 安卓模拟器
+→ → Root
+→ → Magisk / 面具
+→ → LSPosed
+→ → HookEuicc
+→ → giffgaff App
+→ → 购买 eSIM
+→ → 拿到激活码
+→ → 后续安装 / 下发</p>
+<p>注意：模拟器只是用来开卡。</p>
+<p>eSIM 开好之后，不是只能用在模拟器里。</p>
+<p>模拟器的作用是绕过 giffgaff App 的设备检测，拿到激活码。</p>
+<p>真正使用 eSIM，要看你后面把激活码安装到哪里：</p>
+<ul>
+<li>支持 eSIM 的手机</li>
+<li>eSIM 转接方案</li>
+<li>9esim 这类下发方案</li>
+<li>其他支持 eSIM 的设备或工具</li>
+</ul>
+<p>如果你是国行 iPhone，仍然不能原生添加 eSIM，但可以继续走转接或下发方案。</p>
+<h2>开始前准备</h2>
+<p>你需要准备 5 样东西。</p>
+<ol>
+<li>一台电脑</li>
+</ol>
+<p>建议 Windows。</p>
+<p>这套流程依赖安卓模拟器、Root、Magisk、LSPosed。Windows 上成功率更高，也更容易排查。</p>
+<ol start="2">
+<li>一个 giffgaff 账号</li>
+</ol>
+<p>没有账号先注册。</p>
+<p>如果你想走上车链接，可以用这个：</p>
+<p>Get your giffgaff SIM here, with a reward when you join.</p>
+<p>https://giffgaff.com</p>
+<ol start="3">
+<li>一个可用支付方式</li>
+</ol>
+<p>后面购买 / 充值 giffgaff eSIM 会用到。</p>
+<ol start="4">
+<li>一个稳定海外网络</li>
+</ol>
+<p>尤其后面如果用 9esim 下发 eSIM，建议开全局英国节点。</p>
+<p>不要只开浏览器代理，要保证模拟器 / 下发工具也走同一个网络环境。</p>
+<ol start="5">
+<li>giffgaff 工具包</li>
+</ol>
+<p>工具包下载：</p>
+<p>→ http://mega.nz/file/XAEhkDxI</p>
+<p>解密密钥：</p>
+<p>→ YuHRzhbB_W15NB1J9DFt-y1LaQrCRZxV5UBPKnY2fLg</p>
+<p>工具包里要用到这些东西：</p>
+<ul>
+<li>MuMu 模拟器：在电脑里创建安卓手机环境</li>
+<li>Magisk / 面具：提供 Root / 模块能力</li>
+<li>LSPosed：让 Hook 模块作用到指定 App</li>
+<li>manager.apk：LSPosed 管理器入口</li>
+<li>HookEuicc：让 giffgaff 识别设备支持 eSIM</li>
+<li>Via 浏览器：处理登录 / 跳转更稳</li>
+<li>giffgaff App：购买 eSIM、拿激活码</li>
+</ul>
+<p><img alt="Article image" src="/assets/2026-09-08-0成本教你开-giffgaff-esim，保姆教程，有手就行-8aea7729cd/02.jpg"></p>
+<p>安全提醒：</p>
+<p>这套方案涉及 Root 和 Hook，不是官方推荐路径。</p>
+<p>不要在模拟器里保存主力账号、重要隐私、长期银行卡信息。</p>
+<h2>Step 1：安装 MuMu 模拟器</h2>
+<p>先解压工具包。</p>
+<p>找到 MuMu 安装程序，运行安装。</p>
+<p>安装时会联网下载大约 900MB 的系统文件。</p>
+<p>装好后打开 MuMu。</p>
+<p>如果界面不是中文，先把语言改成中文，后面会少很多误操作。</p>
+<p><img alt="Article image" src="/assets/2026-09-08-0成本教你开-giffgaff-esim，保姆教程，有手就行-8aea7729cd/03.jpg"></p>
+<p>这一关的验收标准：</p>
+<p>→ MuMu 能正常打开
+→ 能进入模拟器管理界面</p>
+<p>不要急着装 giffgaff。</p>
+<p>真正关键的是后面这台安卓设备有没有 Root、可写系统盘和模块能力。</p>
+<h2>Step 2：新建一台安卓设备，并打开 Root</h2>
+<p>在 MuMu 里新建一台设备。</p>
+<p>建议选择竖屏手机。</p>
+<p>创建完成后，先不要启动。</p>
+<p>先进入设备设置，打开两个关键选项：</p>
+<p>→ 磁盘：可写系统磁盘
+→ 其他：手机 Root 权限</p>
+<p><img alt="Article image" src="/assets/2026-09-08-0成本教你开-giffgaff-esim，保姆教程，有手就行-8aea7729cd/04.jpg"></p>
+<p>这一步是地基。</p>
+<p>如果这里没做好，后面会出现这些问题：</p>
+<ul>
+<li>Magisk 装不上</li>
+<li>LSPosed 不生效</li>
+<li>HookEuicc 没反应</li>
+<li>giffgaff 仍然提示不支持 eSIM</li>
+</ul>
+<p>你可以这样理解：</p>
+<p>→ 没有 Root，就没有 Hook
+→ 没有可写系统盘，Magisk 就很容易装不进去</p>
+<p>这一关的验收标准：</p>
+<p>→ 设备已创建
+→ 可写系统磁盘已开启
+→ Root 权限已开启</p>
+<h2>Step 3：把工具包放进模拟器</h2>
+<p>启动刚才创建的设备。</p>
+<p>先把安卓系统语言改成简体中文。</p>
+<p>然后打开 MuMu 顶部的“更多工具”，找到共享文件夹。</p>
+<p>把工具包复制进共享文件夹。</p>
+<p>再回到模拟器，用系统文件管理器打开共享文件夹，就能看到工具包。</p>
+<p><img alt="Article image" src="/assets/2026-09-08-0成本教你开-giffgaff-esim，保姆教程，有手就行-8aea7729cd/05.jpg"></p>
+<p>如果你在模拟器里看不到工具包，按这个顺序排查：</p>
+<p>→ 是不是复制到了当前设备的共享文件夹？
+→ 文件管理器有没有刷新？
+→ 有没有重启模拟器？
+→ 是不是开了多个模拟器实例，放错目录了？</p>
+<p>这一关的验收标准：</p>
+<p>→ 模拟器文件管理器里能看到工具包
+→ 能看到 Magisk / LSPosed / HookEuicc / giffgaff 等安装包</p>
+<h2>Step 4：安装 Magisk / 面具</h2>
+<p>在模拟器里打开工具包。</p>
+<p>安装 Magisk，也就是“面具”。</p>
+<p>第一次打开时，系统可能会弹 Root 授权。</p>
+<p>选择：</p>
+<p>→ 永久记住
+→ 授予 Root 权限</p>
+<p>然后在 Magisk 里选择：</p>
+<p>→ 直接安装到系统</p>
+<p>如果一开始没看到这个选项，就退出 Magisk，重新打开。</p>
+<p><img alt="Article image" src="/assets/2026-09-08-0成本教你开-giffgaff-esim，保姆教程，有手就行-8aea7729cd/06.jpg"></p>
+<p>安装完成后，重启模拟器。</p>
+<p>重启后再次打开 Magisk，确认它能正常运行。</p>
+<p>这一关的验收标准：</p>
+<p>→ Magisk 能打开
+→ Magisk 拿到了 Root
+→ Magisk 可以从本地安装模块</p>
+<p>如果 Magisk 装不上，优先回到 Step 2，检查 Root 和可写系统盘。</p>
+<h2>Step 5：安装 LSPosed</h2>
+<p>打开 Magisk。</p>
+<p>进入：</p>
+<p>→ 模块 → 从本地安装</p>
+<p>选择工具包里的 LSPosed 框架包。</p>
+<p>安装完成后，手动重启模拟器。</p>
+<p><img alt="Article image" src="/assets/2026-09-08-0成本教你开-giffgaff-esim，保姆教程，有手就行-8aea7729cd/07.jpg"></p>
+<p>这里有一个很容易卡住的坑：</p>
+<p>重启后，通知栏不一定会出现 LSPosed 入口。</p>
+<p>如果你看不到入口，不要一直等。</p>
+<p>直接这样做：</p>
+<p>→ 解压 LSPosed-v1.9.2-7024-zygisk-release.zip
+→ 找到 manager.apk
+→ 在模拟器里安装 manager.apk
+→ 手动打开 LSPosed 管理器</p>
+<p>这一关的验收标准：</p>
+<p>→ LSPosed 已作为 Magisk 模块安装
+→ 模拟器已重启
+→ LSPosed 管理器能打开</p>
+<h2>Step 6：安装 HookEuicc、Via、giffgaff</h2>
+<p>接下来安装三个应用：</p>
+<p>→ HookEuicc
+→ Via 浏览器
+→ giffgaff App</p>
+<p>先装 HookEuicc。</p>
+<p>然后打开 LSPosed：</p>
+<p>→ 模块 → HookEuicc → 开启模块 → 作用域里勾选 giffgaff</p>
+<p><img alt="Article image" src="/assets/2026-09-08-0成本教你开-giffgaff-esim，保姆教程，有手就行-8aea7729cd/08.jpg"></p>
+<p>注意：</p>
+<p>“装了 HookEuicc”不等于“HookEuicc 对 giffgaff 生效”。</p>
+<p>必须同时满足：</p>
+<p>→ HookEuicc 已安装
+→ LSPosed 里 HookEuicc 已启用
+→ 作用域里已经勾选 giffgaff
+→ 勾选后已经重启模拟器</p>
+<p>再安装 Via 浏览器。</p>
+<p>建议把 Via 设置成默认浏览器，因为登录、付款、网页跳转时更稳。</p>
+<p>最后安装 giffgaff App。</p>
+<p>这一关的验收标准：</p>
+<p>→ HookEuicc 已启用
+→ HookEuicc 作用域已勾选 giffgaff
+→ Via 已安装并设为默认浏览器
+→ giffgaff App 已安装
+→ 模拟器已重启</p>
+<h2>Step 7：确认 giffgaff 识别 eSIM 能力</h2>
+<p>重启模拟器。</p>
+<p>打开 giffgaff App。</p>
+<p>进入 eSIM 页面。</p>
+<p>如果前面都正确，原来“手机不支持 eSIM”的提示应该消失。</p>
+<p>这一步是整套流程最重要的验收点。</p>
+<p><img alt="Article image" src="/assets/2026-09-08-0成本教你开-giffgaff-esim，保姆教程，有手就行-8aea7729cd/09.jpg"></p>
+<p>如果 giffgaff 仍然提示不支持 eSIM，按这个顺序排查：</p>
+<p>→ MuMu 是否开启 Root？
+→ 磁盘是否选择可写系统磁盘？
+→ Magisk 是否直接安装到系统？
+→ LSPosed 是否作为 Magisk 模块安装？
+→ LSPosed 管理器是否能打开？
+→ HookEuicc 是否安装？
+→ HookEuicc 模块开关是否打开？
+→ HookEuicc 作用域是否勾选 giffgaff？
+→ 勾选后是否重启模拟器？</p>
+<p>这一关的验收标准：</p>
+<p>→ giffgaff 不再提示设备不支持 eSIM
+→ 可以进入 eSIM 购买 / 开通流程</p>
+<h2>Step 8：购买 giffgaff eSIM</h2>
+<p>确认 giffgaff 识别 eSIM 后，就可以购买。</p>
+<p>流程大概是：</p>
+<p>→ 打开 giffgaff App
+→ 登录账号
+→ 切换到 eSIM
+→ 选择充值 / 购买
+→ 选择付款方式
+→ 填写地址
+→ 完成支付
+→ 获取 eSIM 激活码</p>
+<p><img alt="Article image" src="/assets/2026-09-08-0成本教你开-giffgaff-esim，保姆教程，有手就行-8aea7729cd/10.jpg"></p>
+<p>如果付款失败，不要马上回去重装 LSPosed。</p>
+<p>到了付款环节，说明设备识别链路大概率已经通了。</p>
+<p>付款失败更可能是这些原因：</p>
+<p>→ 银行卡不支持
+→ 地址不匹配
+→ 网络环境异常
+→ giffgaff 风控
+→ 账号状态问题</p>
+<p>这一关的验收标准：</p>
+<p>→ 完成购买 / 充值
+→ 拿到 giffgaff eSIM 激活码</p>
+<h2>Step 9：处理 eSIM 激活码格式</h2>
+<p>完整 eSIM 激活码通常长这样：</p>
+<p>→ LPA:1$服务器地址$激活码</p>
+<p>但 giffgaff 给出的激活码，可能没有前面的 <code>LPA:</code>。</p>
+<p>如果你把激活码导入某些 eSIM 工具或适配器时，它提示格式错误，可以尝试在前面补上：</p>
+<p>→ LPA:</p>
+<p><img alt="Article image" src="/assets/2026-09-08-0成本教你开-giffgaff-esim，保姆教程，有手就行-8aea7729cd/11.jpg"></p>
+<p>也就是把：</p>
+<p>→ 1$服务器地址$激活码</p>
+<p>改成：</p>
+<p>→ LPA:1$服务器地址$激活码</p>
+<p>注意：</p>
+<p>只补前缀。</p>
+<p>不要改服务器地址。</p>
+<p>不要改激活码主体。</p>
+<p>这一关的验收标准：</p>
+<p>→ 激活码格式被 eSIM 工具识别
+→ 不再提示格式错误</p>
+<h2>Step 10：如果用 9esim 下发，先开全局英国节点</h2>
+<p>这是我自己踩过的坑。</p>
+<p>我一开始用 9esim 下发 eSIM 文件，一直失败。</p>
+<p>后来发现，不是文件问题，不是 eSIM 问题，而是网络环境没走对。</p>
+<p>建议：</p>
+<p>→ 下发前先开全局英国节点
+→ 不要只开浏览器代理
+→ 确保模拟器 / 下发工具也走英国网络</p>
+<p><img alt="Article image" src="/assets/2026-09-08-0成本教你开-giffgaff-esim，保姆教程，有手就行-8aea7729cd/12.jpg"></p>
+<p>很多技术问题，看起来像工具坏了，实际只是网络没走对。</p>
+<p>这一关的验收标准：</p>
+<p>→ eSIM 可以正常下发 / 安装到目标方案</p>
+<h2>最后给一张总排查表</h2>
+<p>如果你卡住了，不要从最后一步乱试。</p>
+<p>按依赖链往回排。</p>
+<ul>
+<li>Magisk 装不上：Step 2：Root + 可写系统盘</li>
+<li>Magisk 没权限：Root 授权是否点了永久允许</li>
+<li>LSPosed 找不到入口：Step 5：安装 manager.apk</li>
+<li>giffgaff 仍提示不支持 eSIM：Step 6：HookEuicc 是否启用并勾选 giffgaff</li>
+<li>付款失败：支付方式、地址、账号风控、网络环境</li>
+<li>eSIM 下发失败：Step 10：是否全局英国节点</li>
+<li>激活码格式错误：Step 9：是否缺少 <code>LPA:</code> 前缀</li>
+</ul>
+<p>整套方法的本质就是这条链：</p>
+<p>→ 模拟器能力
+→ → Root
+→ → Magisk
+→ → LSPosed
+→ → HookEuicc
+→ → giffgaff 识别 eSIM
+→ → 购买
+→ → 激活码格式
+→ → 网络下发</p>
+<p>你在哪一步失败，就回到它上一层依赖。</p>
+<p>别跳。</p>
+<p>跳步骤，是这类教程最大的坑。</p>
+<h2>一句话总结</h2>
+<p>国行 iPhone 不能直接装 eSIM，但你可以先用电脑里的安卓模拟器把 giffgaff eSIM 开出来。</p>
+<p>模拟器不是最终使用 eSIM 的地方。</p>
+<p>模拟器只是开卡工具。</p>
+<p>拿到激活码之后，后面才是安装、转接和下发问题。</p></div><a class="source" href="https://x.com/wadezone/status/2056907392068231597" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>
