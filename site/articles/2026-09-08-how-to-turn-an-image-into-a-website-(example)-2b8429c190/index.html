@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="How To Turn An Image Into A Website (EXAMPLE)">
+  <title>How To Turn An Image Into A Website (EXAMPLE) · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Leon Lin @LexnLin · 2026-09-08</div><div class="prose"><h1>How To Turn An Image Into A Website (EXAMPLE)</h1>
+<p>You may have read this tutorial and still asked how do I turn gpt-images-2.0 generated images into code using for example codex.</p>
+<p>This tutorial should hopefully clarify everything with an example :)</p>
+<p>Leon Lin
+@LexnLin
+·
+Apr 27
+ Article
+Building Better Frontends with an Image-to-Code approach
+Most AI-generated websites still look average or sloppy.
+Not because the models are useless, but because the workflow is usually wrong. People ask a coding agent to “make it modern,” “make it clean,”...
+16
+43
+341
+78K</p>
+<h2>Generate images of the website you like</h2>
+<p>Step one is to generate images for your website on chatgpt.com using 
+https://github.com/Leonxlnx/taste-skill/blob/main/skills/imagegen-frontend-web/SKILL.md</p>
+<p>Copy the content of the file and drop it into the prompt or add the Markdown file.</p>
+<p><img alt="Article image" src="/assets/2026-09-08-how-to-turn-an-image-into-a-website-(example)-2b8429c190/01.jpg"></p>
+<p>In this example I used this prompt:</p>
+<p>Based on this skill above, generate images for a website for an AI agency. The design should include eight sections, with one image per section, eight distinct images in total. The website should feel polished and clean and rather minimalist with less info, but with striking image effects/visuals and creative layouts. Use orange as the main color. All images should be horizontal</p>
+<p>TIPS:</p>
+<ul>
+<li>
+<p>Please run your prompt multiple times in different chats to get more results to choose from</p>
+</li>
+<li>
+<p>Use thinking mode for better quality</p>
+</li>
+<li>
+<p>Generate one image per website section</p>
+</li>
+<li>
+<p>images 2.0 can generate up to 10images at once</p>
+</li>
+</ul>
+<h2>Optional: refine/iterate till you get the perfect result</h2>
+<p>Just prompt and refine in chatgpt till you get a really nice result.</p>
+<p>Use this to edit one image at a time.</p>
+<p><img alt="Article image" src="/assets/2026-09-08-how-to-turn-an-image-into-a-website-(example)-2b8429c190/02.jpg"></p>
+<p>Or change the style of all images.</p>
+<p><img alt="Article image" src="/assets/2026-09-08-how-to-turn-an-image-into-a-website-(example)-2b8429c190/03.jpg"></p>
+<p>If you&#x27;re done, download all images.</p>
+<h2>Extract all images</h2>
+<p>Now you need to extract all assets from your images. So this means for example these:</p>
+<p><img alt="Article image" src="/assets/2026-09-08-how-to-turn-an-image-into-a-website-(example)-2b8429c190/04.jpg"></p>
+<p><img alt="Article image" src="/assets/2026-09-08-how-to-turn-an-image-into-a-website-(example)-2b8429c190/05.jpg"></p>
+<p>This is how I extract these images:</p>
+<p><img alt="Article image" src="/assets/2026-09-08-how-to-turn-an-image-into-a-website-(example)-2b8429c190/06.jpg"></p>
+<p>Prompt:</p>
+<p>extract the images on the right, generate them total should be 7 extracted generated images, please dont change them, they should look exactly the same</p>
+<p><img alt="Article image" src="/assets/2026-09-08-how-to-turn-an-image-into-a-website-(example)-2b8429c190/07.jpg"></p>
+<p>Prompt:</p>
+<p>in this image there are 4 images used. extract them and generate all 4. so generate 4 different images in total</p>
+<h2>Remove background of your assets</h2>
+<p>Sadly chatgpt no longer has the feature of generating transparent images anymore (hope it will be there again soon :))</p>
+<p>I personally use https://express.adobe.com/home/tools/remove-background (free)</p>
+<p><img alt="Article image" src="/assets/2026-09-08-how-to-turn-an-image-into-a-website-(example)-2b8429c190/08.jpg"></p>
+<h2>Turn it into a website</h2>
+<p>I&#x27;m using Codex for building this website.</p>
+<p>Work on one section everytime. 
+Start by adding your first section and prompting something like this:</p>
+<p>lets build a website. 
+i will provide the images and you just clone the rest of the website. so do NOT generate or build the asset in this image. focus on the components and details. 
+here is the hero section. copy it. after that give me the dir of the folder where i need to put my images in  use react + nextjs 
+start local dev server afterwards</p>
+<p><img alt="Article image" src="/assets/2026-09-08-how-to-turn-an-image-into-a-website-(example)-2b8429c190/09.png"></p>
+<p>Afterwards codex will cook and tell you something this:</p>
+<p><img alt="Article image" src="/assets/2026-09-08-how-to-turn-an-image-into-a-website-(example)-2b8429c190/10.png"></p>
+<p>Put your asset image that you extracted into that folder. 
+(Either refresh the site or tell codex that you&#x27;ve added it)</p>
+<p>And there you go</p>
+<p>The result</p>
+<p><img alt="Article image" src="/assets/2026-09-08-how-to-turn-an-image-into-a-website-(example)-2b8429c190/11.jpg"></p>
+<p>Original</p>
+<p><img alt="Article image" src="/assets/2026-09-08-how-to-turn-an-image-into-a-website-(example)-2b8429c190/12.jpg"></p>
+<p>These were 2 prompts. You can refine it of course by fixing sizes and positioning of components.</p>
+<p>Do the same for all the other sections. If you encounter alignment issues or overlapping:
+Screenshot it, give it to codex, let it fix it</p>
+<p>You need to be patient. Nothing crazy comes after one prompt.</p>
+<p>“Good things come to those who wait.”</p>
+<h2>Next steps</h2>
+<ul>
+<li>
+<p>Add scroll animations</p>
+</li>
+<li>
+<p>Add hover animations</p>
+</li>
+<li>
+<p>Focus on details and responsiveness</p>
+</li>
+</ul>
+<p>You can add these by just prompting Codex to add them:</p>
+<p>Add animations when scrolling into a new section. Should feel smooth and clean</p>
+<h2>My result</h2>
+<p>The media could not be played.
+Reload</p>
+<p>So everything you actually need is ChatGPT images 2.0 and Codex.</p>
+<p>Github code: https://github.com/Leonxlnx/tutorialnexora</p>
+<p>If you have questions, reply or dm me :)</p>
+<p>Happy codexmaxxing!</p></div><a class="source" href="https://x.com/LexnLin/status/2050179260892029179" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>
