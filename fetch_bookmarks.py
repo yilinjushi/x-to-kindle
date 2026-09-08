@@ -124,6 +124,15 @@ def is_long_article(content: dict, total_chars: int) -> bool:
     return content.get("is_article", False) or total_chars >= MIN_TEXT_CHARS
 
 
+def load_archived_urls() -> set[str]:
+    from build_site import _read_article
+    return {
+        article["url"]
+        for path in Path(ARCHIVE_DIR).glob("**/*.md")
+        if (article := _read_article(path)).get("url")
+    }
+
+
 def main():
     if not Path(SESSION_FILE).exists():
         print("ERROR: No session file found. Run fetch_tweet.py --setup first.", file=sys.stderr)
@@ -145,6 +154,8 @@ def main():
 
     Path(outdir).mkdir(parents=True, exist_ok=True)
     sent_history = load_sent_history()
+    archived_urls = load_archived_urls() if archive_only else set()
+    failures = 0
 
     with sync_playwright() as p:
         launch_kwargs = {
@@ -173,6 +184,9 @@ def main():
         results = []
         for i, url in enumerate(urls, 1):
             print(f"\n[{i}/{len(urls)}] {url}")
+            if archive_only and url in archived_urls:
+                print("  SKIP: this URL is already archived.")
+                continue
             try:
                 page.goto(url, wait_until="domcontentloaded", timeout=60000)
                 wait_for_content(page)
@@ -185,6 +199,8 @@ def main():
                 n_img = sum(1 for x in items if x["type"] == "image")
                 n_txt = sum(1 for x in items if x["type"] != "image")
                 total_chars = sum(len(x.get("text", "")) for x in items if x["type"] != "image")
+                if archive_only and not total_chars and not n_img:
+                    raise ValueError("No article content extracted; refusing to archive an empty page")
                 print(f"  {title!r} | {n_txt} text blocks, {n_img} images, {total_chars} chars")
 
                 if url in sent_history and not archive_only:
@@ -218,6 +234,7 @@ def main():
                 print(f"  Archived: {archive_path}")
 
                 if archive_only:
+                    archived_urls.add(url)
                     results.append((title, str(archive_path), n_images))
                     continue
 
@@ -251,6 +268,7 @@ def main():
 
             except Exception as e:
                 print(f"  ERROR: {e}")
+                failures += 1
                 results.append((f"article_{i}", None, 0))
 
         context.close()
@@ -264,7 +282,12 @@ def main():
         print(f"  Archived: {len(succeeded)} article(s) → {ARCHIVE_DIR}")
     else:
         print(f"  Saved:  {len(succeeded)} DOCX file(s) → {outdir}")
-    if send_to:
+    if archive_only:
+        print("  Emails: skipped (archive-only mode)")
+        if failures:
+            print(f"  Failed: {failures} article(s); rerun to retry.", file=sys.stderr)
+            sys.exit(1)
+    elif send_to:
         print(f"  Emails: sent individually to {send_to}")
         print(f"  History: {len(sent_history)} sent URL(s) tracked in {SENT_HISTORY_FILE}")
     else:
