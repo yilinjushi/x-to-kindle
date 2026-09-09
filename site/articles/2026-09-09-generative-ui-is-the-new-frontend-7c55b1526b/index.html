@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Generative UI Is the New Frontend">
+  <title>Generative UI Is the New Frontend · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Shubham Saboo @Saboo_Shubham_ · 2026-09-09</div><div class="prose"><h1>Generative UI Is the New Frontend</h1>
+<p>The frontend used to be a fixed thing. Designers drew it. Engineers built it. Users got what shipped.</p>
+<p>That&#x27;s over.</p>
+<p>The interfaces shipping in 2026 are drawn partly by the agent itself, in real time, from what the user actually asked for. Ask for a table, get a table. Not a paragraph describing one.</p>
+<p>Generative UI is the layer that lets agents stop describing and start showing. Three patterns have emerged for how to build it, and the differences between them matter more than most teams realize.</p>
+<p>But there isn&#x27;t one way to build this. There are three. And most teams pick one without knowing they chose.</p>
+<h2>The protocol stack</h2>
+<p>Three protocols. Each does one job.</p>
+<p>MCP connects agents to tools. A2A connects agents to each other. AG-UI connects agents to users.</p>
+<p>AG-UI is the streaming layer that carries everything you&#x27;ll see below: tool calls, A2UI schemas, MCP App events, state deltas. Runs over SSE. State flows both ways on the same stream. User edits, agent sees. Agent mutates, user sees.</p>
+<p>A2UI is Google&#x27;s spec for agents emitting UI as schema. It rides on AG-UI. CopilotKit ships it in production.</p>
+<p>You don&#x27;t write a parser for any of this. CopilotKit is an AG-UI client and decodes the stream for you.</p>
+<h2>The three patterns most teams confuse</h2>
+<p>Ask ten developers what Generative UI is. You get ten answers. Most of them are describing whichever pattern their current framework ships.</p>
+<p>There are just three. The spectrum runs from more control to more flexibility.</p>
+<ul>
+<li>
+<p>Controlled: You pre-build the components. The agent picks which to render.</p>
+</li>
+<li>
+<p>Declarative: The agent emits a schema. Your app maps it to components.</p>
+</li>
+<li>
+<p>Open-ended: The agent writes raw HTML. Your app renders it in a sandbox.</p>
+</li>
+</ul>
+<p><img alt="Article image" src="/assets/2026-09-09-generative-ui-is-the-new-frontend-7c55b1526b/01.jpg"></p>
+<p>Every Gen UI framework in 2026 lives somewhere on this line. The differences are architectural, not cosmetic. Each pattern breaks your app in a different way at scale.</p>
+<p>I tried different stacks. Most cover one pattern well. Landed on CopilotKit because it supports all three on the same runtime, riding AG-UI. That&#x27;s the stack everything below runs on.</p>
+<h2>Pattern 1: Controlled, frontend owns the UI</h2>
+<p><img alt="Article image" src="/assets/2026-09-09-generative-ui-is-the-new-frontend-7c55b1526b/02.jpg"></p>
+<p>This is where most teams start. It&#x27;s also where most teams get stuck.</p>
+<p>You pre-build a React component. You bind it to a tool name. The agent picks that tool and the component renders inline in chat with the agent&#x27;s args as props.</p>
+<p>One frontend hook. Zero agent code. That&#x27;s it.</p>
+<p>typescript
+&quot;use client&quot;;
+import { z } from &quot;zod&quot;;
+import { useComponent } from &quot;@copilotkit/react-core/v2&quot;;</p>
+<p>const expenseChartSchema = z.object({
+  title: z.string(),
+  data: z.array(z.object({ label: z.string(), value: z.number() })),
+});</p>
+<p>function ExpenseChart({ title, data }: z.infer&lt;typeof expenseChartSchema&gt;) {
+  return (
+    &lt;section className=&quot;rounded-xl border p-4&quot;&gt;
+      &lt;h3 className=&quot;text-sm font-medium&quot;&gt;{title}&lt;/h3&gt;
+      &lt;ul className=&quot;mt-2 grid gap-1&quot;&gt;
+        {data.map((d) =&gt; (
+          &lt;li key={d.label} className=&quot;flex justify-between text-sm&quot;&gt;
+            &lt;span&gt;{d.label}&lt;/span&gt;
+            &lt;span&gt;${d.value}&lt;/span&gt;
+          &lt;/li&gt;
+        ))}
+      &lt;/ul&gt;
+    &lt;/section&gt;
+  );
+}</p>
+<p>export function ExpensesCopilot() {
+  useComponent({
+    name: &quot;showExpenseChart&quot;,
+    description: &quot;Render a breakdown of expenses by category.&quot;,
+    parameters: expenseChartSchema,
+    render: ExpenseChart,
+  });</p>
+<p>return null;
+}</p>
+<p>The hook registers the tool with CopilotKit&#x27;s runtime. The runtime advertises it to the agent over AG-UI. When the agent calls it, the args stream in and your component renders inline. No Python tool to write, no schema to wire, no API route to add.</p>
+<p>Your design system stays in charge.</p>
+<p>That expense chart isn&#x27;t a mockup. The AI Financial Coach Agent renders cards just like it for real budgets, savings plans, and debt payoff.</p>
+<p>The media could not be played.
+Reload</p>
+<p>Want the bare hook first? It&#x27;s &#x27;use-generative-ui-examples.tsx&#x27; in the Generative UI Starter Project.</p>
+<p>The token tax</p>
+<p>Every component you register sits in the agent&#x27;s context window before the user has said anything. A typical tool description with its JSON schema runs around 400 tokens. 25 components are 10,000 tokens on every turn. You pay that tax per request.</p>
+<p>The agent picks the wrong component too. Too many look similar. Pie chart and donut chart both &quot;show proportions.&quot; It guesses.</p>
+<p>When to add agent-side state</p>
+<p>Shared state is the one case where writing a Python tool is worth it. The agent writes to session state. Other parts of the UI subscribe and re-render with no second LLM call. Pin a metric, the dashboard updates. Add a row, the table redraws.</p>
+<p>python
+from google.adk.agents import LlmAgent
+from google.adk.tools import ToolContext</p>
+<p>def pin_metric(tool_context: ToolContext, label: str, value: float) -&gt; dict:
+    &quot;&quot;&quot;Pin a metric to the user&#x27;s dashboard.&quot;&quot;&quot;
+    pinned = tool_context.state.get(&quot;pinnedMetrics&quot;, [])
+    tool_context.state[&quot;pinnedMetrics&quot;] = pinned + [{&quot;label&quot;: label, &quot;value&quot;: value}]
+    return {&quot;status&quot;: &quot;pinned&quot;}</p>
+<p>agent = LlmAgent(name=&quot;dashboard_agent&quot;, model=&quot;gemini-3.5-flash&quot;, tools=[pin_metric])</p>
+<p>The frontend reads pinned metrics through CopilotKit&#x27;s shared-state hook. The chat component still renders inline because the same tool name is wired with the frontend hook.</p>
+<p>Pin a metric in chat. The panel redraws with no second model call. That&#x27;s the AI Dashboard Canvas Agent.</p>
+<p>The media could not be played.
+Reload</p>
+<p>The AI Deep Research Agent takes it further. The plan, every search, each file write, all of it streams in as live cards. For everything else, the frontend hook is the whole story.</p>
+<p>The media could not be played.
+Reload</p>
+<p>When to ship Controlled: Ten or fewer high-value flows. Design precision matters. You know the exact UIs you need.</p>
+<p>When not to: Your codebase grows linearly with use cases. 25 components means 25 tool definitions sitting in every agent turn.</p>
+<p>What breaks: Agent picks the wrong component. Two tool descriptions overlap semantically. Past 15 tools, two of them probably read like &quot;displays data.&quot; Fix: rewrite descriptions to name the user intent, not the visual. &quot;Use when the user asks to compare proportions of a whole&quot; beats &quot;renders a pie chart.&quot;</p>
+<h2>Pattern 2: Declarative (A2UI), agent emits schema</h2>
+<p><img alt="Article image" src="/assets/2026-09-09-generative-ui-is-the-new-frontend-7c55b1526b/03.jpg"></p>
+<p>This is the pattern most production agent apps end up needing.</p>
+<p>The agent emits a JSON schema describing the UI. Your app has a catalog of components that maps schema nodes to React (or Svelte, Flutter, anything). One tool. Many UIs.</p>
+<p>A2UI is the standard spec. CopilotKit ships the runtime. ADK runs the agent. AG-UI is the wire.</p>
+<p>The agent tool returns three operations in order: create a surface, push the component tree, push the data.</p>
+<p>python
+def search_flights(flights: list[Flight]) -&gt; dict[str, Any]:
+    &quot;&quot;&quot;Search flights and display them as rich cards.&quot;&quot;&quot;
+    return {
+        &quot;a2ui_operations&quot;: [
+            {&quot;type&quot;: &quot;create_surface&quot;, &quot;surfaceId&quot;: SURFACE_ID, &quot;catalogId&quot;: CATALOG_ID},
+            {&quot;type&quot;: &quot;update_components&quot;, &quot;surfaceId&quot;: SURFACE_ID, &quot;components&quot;: FLIGHT_SCHEMA},
+            {&quot;type&quot;: &quot;update_data_model&quot;, &quot;surfaceId&quot;: SURFACE_ID, &quot;data&quot;: {&quot;flights&quot;: flights}},
+        ]
+    }</p>
+<p>This is the actual function, not pseudocode. The runtime middleware sees the a2ui_operations container in the tool result and forwards surfaces to the frontend. Adding hotels? New schema file. One more function with a different surface ID. Zero extra frontend work.</p>
+<p>Fixed schema vs dynamic schema</p>
+<p>The component tree above lives in flights.json. You wrote it. The agent only fills in the data. That&#x27;s a fixed schema.</p>
+<p>Dynamic schema flips it: a secondary LLM writes the component tree per turn from conversation context. Same a2ui_operations container at the end. The Google ADK showcase ships both.</p>
+<p>The catalog is the contract</p>
+<p>Definitions list the components the agent is allowed to emit, with Zod schemas for the props. Renderers fill in React. Typos become build errors instead of blank screens.</p>
+<p>typescript
+const renderers: CatalogRenderers&lt;TravelDefinitions&gt; = {
+  FlightCard: ({ props }) =&gt; (
+    &lt;article className=&quot;rounded-xl border p-4&quot;&gt;
+      &lt;header className=&quot;flex justify-between&quot;&gt;
+        &lt;span&gt;{(props as any).airline}&lt;/span&gt;
+        &lt;span&gt;{(props as any).price}&lt;/span&gt;
+      &lt;/header&gt;
+      &lt;div className=&quot;text-sm text-muted-foreground&quot;&gt;
+        {(props as any).origin} → {(props as any).destination} · {(props as any).departureTime}
+      &lt;/div&gt;
+    &lt;/article&gt;
+  ),
+};</p>
+<p>export const travelCatalog = createCatalog(travelDefinitions, renderers, {
+  catalogId: &quot;copilotkit://travel-catalog&quot;,
+  includeBasicCatalog: true,
+});</p>
+<p>Both halves live in the Generative UI Starter Project, wired and matched. search_flights in &#x27;a2ui_fixed_schema.py&#x27;, the FlightCard catalog in &#x27;renderers.tsx&#x27;. Ask for flights. Watch the cards stream into chat.</p>
+<p>The media could not be played.
+Reload</p>
+<p>Buttons and other interactive components carry an action in the schema. The basic catalog wires it to onClick. Click fires an event back to the agent over AG-UI. The agent decides what to render next. Zero click handlers.</p>
+<p>The token math</p>
+<p>50 card types or 500, the agent sees one function. Tokens per turn stay flat as your component library grows.</p>
+<p>Extensible to any rendering framework because it&#x27;s just JSON. Any agent that already speaks AG-UI can drive A2UI on day zero. You don&#x27;t touch agent code to wire this up.</p>
+<p>Trade-off: The LLM owns the layout. Output varies run to run within your catalog. If you&#x27;re shipping legal disclosures, marketing surfaces, or anything where exact pixel placement matters, this is not your bucket.</p>
+<p>Declarative is the pattern built for the long tail. Dashboards, results, forms, cards, widgets.</p>
+<p>When to ship Declarative: You have more use cases than time to pre-build. You care about token economics past the prototype stage.</p>
+<p>What breaks: Built a custom FlightCard. Every flight renders as the basic catalog&#x27;s generic card. No error in the console. The CATALOG_ID on the agent and catalogId in createCatalog on the frontend don&#x27;t match. Frontend doesn&#x27;t recognize the catalog the agent is targeting, falls back to basic. Match the strings exactly on both sides.</p>
+<h2>Pattern 3: Open-ended, no catalog, no rules</h2>
+<p><img alt="Article image" src="/assets/2026-09-09-generative-ui-is-the-new-frontend-7c55b1526b/04.jpg"></p>
+<p>The third pattern is the opposite extreme. No catalog. No schema. Just a blank canvas.</p>
+<p>Two sub-patterns live in this bucket.</p>
+<p>MCP Apps</p>
+<p>An MCP server exposes UI surfaces that the agent drives. Excalidraw is the example that stuck with me. The agent gets full control of the canvas. Draws diagrams from your context. Owns every pixel on the board.</p>
+<p><img alt="Article image" src="/assets/2026-09-09-generative-ui-is-the-new-frontend-7c55b1526b/05.jpg"></p>
+<p>Implementing the client protocol from scratch is painful, so CopilotKit ships an MCPAppsMiddleware. Attach it to your agent and point it at any MCP Apps server.</p>
+<p>typescript
+const agent = new BuiltInAgent({
+  model: &quot;openai/gpt-5.5&quot;,
+  prompt: &quot;You are a helpful assistant.&quot;,
+}).use(
+  new MCPAppsMiddleware({
+    mcpServers: [{ type: &quot;http&quot;, url: &quot;https://mcp.excalidraw.com/mcp&quot;, serverId: &quot;my-server&quot; }],
+  }),
+);</p>
+<p>Spin up the MCP Apps Showcase and you&#x27;re booking flights and reserving hotels inside the chat window. Same middleware, real MCP servers. Or go further.</p>
+<p>The AI MCP App Builder lets the agent write a brand-new app into an E2B sandbox, then renders it live.</p>
+<p>The media could not be played.
+Reload</p>
+<p>Sandboxed HTML</p>
+<p>The agent writes raw HTML. Your app renders it inside a sandboxed iframe so it can&#x27;t hijack the session.</p>
+<p>The runtime registers an HTML rendering tool and ships it to the agent over AG-UI. The agent calls it with whatever markup it wants. There is no HTML tool to define on the agent side. The runtime injects it.</p>
+<p>Agent-side instruction is doing real work:</p>
+<p>python
+canvas_agent = LlmAgent(
+    name=&quot;canvas_agent&quot;,
+    model=&quot;gemini-3.5-flash&quot;,
+    instruction=(
+        &quot;You are a visualization assistant. When the user asks to see, &quot;
+        &quot;draw, or visualize anything, generate an interactive HTML UI. &quot;
+        &quot;Use Tailwind classes only. No external fonts. Stick to neutral &quot;
+        &quot;colors unless the user names one.&quot;
+    ),
+)</p>
+<p>Without those style rules, the model defaults to whatever aesthetic was loudest in its training data that week. With them, you get something close to your brand most of the time. Not always.</p>
+<p>The brand inconsistency problem</p>
+<p>I tried shipping Open-ended as the primary UI for an agent. Pulled it in a week.</p>
+<p>&quot;Neo-brutalist&quot; on Tuesday. &quot;iOS 4 clone&quot; on Wednesday. Style rules in the prompt nudge the agent toward your brand. They don&#x27;t guarantee it. The brand kept changing. The product felt unserious.</p>
+<p><img alt="Article image" src="/assets/2026-09-09-generative-ui-is-the-new-frontend-7c55b1526b/06.jpg"></p>
+<p>Open-ended isn&#x27;t useless. It&#x27;s misapplied.</p>
+<p>Right call for one thing: throwaway interactions where the user doesn&#x27;t care what the interface looks like and will never see it again. &quot;Show me how electrons work.&quot; &quot;Give me a weird bar chart of my last 10 queries.&quot; &quot;Visualize this API response.&quot; The kind of thing you see in Google AI overviews.</p>
+<p>When to ship Open-ended: One-shot queries. Disposable visualizations. Sandboxed experiments. Never as the primary surface.</p>
+<p>What breaks: The iframe renders. Buttons don&#x27;t click. Forms don&#x27;t submit. Sandbox flags are too tight, or too loose in a way the browser refuses. Set the iframe sandbox to allow scripts and allow forms. Nothing else. Never allow-same-origin.</p>
+<h2>How to pick</h2>
+<p>Run the decision tree before you write code.</p>
+<p>Designer has pixel-perfect mockups for this flow? Controlled.</p>
+<p>Dozens of card types or widgets to ship? Declarative.</p>
+<p>One-shot, throwaway visualization the user will never see twice? Open-ended.</p>
+<p>Can&#x27;t decide? Default to Declarative. Upgrade to Controlled for the top 3 flows. Never Open-ended as the default.</p>
+<p>If you&#x27;re already shipping and not sure where you landed, count the render tools. Past 15, you&#x27;re in Controlled and the wall is close. Start wiring A2UI this week.</p>
+<h2>Three patterns. Three bets.</h2>
+<p>Controlled bets on you. Pre-built components, pixel-perfect. Expensive past 25 of them.</p>
+<p>Declarative bets on the schema. The schema is the contract. The agent fills it in. Scales flat.</p>
+<p>Open-ended bets on the model. No catalog, no schema, raw HTML. Good for throwaway. Brittle for anything that ships twice.</p>
+<p>The mistake isn&#x27;t picking the wrong pattern. It&#x27;s not knowing you picked one.</p>
+<p>Most teams default to Controlled because the framework defaults to Controlled. They hit the wall at 25 components and reach for Open-ended because it looks compelling in demos. Neither was a decision. Both were drift.</p>
+<p>Pick on purpose. Match the pattern to the problem. Controlled for the flows that need to be exact. Declarative for the long tail. Open-ended for the disposable.</p>
+<p>Open Source Generative UI Agent Templates</p>
+<p>The reference for all three lives in the new Generative UI Agents section of awesome-llm-apps. Clone what you need. Rip out what you don&#x27;t.</p>
+<p>I&#x27;ll be publishing more about shipping agents in production, AG-UI, and the patterns that scale. Follow me @Saboo_Shubham_ to stay tuned.</p></div><a class="source" href="https://x.com/Saboo_Shubham_/status/2062220865643982875" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

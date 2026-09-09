@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="LOOP vs GRAPH vs HARNESS ENGINEERING">
+  <title>LOOP vs GRAPH vs HARNESS ENGINEERING · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">rari @0xwhrrari · 2026-09-09</div><div class="prose"><h1>LOOP vs GRAPH vs HARNESS ENGINEERING</h1>
+<h1>The 3 AI Agent Systems Every Builder Must Understand</h1>
+<h2>Agent failures</h2>
+<p>Most agent systems do not fail because the model is too weak</p>
+<p>They fail because the system around the model was never designed as a system</p>
+<p>The tools are unreliable</p>
+<p>The state disappears between runs</p>
+<p>The agent retries without learning anything</p>
+<p>The workflow branches in ways nobody can inspect</p>
+<p>Then every failure gets blamed on the model</p>
+<p>That is the wrong diagnosis</p>
+<p>There are three different engineering layers behind a serious agent:</p>
+<ul>
+<li>
+<p>the harness gives the model a place to work</p>
+</li>
+<li>
+<p>the loop gives the work a feedback cycle</p>
+</li>
+<li>
+<p>the graph gives the process an explicit route</p>
+</li>
+</ul>
+<p>They overlap</p>
+<p>They can contain one another</p>
+<p>But they solve different problems</p>
+<p>A model decidesA harness lets it actA loop makes it prove the resultA graph controls what is allowed to happen next</p>
+<h2>The 30-second version</h2>
+<p>Harness engineering builds the operating environment around the model</p>
+<p>Tools, memory, files, permissions, sandboxes, routing, checkpoints, traces and human approvals all live here</p>
+<p>Loop engineering designs repeated work and feedback</p>
+<p>The agent produces something, checks it against evidence, receives a useful failure signal and tries again under a bounded rule</p>
+<p>Graph engineering makes control flow explicit</p>
+<p>It defines the nodes, branches, joins, parallel work, legal cycles, state transitions and exit paths</p>
+<p>The easiest way to remember the difference is:</p>
+<p>HARNESS = ENVIRONMENT
+LOOP    = FEEDBACK
+GRAPH   = FLOW</p>
+<p>This distinction matters as soon as an agent leaves a demo and starts touching real files, APIs, customers, money or production code</p>
+<h2>Why people keep mixing them together</h2>
+<p>All three layers sit around the same model</p>
+<p>All three affect reliability</p>
+<p>All three may include something that looks like a loop</p>
+<p>And in a small prototype, all three are usually buried inside one script</p>
+<p>That makes them feel interchangeable</p>
+<p>They are not</p>
+<p>Consider a basic tool-using agent</p>
+<p>ask model
+receive tool call
+run tool
+return observation
+ask model again
+stop when finished</p>
+<p>That small cycle is part of the runtime</p>
+<p>But the tool definitions, filesystem and state store belong to the harness</p>
+<p>The test-and-retry policy is a loop design decision</p>
+<p>The choice between researcher, reviewer and publisher is a graph design decision</p>
+<p>One piece of software can contain all three layers at once</p>
+<p>The cleanest architecture starts by naming them separately</p>
+<h2>Layer 1: Harness Engineering</h2>
+<p>A raw model can transform input into output</p>
+<p>It cannot independently maintain project state, run a test suite, inspect a browser, write files safely, enforce permissions or resume tomorrow where it stopped today</p>
+<p>The harness supplies those capabilities</p>
+<p>The simplest definition is:</p>
+<p>The model is the intelligence The harness is the machinery that makes that intelligence useful</p>
+<p>Remove the model from your architecture diagram</p>
+<p>Everything still visible is probably part of the harness</p>
+<p>This is the production shift Boris Cherny keeps pointing at through Claude Code: hooks, scheduled runs, isolated worktrees, custom agents and parallel execution are not prompt tricks</p>
+<p>They are harness primitives</p>
+<p>Boris Cherny
+@bcherny
+·
+Mar 30
+I wanted to share a bunch of my favorite hidden and under-utilized features in Claude Code. I&#x27;ll focus on the ones I use the most.</p>
+<p>Here goes.
+538
+2.9K
+23K
+3.9M</p>
+<h2>What belongs inside a serious harness</h2>
+<p>Context</p>
+<ul>
+<li>
+<p>system instructions</p>
+</li>
+<li>
+<p>retrieved knowledge</p>
+</li>
+<li>
+<p>conversation state</p>
+</li>
+<li>
+<p>task policies</p>
+</li>
+<li>
+<p>skills and operating procedures</p>
+</li>
+</ul>
+<p>Action surfaces</p>
+<ul>
+<li>
+<p>APIs</p>
+</li>
+<li>
+<p>browser control</p>
+</li>
+<li>
+<p>shell and code execution</p>
+</li>
+<li>
+<p>databases</p>
+</li>
+<li>
+<p>MCP tools</p>
+</li>
+<li>
+<p>specialist agents</p>
+</li>
+</ul>
+<p>Persistence</p>
+<ul>
+<li>
+<p>files</p>
+</li>
+<li>
+<p>checkpoints</p>
+</li>
+<li>
+<p>session state</p>
+</li>
+<li>
+<p>progress logs</p>
+</li>
+<li>
+<p>git history</p>
+</li>
+<li>
+<p>long-term memory</p>
+</li>
+</ul>
+<p>Execution control</p>
+<ul>
+<li>
+<p>timeouts</p>
+</li>
+<li>
+<p>retry limits</p>
+</li>
+<li>
+<p>token and cost budgets</p>
+</li>
+<li>
+<p>model routing</p>
+</li>
+<li>
+<p>handoffs</p>
+</li>
+<li>
+<p>approval gates</p>
+</li>
+</ul>
+<p>Safety</p>
+<ul>
+<li>
+<p>isolated environments</p>
+</li>
+<li>
+<p>least-privilege permissions</p>
+</li>
+<li>
+<p>allow lists</p>
+</li>
+<li>
+<p>secret handling</p>
+</li>
+<li>
+<p>human authorization</p>
+</li>
+</ul>
+<p>Observability</p>
+<ul>
+<li>
+<p>traces</p>
+</li>
+<li>
+<p>tool inputs and outputs</p>
+</li>
+<li>
+<p>state transitions</p>
+</li>
+<li>
+<p>cost and latency</p>
+</li>
+<li>
+<p>evaluation results</p>
+</li>
+</ul>
+<p><img alt="Article image" src="/assets/2026-09-09-loop-vs-graph-vs-harness-engineering-79822c2ef6/01.jpg"></p>
+<h2>Where harness engineering earns its keep</h2>
+<p>Harness work becomes critical when tasks last longer than one context window</p>
+<p>A coding agent that works for hours cannot rely on chat history alone</p>
+<p>It needs durable artifacts that another session can understand</p>
+<p>A useful setup might include:</p>
+<ul>
+<li>
+<p>an initializer that inspects the workspace</p>
+</li>
+<li>
+<p>a progress file that explains what is done and what remains</p>
+</li>
+<li>
+<p>git commits that preserve working states</p>
+</li>
+<li>
+<p>checkpoints before risky actions</p>
+</li>
+<li>
+<p>verification tools that produce clear evidence</p>
+</li>
+</ul>
+<p>This is not a better prompt</p>
+<p>It is a better working environment</p>
+<p>Start with harness engineering when the agent:</p>
+<ul>
+<li>
+<p>cannot access the right capability</p>
+</li>
+<li>
+<p>loses progress between sessions</p>
+</li>
+<li>
+<p>has permissions that are too broad</p>
+</li>
+<li>
+<p>behaves differently across environments</p>
+</li>
+<li>
+<p>cannot be paused, inspected or resumed</p>
+</li>
+<li>
+<p>produces failures nobody can reconstruct</p>
+</li>
+</ul>
+<h2>Layer 2: Loop Engineering</h2>
+<p>Every tool-using agent already has a small internal loop</p>
+<p>model -&gt; action -&gt; observation -&gt; model</p>
+<p>Loop engineering begins when you intentionally design the cycles around that behavior</p>
+<p>The goal is not to make the agent repeat itself forever</p>
+<p>The goal is to turn a one-shot attempt into a managed process</p>
+<h2>The verification loop</h2>
+<p>The most useful outer loop is simple</p>
+<p>BUILD
+  ↓
+CHECK AGAINST EVIDENCE
+  ↓
+PASS? ── yes ──&gt; STOP
+  │
+  no
+  ↓
+RETURN SPECIFIC FEEDBACK
+  ↓
+RETRY WITH A LIMIT</p>
+<p>The check may be deterministic:</p>
+<ul>
+<li>
+<p>tests pass</p>
+</li>
+<li>
+<p>schema validates</p>
+</li>
+<li>
+<p>links resolve</p>
+</li>
+<li>
+<p>numbers reconcile</p>
+</li>
+<li>
+<p>files compile</p>
+</li>
+</ul>
+<p>Or it may require a reviewer:</p>
+<ul>
+<li>
+<p>the argument is complete</p>
+</li>
+<li>
+<p>the tone matches the audience</p>
+</li>
+<li>
+<p>the evidence supports the conclusion</p>
+</li>
+<li>
+<p>the change is scoped correctly</p>
+</li>
+</ul>
+<p>The rule is the same</p>
+<p>Do not loop on confidence</p>
+<p>Loop on evidence</p>
+<p>&quot;The agent says it is finished&quot; is not proof</p>
+<p>&quot;The tests pass, the sources resolve and the reviewer approved the diff&quot; is proof</p>
+<p>The leverage comes from building the cycle once and letting the system run it for you</p>
+<p>Claude&#x27;s scheduled tasks are the visible product version of the same shift: define recurring work once and let the system re-enter it without another manual prompt</p>
+<p>Scheduling is only the trigger</p>
+<p>The checks, feedback and exit condition are what turn the recurring task into an engineered loop</p>
+<p>Claude
+@claudeai
+·
+Feb 25
+New in Cowork: scheduled tasks.</p>
+<p>Claude can now complete recurring tasks at specific times automatically: a morning brief, weekly spreadsheet updates, Friday team presentations.
+The media could not be played.
+Reload
+966
+3.3K
+21K
+8.2M</p>
+<p><img alt="Article image" src="/assets/2026-09-09-loop-vs-graph-vs-harness-engineering-79822c2ef6/02.jpg"></p>
+<h2>The anatomy of a useful loop</h2>
+<p>Every production loop needs seven things</p>
+<ol>
+<li>Trigger</li>
+</ol>
+<p>What starts another cycle: a request, schedule, webhook, failed test, new document or evaluator result</p>
+<ol start="2">
+<li>Goal</li>
+</ol>
+<p>A measurable state to reach, not &quot;keep improving&quot;</p>
+<ol start="3">
+<li>State</li>
+</ol>
+<p>What the next attempt must know without replaying the entire history</p>
+<ol start="4">
+<li>Action policy</li>
+</ol>
+<p>What the agent may change, call, delegate or spend</p>
+<ol start="5">
+<li>Evidence</li>
+</ol>
+<p>Tests, citations, diffs, metrics, schemas or human review</p>
+<ol start="6">
+<li>Feedback</li>
+</ol>
+<p>A compact explanation of what failed and what must change</p>
+<ol start="7">
+<li>Stopping rule</li>
+</ol>
+<p>Success, maximum attempts, budget exhaustion, timeout, hard error or human escalation</p>
+<h2>Loops can stack</h2>
+<p>The agent loop performs the work</p>
+<p>The verification loop checks the work</p>
+<p>An event loop wakes the system when new work arrives</p>
+<p>An improvement loop studies production traces and changes the harness itself</p>
+<p>EVENT LOOP
+└── VERIFICATION LOOP
+    └── AGENT LOOP</p>
+<p>TRACE IMPROVEMENT LOOP
+└── updates prompts, tools, policies and graders</p>
+<p>This is why loop engineering is larger than prompt engineering</p>
+<p>A prompt defines what should happen during one model call</p>
+<p>A loop defines what the system does after that call</p>
+<p>The cost is obvious</p>
+<p>Every retry, grader and reviewer adds latency and spend</p>
+<p>Add a loop when the expected cost of failure is higher than the cost of verification</p>
+<h2>Layer 3: Graph Engineering</h2>
+<p>Graph engineering asks a different question</p>
+<p>Not &quot;how should the agent work&quot;</p>
+<p>But &quot;what is allowed to run next&quot;</p>
+<p>Work becomes nodes</p>
+<p>Allowed transitions become edges</p>
+<p>State moves through the graph</p>
+<p>That structure can represent:</p>
+<ul>
+<li>
+<p>fixed sequences</p>
+</li>
+<li>
+<p>conditional branches</p>
+</li>
+<li>
+<p>parallel fan-out</p>
+</li>
+<li>
+<p>joins</p>
+</li>
+<li>
+<p>bounded cycles</p>
+</li>
+<li>
+<p>recovery paths</p>
+</li>
+<li>
+<p>human interrupts</p>
+</li>
+</ul>
+<h2>What graph engineers actually decide</h2>
+<p>Node boundaries</p>
+<p>Which work belongs in normal code, an LLM call, a specialist agent or a human review step</p>
+<p>State schema</p>
+<p>What each node may read or update and how parallel results are merged</p>
+<p>Routing conditions</p>
+<p>Which evidence moves work forward, backward, sideways or into escalation</p>
+<p>Concurrency</p>
+<p>What can run in parallel and what must wait for a join</p>
+<p>Cycles and exits</p>
+<p>Where retries are legal, how many attempts are allowed and what makes the cycle safe</p>
+<p>Durability</p>
+<p>Where execution is checkpointed and how it resumes after interruption</p>
+<h2>When a graph is worth the ceremony</h2>
+<p>Use a graph when the process contains meaningful branches, parallel specialists, approvals, recovery routes or stateful handoffs</p>
+<p>Do not start with a graph only because the workflow has multiple steps</p>
+<p>If one capable agent with three tools can solve the task, a graph may add structure without adding value</p>
+<p>There is another failure mode</p>
+<p>Teams formalize the workflow before they understand the work</p>
+<p>The result is a beautiful diagram that encodes the wrong assumptions</p>
+<p>Start with a simple harness</p>
+<p>Study real traces</p>
+<p>Formalize the paths that remain stable</p>
+<p>The next step after loops is making the execution topology explicit</p>
+<p>OpenAI packaged the same idea into Agent Builder: a visible workflow canvas for multi-agent execution with guardrails and evals around the graph</p>
+<p>OpenAI Developers
+@OpenAIDevs
+·
+Oct 6, 2025
+Introducing AgentKit—build, deploy, and optimize agentic workflows.</p>
+<p>💬 ChatKit: Embeddable, customizable chat UI
+👷 Agent Builder: WYSIWYG workflow creator
+🛤️ Guardrails: Safety screening for inputs/outputs
+⚖️ Evals: Datasets, trace grading, auto-prompt optimization
+The media could not be played.
+Reload
+290
+2K
+11K
+2.9M</p>
+<h2>How all three layers work in one real system</h2>
+<p>Imagine a research-and-publishing agent that produces a factual industry briefing</p>
+<p>The harness provides:</p>
+<ul>
+<li>
+<p>browser and search tools</p>
+</li>
+<li>
+<p>source storage</p>
+</li>
+<li>
+<p>a writing workspace</p>
+</li>
+<li>
+<p>citation checking</p>
+</li>
+<li>
+<p>permissions and approval rules</p>
+</li>
+<li>
+<p>checkpoints and traces</p>
+</li>
+</ul>
+<p>The graph controls the route:</p>
+<p>RESEARCH
+   ↓
+DRAFT
+   ↓
+FACT CHECK ── fail ──&gt; RESEARCH
+   │
+  pass
+   ↓
+EDITORIAL REVIEW ── fail ──&gt; DRAFT
+   │
+  pass
+   ↓
+HUMAN APPROVAL
+   ↓
+PUBLISH</p>
+<p>The loops live inside that route</p>
+<p>The research node may search until source coverage is sufficient</p>
+<p>The drafting node may revise until the style grader passes</p>
+<p>The fact-check node may return exact unsupported claims instead of a vague rejection</p>
+<p><img alt="Article image" src="/assets/2026-09-09-loop-vs-graph-vs-harness-engineering-79822c2ef6/03.jpg"></p>
+<p>The nesting is the important part</p>
+<p>The graph runs inside the harness</p>
+<p>The loops run inside parts of the graph</p>
+<p>The harness supplies the tools, state and evidence those loops need</p>
+<p>The layers overlap because real software layers overlap</p>
+<p>They still give you three different levers when the system fails</p>
+<h2>Diagnose the failure before changing the architecture</h2>
+<p>Symptom</p>
+<p>Start with</p>
+<p>Likely fix</p>
+<p>The agent cannot access the right data safely</p>
+<p>Harness</p>
+<p>Better tool contract, permissions, sandbox and context injection</p>
+<p>The agent forgets progress between sessions</p>
+<p>Harness</p>
+<p>Durable state, checkpoints, progress artifacts and compaction</p>
+<p>The first attempt is close but unreliable</p>
+<p>Loop</p>
+<p>External grader, deterministic tests, actionable feedback and bounded retry</p>
+<p>The agent continues after success or stops before proof</p>
+<p>Loop</p>
+<p>Evidence-based terminal states and budget-aware stop rules</p>
+<p>Specialists must run in a controlled order</p>
+<p>Graph</p>
+<p>Explicit nodes, edges, routing conditions and joins</p>
+<p>A multi-step failure is impossible to locate</p>
+<p>Graph + harness</p>
+<p>Stateful traces aligned with nodes and transitions</p>
+<p>The process changes too quickly for a fixed diagram</p>
+<p>Simpler harness</p>
+<p>Keep planning model-driven and delay graph formalization</p>
+<p>This table is more useful than arguing about terminology</p>
+<p>Find the layer that owns the failure</p>
+<p>Fix that layer first</p>
+<h2>The expensive mistakes behind weak agent systems</h2>
+<h2>Building the graph too early</h2>
+<p>Do not convert an imagined business process into forty nodes before watching a strong agent perform the work</p>
+<p>Trace first</p>
+<p>Formalize second</p>
+<h2>Letting the maker grade itself</h2>
+<p>Self-review is useful but shares the same blind spots as the original attempt</p>
+<p>Prefer deterministic checks where possible</p>
+<p>Use an isolated reviewer context for subjective checks</p>
+<p>Require human approval for high-impact actions</p>
+<h2>Defining the loop as &quot;keep trying&quot;</h2>
+<p>An unbounded retry is not reliability</p>
+<p>It is a cost leak</p>
+<p>Every cycle needs fresh evidence, a maximum attempt count and a named escalation path</p>
+<h2>Turning the harness into a warehouse</h2>
+<p>More tools do not automatically create a better agent</p>
+<p>A crowded toolset increases selection errors</p>
+<p>Noisy context increases confusion</p>
+<p>Broad permissions increase risk</p>
+<p>Give the agent the smallest environment that can complete the job</p>
+<h2>Blaming the model for orchestration failures</h2>
+<p>A stronger model cannot reliably repair stale state, broken APIs, ambiguous tool schemas or missing exit conditions</p>
+<p>Do not upgrade the model before proving the model is the problem</p>
+<h2>A production-ready checklist</h2>
+<h2>Harness</h2>
+<ul>
+<li>
+<p>are the tools narrow, documented and observable</p>
+</li>
+<li>
+<p>is state durable across sessions</p>
+</li>
+<li>
+<p>are permissions least-privilege</p>
+</li>
+<li>
+<p>can an operator pause, inspect and resume the run</p>
+</li>
+<li>
+<p>can every important action be reconstructed from traces</p>
+</li>
+</ul>
+<h2>Loop</h2>
+<ul>
+<li>
+<p>what evidence proves success</p>
+</li>
+<li>
+<p>what feedback is returned after failure</p>
+</li>
+<li>
+<p>how many retries are allowed</p>
+</li>
+<li>
+<p>what happens when the budget is exhausted</p>
+</li>
+<li>
+<p>where human judgment is required</p>
+</li>
+</ul>
+<h2>Graph</h2>
+<ul>
+<li>
+<p>which paths must be deterministic</p>
+</li>
+<li>
+<p>where can work run in parallel</p>
+</li>
+<li>
+<p>what state is shared</p>
+</li>
+<li>
+<p>where are the joins, approvals and recovery routes</p>
+</li>
+<li>
+<p>which cycles are legal and how do they terminate</p>
+</li>
+</ul>
+<h2>Evaluation</h2>
+<ul>
+<li>
+<p>can the team replay real traces</p>
+</li>
+<li>
+<p>can versions be compared against the same tasks</p>
+</li>
+<li>
+<p>can an improvement be attributed to a specific change</p>
+</li>
+</ul>
+<h2>Operations</h2>
+<ul>
+<li>
+<p>are cost and latency monitored</p>
+</li>
+<li>
+<p>is failure rate visible by node and tool</p>
+</li>
+<li>
+<p>is human intervention measured</p>
+</li>
+<li>
+<p>is task-level success measured in production</p>
+</li>
+</ul>
+<h2>The simplest way to remember the difference</h2>
+<p>Harness engineering makes the model operational</p>
+<p>Loop engineering makes the work iterative and verifiable</p>
+<p>Graph engineering makes complex execution explicit and controllable</p>
+<p>None replaces the others</p>
+<p>A perfect graph cannot save an agent that loses its state</p>
+<p>A perfect harness still wastes money if the loop has no evidence or stop rule</p>
+<p>A strong loop becomes difficult to operate when branches, parallelism and approvals are hidden inside ad hoc code</p>
+<p>Reliable agents appear when all three layers are designed together</p>
+<p>And when every layer has one clear job</p>
+<p>ENVIRONMENT -&gt; HARNESS
+FEEDBACK    -&gt; LOOP
+FLOW        -&gt; GRAPH</p>
+<p>That is the whole framework</p>
+<h2>Sources and further reading</h2>
+<ul>
+<li>
+<p>Claude scheduled tasks</p>
+</li>
+<li>
+<p>OpenAI AgentKit</p>
+</li>
+<li>
+<p>OpenAI Agents SDK</p>
+</li>
+<li>
+<p>AutoGen GraphFlow</p>
+</li>
+<li>
+<p>Building Effective AI Agents</p>
+</li>
+</ul>
+<h2>If you read this far</h2>
+<p>Bookmark the article and follow @0xwhrrari for more practical agent engineering</p>
+<p>Also you can read other articles:</p>
+<ul>
+<li>
+<p>How I set up Obsidian + Claude as my second brain</p>
+</li>
+<li>
+<p>How I set up Claude to actually get work done</p>
+</li>
+<li>
+<p>How I set up Claude projects so they actually work</p>
+</li>
+<li>
+<p>30 Claude system prompts I actually use</p>
+</li>
+<li>
+<p>Loop Engineering: The AI skill every builder needs in 2026</p>
+</li>
+<li>
+<p>30 Claude Code settings, shortcuts &amp; workflows most users miss</p>
+</li>
+<li>
+<p>How I Use Claude Cowork to Run Like a One-Person Company</p>
+</li>
+</ul></div><a class="source" href="https://x.com/0xwhrrari/status/2082096897964306572" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>
