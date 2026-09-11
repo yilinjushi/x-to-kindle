@@ -90,6 +90,54 @@ class BookmarkSyncTests(unittest.TestCase):
         mocks[7].assert_not_called()
         mocks[8].assert_not_called()
 
+    def test_archive_only_skips_unavailable_content_without_failing(self):
+        unavailable_url = "https://x.com/user/status/400"
+        empty_post = {
+            "title": "",
+            "author": "",
+            "is_article": False,
+            "items": [],
+        }
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            with patch.object(fetch_bookmarks, "load_archived_urls", return_value=set()), patch.object(
+                fetch_bookmarks, "load_sent_history", return_value={}
+            ):
+                page, mocks = self._run_archive_only(root, [unavailable_url], [empty_post])
+                fetch_bookmarks.main()
+
+        self.assertEqual(page.goto.call_args_list[0].args[0], unavailable_url)
+        mocks[6].assert_not_called()
+        mocks[7].assert_not_called()
+        mocks[8].assert_not_called()
+
+    def test_archive_only_publishes_successes_despite_other_failures(self):
+        successful_url = "https://x.com/user/status/500"
+        failed_url = "https://x.com/user/status/600"
+        post = {
+            "title": "Publish me",
+            "author": "Writer",
+            "is_article": False,
+            "items": [{"type": "para", "text": "body"}],
+        }
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            with patch.object(fetch_bookmarks, "load_archived_urls", return_value=set()), patch.object(
+                fetch_bookmarks, "load_sent_history", return_value={}
+            ):
+                _, mocks = self._run_archive_only(
+                    root,
+                    [successful_url, failed_url],
+                    [post, RuntimeError("page failed")],
+                )
+                fetch_bookmarks.main()
+
+        archive_mock = mocks[6]
+        archive_mock.assert_called_once()
+        self.assertEqual(archive_mock.call_args.kwargs["url"], successful_url)
+
 
 if __name__ == "__main__":
     unittest.main()
