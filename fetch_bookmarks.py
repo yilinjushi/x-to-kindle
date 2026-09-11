@@ -156,6 +156,7 @@ def main():
     sent_history = load_sent_history()
     archived_urls = load_archived_urls() if archive_only else set()
     failures = 0
+    unavailable = 0
 
     with sync_playwright() as p:
         launch_kwargs = {
@@ -200,7 +201,9 @@ def main():
                 n_txt = sum(1 for x in items if x["type"] != "image")
                 total_chars = sum(len(x.get("text", "")) for x in items if x["type"] != "image")
                 if archive_only and not total_chars and not n_img:
-                    raise ValueError("No article content extracted; refusing to archive an empty page")
+                    print("  SKIP: no readable text or images were extracted; leaving it unarchived for a later retry.")
+                    unavailable += 1
+                    continue
                 print(f"  {title!r} | {n_txt} text blocks, {n_img} images, {total_chars} chars")
 
                 if url in sent_history and not archive_only:
@@ -284,9 +287,12 @@ def main():
         print(f"  Saved:  {len(succeeded)} DOCX file(s) → {outdir}")
     if archive_only:
         print("  Emails: skipped (archive-only mode)")
+        if unavailable:
+            print(f"  Unavailable: {unavailable} article(s); skipped without blocking publication.", file=sys.stderr)
         if failures:
             print(f"  Failed: {failures} article(s); rerun to retry.", file=sys.stderr)
-            sys.exit(1)
+            if not succeeded:
+                sys.exit(1)
     elif send_to:
         print(f"  Emails: sent individually to {send_to}")
         print(f"  History: {len(sent_history)} sent URL(s) tracked in {SENT_HISTORY_FILE}")
