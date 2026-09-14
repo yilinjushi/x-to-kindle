@@ -1,10 +1,6 @@
 name: Fetch X Article Smoke Test
 
 on:
-  push:
-    paths:
-      - "fetch_article_json.py"
-      - ".github/workflows/fetch-x-article-smoke.yml"
   workflow_dispatch:
     inputs:
       url:

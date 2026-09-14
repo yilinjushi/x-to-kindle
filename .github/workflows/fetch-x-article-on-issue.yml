@@ -1,8 +1,7 @@
 name: Fetch X Article From Issue
 
 on:
-  issues:
-    types: [opened, edited, reopened]
+  workflow_dispatch:
 
 permissions:
   contents: write
