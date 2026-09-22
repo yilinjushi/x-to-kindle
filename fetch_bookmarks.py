@@ -142,6 +142,7 @@ def main():
     send_to = KINDLE_EMAIL or None
     outdir = OUTDIR
     archive_only = "--archive-only" in sys.argv[1:]
+    send_only = "--send-only" in sys.argv[1:]
 
     args = sys.argv[1:]
     for i, arg in enumerate(args):
@@ -223,18 +224,20 @@ def main():
                 full_text = "\n\n".join(
                     x["text"] for x in items if x["type"] != "image" and x.get("text")
                 )
-                archive_path = save_article_archive(
-                    url=url,
-                    title=title,
-                    text=full_text,
-                    author=author,
-                    source="x_bookmark",
-                    chars=total_chars,
-                    n_images=n_images,
-                    items=items,
-                    cookies={c["name"]: c["value"] for c in context.cookies()},
-                )
-                print(f"  Archived: {archive_path}")
+                archive_path = None
+                if not send_only:
+                    archive_path = save_article_archive(
+                        url=url,
+                        title=title,
+                        text=full_text,
+                        author=author,
+                        source="x_bookmark",
+                        chars=total_chars,
+                        n_images=n_images,
+                        items=items,
+                        cookies={c["name"]: c["value"] for c in context.cookies()},
+                    )
+                    print(f"  Archived: {archive_path}")
 
                 if archive_only:
                     archived_urls.add(url)
