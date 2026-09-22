@@ -2,6 +2,9 @@ name: Kindle Delivery
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - ".github/run-kindle-catchup"
   schedule:
     # GitHub cron uses UTC. 11:00 UTC = 19:00 UTC+8.
     # Run the scheduler daily, then gate actual delivery to every 3 days.
@@ -78,7 +81,13 @@ jobs:
           EOF
 
       - name: Run bookmark delivery
-        run: python fetch_bookmarks.py
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            python fetch_bookmarks.py --send-only --count 100
+          else
+            python fetch_bookmarks.py
+          fi
 
       - name: Commit sent-history and archive updates
         shell: bash
