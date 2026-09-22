@@ -78,18 +78,18 @@ jobs:
           EOF
 
       - name: Run bookmark delivery
-        run: python fetch_bookmarks.py
+        run: python fetch_bookmarks.py --send-only
 
       - name: Commit sent-history and archive updates
         shell: bash
         run: |
-          git add state/sent_articles.json archive/ site/
+          git add state/sent_articles.json
           if git diff --cached --quiet; then
-            echo "No sent-history or archive changes to commit."
+            echo "No sent-history changes to commit."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Update sent article history and archive"
+          git commit -m "Update Kindle sent article history"
           git pull --rebase
           git push
