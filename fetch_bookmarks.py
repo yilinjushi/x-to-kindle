@@ -142,7 +142,6 @@ def main():
     send_to = KINDLE_EMAIL or None
     outdir = OUTDIR
     archive_only = "--archive-only" in sys.argv[1:]
-    send_only = "--send-only" in sys.argv[1:]
 
     args = sys.argv[1:]
     for i, arg in enumerate(args):
@@ -239,7 +238,7 @@ def main():
 
                 if archive_only:
                     archived_urls.add(url)
-                    results.append((title, str(archive_path) if archive_path else None, n_images))
+                    results.append((title, str(archive_path), n_images))
                     continue
 
                 filename = f"{title_to_filename(title)}-{status_id_from_url(url)}.docx"
