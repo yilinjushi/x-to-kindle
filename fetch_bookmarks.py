@@ -141,7 +141,8 @@ def main():
     target_count = TARGET_COUNT
     send_to = KINDLE_EMAIL or None
     outdir = OUTDIR
-    archive_only = "--archive-only" in sys.argv[1:]\n    send_only = "--send-only" in sys.argv[1:]
+    archive_only = "--archive-only" in sys.argv[1:]
+    send_only = "--send-only" in sys.argv[1:]
 
     args = sys.argv[1:]
     for i, arg in enumerate(args):
