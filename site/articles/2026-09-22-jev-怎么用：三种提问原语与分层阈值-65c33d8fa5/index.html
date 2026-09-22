@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Jev 怎么用：三种提问原语与分层阈值">
+  <title>Jev 怎么用：三种提问原语与分层阈值 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">yibie @yibie · 2026-09-22</div><div class="prose"><h1>Jev 怎么用：三种提问原语与分层阈值</h1>
+<p>作者：本刊整理（一手来源：官方文档 docs.typesafe.ai、快速上手页、Workflow Evals 站、GitHub 适配器、X 上的当日讨论）</p>
+<p>TypeSafe 的 Jev 是我们这周写得最多的东西：先译了发布文，又在本机复现了它的开源同类实现，还做了准确性对照。但「它到底怎么用」一直没有一篇文章讲清楚。这篇把它补齐——原文没有的、散在各处的、以及我们实测出来的注意事项，全部收在一处。</p>
+<p>一、它到底是什么</p>
+<p>一句话：状态进，带类型的决策出。</p>
+<p>你给它一段非结构化内容（一段工单、一封邮件、一份简历、一个 JSON 状态），再加若干「问题」，它返回每个问题的答案——不是字符串，是类型安全的取值，外加概率分布和置信度。</p>
+<p>它有且只有三种提问原语，用途由返回形状决定：</p>
+<p>Noul：是/否判断。返回 noul，0 到 1 之间的概率，表示「是」的可能性。它没有单独的置信度字段——那个概率本身就是答案。近 1 是强肯定，近 0 是强否定，近 0.5 是「是/否各半」，不是「中等」。</p>
+<p>Choice：从一组选项里挑一个。返回 choice、probabilities（每个选项的概率，总和为 1）、confidence。</p>
+<p>Score：在你描述好的档位上给一个位置。返回 score（可以是小数，比如 1.3，意思是主要落在第 1 档、有一点落在第 2 档）、legend（档位编号到描述的映射）、probabilities、confidence。</p>
+<p>关键性质：一次请求可以混用三种原语；每个问题都对同一份 state 独立评估、并行执行；加问题几乎不增加响应时间，只多一点输入 token。答案被约束在你给的选项里——模型给不出选项外的值。</p>
+<p>二、五条上手路径</p>
+<ol>
+<li>
+<p>Playground：打开 console.typesafe.ai/playground 登录，粘一段文本当 state，加一个问题试手（比如 Noul：「这条消息是否表达出紧急感？」），再混着加 Choice 和 Score，一次看全部结果。</p>
+</li>
+<li>
+<p>HTTP API：从 console.typesafe.ai/settings/keys 拿 key，POST 到 https://api.typesafe.ai/v1/systemone，头部 Authorization: Bearer 你的key，model 填 jev-latest。请求体三个字段：state、model、questions。</p>
+</li>
+<li>
+<p>Python SDK：pip install typesafe-sdk（要求 Python 3.10 以上）。客户端自动读环境变量 TYPESAFE_API_KEY，默认调用 jev-latest，请求写法就是把 Choice、Noul、Score 三个对象塞进一个 questions 字典，response.answers 里按你的问题 id 取类型化结果。</p>
+</li>
+<li>
+<p>Agent Skill：npx skills add typesafe-ai/skills --skill typesafe-ai（Claude Code 用户走 plugin marketplace 两条命令）。这是官方为 coding agent 准备的技能包，装了之后 agent 知道请求和响应的形状——官方特别提到，agent 比人更容易犯「一次只问一个问题」的毛病，这个技能会教它一次多问。</p>
+</li>
+<li>
+<p>还没排到队也能开始：官方开源的 system-one-adapter-python 是 typesafe_sdk 那个 system_one 接口的替代实现，背后接 OpenAI、Anthropic 或你自己的兼容端点。它的用途是拿 LLM 和 TypeSafe 做成本、速度、智能的三方对照，但也可以先用它把接口和代码结构跑通——接口一样，将来换回 Jev 只改一个 provider。可选参数里有两个值得注意：llm_answer_mode 选 probabilities 还是 discrete 决定你的模型是给整条分布还是只给一个值；normalize_probabilities 会把不合法的概率分布重新归一到 1。</p>
+</li>
+</ol>
+<p>三、怎么问才对（这部分才是真正的使用技能）</p>
+<p>一个问题只问一个判断。判据是「一个有知识的人看一眼就能答」。好问题：「这条消息是否传达紧急感？」坏问题：「分析这条消息并确定最佳行动」——后者需要慢思考，看到这种问题就该拆。</p>
+<p>多因素判断要拆开，在代码里加权合成。官方例子：不要问「给这个创业 pitch 打分」，而是分别问市场规模、技术可行性、差异化，再用你自己的公式合成。好处是优先级变化时你改的是代码里的系数，不用重写提示词。</p>
+<p>state 是 JSON 时，在 instructions 里用点号路径指名字段，比如「ticket.messages[0].text 是否请求退款？」「refund_policy 是否支持 ticket.messages[0].text 里提出的退款请求？」，让模型明确该看哪一块。</p>
+<p>一次把问题问满，包括投机性问题。官方并行问题手册的数字：13 个问题合成一次调用，比拆成 13 次单独调用便宜 11.5 倍、快 9.6 倍，答案完全一致。单次请求的预算约 32,000 token（约 15 万英文字符），state 和问题共享这个预算。</p>
+<p>档位要写情形，不要写程度。「功能坏了但有绕行方案」能匹配状态，「中等严重」不能。另外每档是独立判断的，模型看不到档位编号，所以「比上一档更差」和数字都没意义。同一份 bug 报告：档位写成 0/1/2 三个数字时，模型给出 0.57 分、置信度 0.35；写成具体情形描述时，判断就稳定了。</p>
+<p>Choice 的选项列表要留「其他/以上都不是」，否则模型会被迫在错的选项里挑一个。</p>
+<p>想要「等级」就用 Score，不要用 Noul。0.5 的 Noul 意思是「是/否平权」，不是「中等水平」。要衡量熟练度就写档位：没经验、了解、每天用、精通。</p>
+<p>四、置信度怎么用（把不确定变成系统行为）</p>
+<p>Choice 和 Score 才有 confidence，它是从概率分布的形状算出来的统计量：分布越尖越自信，摊得越开越不确定。官方说这只是一个「大多数场景够用」的默认定义，它把完整分布 probabilities 也给你了，你可以自己定义更适合你任务的度量。</p>
+<p>官方推荐的三段式：</p>
+<p>高置信度：自动执行。</p>
+<p>中置信度：继续，但加一道确认、标记复核或补充信息。</p>
+<p>低置信度：不执行，转人工或换一条路径。</p>
+<p>关键在下一句：阈值不是一个数，它随风险分层。官方的语音银行例子——意图判断置信度低于 0.6 一律转人工；查余额这类低风险动作 0.6 就够，因为最坏结果是用户听一遍余额；批准转账这类高风险动作要求 0.85 以上，否则先反问一句确认。风险容忍度写在你的代码里，不在模型里。</p>
+<p>官方还有一句我们要抄下来当警告：阈值该定在哪，取决于你的领域和模型在你任务上的表现——从保守值开始，用你自己的数据测。</p>
+<p>为什么这句话重要，我们自己有实测：我们跑过 30 条带金标的决策评测（开源并行约束解码，同一类「校准概率」机制），平均置信度 0.82，实际准确率只有 0.70；最自信的那批（置信度 0.95 以上）只有 72.7% 正确。Jev 是专门训练过校准的模型，理论上应该好得多，但「把阈值抄过来直接用」这件事在任何模型上都不可靠——先在你的数据上量一遍。</p>
+<p>五、成本和速度的实际感受</p>
+<p>输入 0.042 美元/百万 token（每十亿 42 美元），输出免费；端到端 70 到 500 毫秒。官方首页那句「193.6 倍更快、444.6 倍更便宜」出自四个 workflow eval，官方自己承认这是偏乐观的一端。</p>
+<p>用例级的价格感：Doom 那个 demo 每秒 10 次查询，约合每小时 7 美元。首页另有对比：输入价格比 Claude Fable 5.1 低 238 倍。</p>
+<p>官方 Workflow Evals 站的方法论比数字更值得抄：把策略拆成 harness。同一批任务里，每个被测模型用工作流（拆成 Noul/Choice/Score 加代码规则）都跑得比「把整套策略写成一段提示词」更准、更便宜、更快。举例：haiku 4.5 在工作流里 58.8%，同一策略写成提示词只有 17.1%。参考标签取的是最强两个模型（GPT-6 Astra 与 Claude Fable 5.1，高思考）的平均。他们自己标注了偏差：参考值偏向 OpenAI 与 Anthropic，可能低估自家模型。</p>
+<p>六、边界和坑</p>
+<p>基数上限 255。超过时改走两阶段：先独立打分，再显式选择，会慢一点。</p>
+<p>服务目前在西海岸。官方原话是他们的评测一般在自己（西海岸）的笔记本上跑。</p>
+<p>还在 early access，在按顺序放人。</p>
+<p>它的目标场景是「看一眼就能判」的原子判断。需要长链条推理的任务不是它的事——那是推理模型的事。</p>
+<p>输出永远类型安全，所以它错起来的样子是「在你给的选项里挑错了」，而不是「吐出一个不存在的值」。这是优点（流水线不会崩）也是风险（错误看起来很正常，不会被解析器拦住）。</p>
+<p>七、社区正在拿它做什么</p>
+<p>从 X 上今日的讨论里能看到几类：有人刚拿到权限（i just got in）；有人把调用接到 Vercel AI gateway 上跑通了；有人问它和老牌 BERT 系列的区别——这个问题问得很准，NLI 交叉编码器本来就在做「前提加假设」的判断；还有人想在 LLM 生成命令之后用它做安全校验，把不确定的命令拦下来。</p>
+<p>如果你想先在本机把「决策原语」这条路走通再决定要不要排队，可以看第三方的 OpenJev：把 Qwen3.5-4B 训成 NLI 交叉编码器，提供 predict、rerank、grade 三个方法，MIT 许可，零样本就能从文本状态玩 Flappy Bird 和 Doom。它不是 Jev，但把同一种思路落成了可以本地跑的东西。</p>
+<p>链接</p>
+<p>官方文档：https://docs.typesafe.ai/</p>
+<p>快速上手：https://docs.typesafe.ai/introduction/quickstart</p>
+<p>API 参考：https://docs.typesafe.ai/api</p>
+<p>置信度：https://docs.typesafe.ai/confidence</p>
+<p>设计模式：https://docs.typesafe.ai/patterns</p>
+<p>Workflow Evals：https://evals.typesafe.ai/</p>
+<p>开源适配器：https://github.com/typesafe-ai/system-one-adapter-python</p>
+<p>官方 agent skill：https://github.com/typesafe-ai/skills</p>
+<p>Playground：https://console.typesafe.ai/playground</p>
+<p>发布文（本刊译文）：https://x.com/yibie/status/2099990938781188585</p>
+<p>OpenJev：https://huggingface.co/AlexWortega/openjev</p>
+<h1>结构化决策 #Agent工程 #实测</h1></div><a class="source" href="https://x.com/yibie/status/2100541283081023936" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>
