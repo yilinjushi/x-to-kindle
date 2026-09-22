@@ -2,9 +2,6 @@ name: Kindle Delivery
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - ".github/kindle-catchup-trigger"
   schedule:
     # GitHub cron uses UTC. 11:00 UTC = 19:00 UTC+8.
     # Run the scheduler daily, then gate actual delivery to every 3 days.
@@ -30,7 +27,7 @@ jobs:
         id: cadence
         shell: bash
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "${{ github.event_name }}" = "push" ]; then
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "run=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
