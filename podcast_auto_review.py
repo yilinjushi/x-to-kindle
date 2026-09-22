@@ -12,7 +12,7 @@ import unicodedata
 
 from podcast_sources import atomic_write
 
-WORDS = re.compile(r"[+-]?\d+(?:,\d{3})*(?:\.\d+)?|[^\W\d_]+(?:['’][^\W\d_]+)*|[^\s.,!?;:\"“”‘’()\[\]{}…—–-]", re.UNICODE)
+WORDS = re.compile(r"[+\-−﹣－–—]?\s*(?:\d+(?:,\d{3})*(?:\.\d+)?|\.\d+)|[^\W\d_]+(?:['’][^\W\d_]+)*|[^\s.,!?;:\"“”‘’()\[\]{}…—–-]", re.UNICODE)
 FUNCTION = set('the a an and or but if when because as with without in on at to from of for is are was were be been being this that these those it its you your we our they their not can will should how what who which than have has do does'.split())
 SMALL = 'zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen'.split()
 TENS = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety']
@@ -24,7 +24,7 @@ def sha(path):
 
 
 def tokens(text):
-    return [x.replace('’',"'") for x in WORDS.findall(text)]
+    return [re.sub(r'\s+','',x).replace('’',"'").translate(str.maketrans('−﹣－–—','-----')) for x in WORDS.findall(text)]
 
 
 def prepare_source(source_path):
@@ -66,11 +66,11 @@ def speech_tokens(text):
 
 def variants(token):
     result=[[token]]
-    if re.fullmatch(r'[+-]?\d+(?:,\d{3})*(?:\.\d+)?',token):
+    if re.fullmatch(r'[+-]?(?:\d+(?:,\d{3})*(?:\.\d+)?|\.\d+)',token):
         raw=token.replace(',','');sign=[]
         if raw[0] in '+-':sign=['plus' if raw[0]=='+' else 'minus'];raw=raw[1:]
         if len(raw.split('.')[0])>1 and raw.startswith('0'):return result
-        parts=raw.split('.');number=int(parts[0]);spoken=integer_words(number)
+        parts=raw.split('.');number=int(parts[0] or '0');spoken=integer_words(number)
         if spoken:
             if len(parts)==2:spoken+=['point']+[SMALL[int(x)] for x in parts[1]]
             result.append(sign+spoken)
