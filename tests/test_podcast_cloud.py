@@ -30,7 +30,8 @@ class CloudTests(unittest.TestCase):
         self.assertTrue(kwargs['env']['PODCAST_PYTHON'])
         if 'PI_STORAGE_STATE' in kwargs['env']:
             self.assertTrue(Path(kwargs['env']['PI_STORAGE_STATE']).exists())
-        return type('Result', (), {'returncode':0,'stdout':'private title https://private/article secret-do-not-print','stderr':'secret-do-not-print'})()
+        output = '{"status":"available"}' if Path(command[1]).name == 'pi_probe.mjs' else 'private title https://private/article secret-do-not-print'
+        return type('Result', (), {'returncode':0,'stdout':output,'stderr':'secret-do-not-print'})()
 
     def test_capture_restores_scans_runs_saves_and_cleans_auth(self):
         with patch.object(cloud.subprocess,'run',side_effect=self.subprocess):
@@ -133,7 +134,7 @@ class CloudTests(unittest.TestCase):
             result.returncode = 1
             return result
         with patch.object(cloud.subprocess,'run',side_effect=fail):
-            with self.assertRaisesRegex(cloud.CloudError,'pi_cloud_unavailable'):
+            with self.assertRaisesRegex(cloud.CloudError,'pi_cloud_probe_error'):
                 cloud.orchestrate('probe',root=self.root,env=self.env)
         self.assertEqual(len(self.calls),1)
         self.assertEqual(list(self.auth.iterdir()), [])
@@ -147,6 +148,17 @@ class CloudTests(unittest.TestCase):
         with patch.object(cloud.subprocess,'run',side_effect=self.subprocess):
             cloud.orchestrate('automatic',root=self.root,env=self.env)
         self.assertEqual([Path(call[1]).name for call in self.calls], ['pi_probe.mjs','podcast_sync.py','fetch_bookmarks.py','podcast_automatic.py','podcast_sync.py'])
+
+    def test_login_failure_is_classified_without_exposing_browser_details(self):
+        def login(command, **kwargs):
+            result = self.subprocess(command, **kwargs)
+            result.returncode = 2
+            result.stdout = '{"status":"needs_login"}'
+            return result
+        with patch.object(cloud.subprocess,'run',side_effect=login):
+            with self.assertRaisesRegex(cloud.CloudError,'^pi_cloud_needs_login$'):
+                cloud.orchestrate('probe',root=self.root,env=self.env)
+        self.assertEqual(list(self.auth.iterdir()), [])
 
 
 if __name__ == '__main__':

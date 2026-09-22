@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
-from podcast_auto_review import review,exact_audio_match,prepare_source,sha
+from podcast_auto_review import review,exact_audio_match,prepare_source,sha,tokens
 
 
 class AutoReviewTests(unittest.TestCase):
@@ -46,6 +46,23 @@ class AutoReviewTests(unittest.TestCase):
         self.assertFalse(exact_audio_match('We have -12.5%.','We have twelve point five percent.'))
         self.assertFalse(exact_audio_match('We have 12 examples.','We have thirteen examples.'))
         self.assertFalse(exact_audio_match('We have context engineering.','We have engineering.'))
+
+    def test_spaced_signs_and_leading_decimals_cannot_disappear(self):
+        for source,transcript in [('- 12','twelve'),('.5','five'),('5','.5'),('12','- 12'),('- .5','zero point five'),('− 12','twelve'),('﹣12','twelve'),('－12','twelve'),('–12','twelve'),('— 12','twelve')]:
+            with self.subTest(source=source,transcript=transcript):
+                self.assertFalse(exact_audio_match(source,transcript))
+        self.assertEqual(tokens('- 12'),['-12'])
+        self.assertEqual(tokens('.5'),['.5'])
+        self.assertTrue(exact_audio_match('- 12','minus twelve'))
+        self.assertTrue(exact_audio_match('− .5','minus zero point five'))
+
+    def test_source_adapted_numeric_changes_fail_before_asr(self):
+        for original,changed in [('- 12','12'),('.5','5'),('5','.5'),('−12','12')]:
+            text=self.text+' The measured value is '+original+'.'
+            self.source.write_text(json.dumps({'text':text,'items':[{'type':'para','text':text}]}))
+            self.adapted.write_text(self.text+' The measured value is '+changed+'.')
+            result=review(self.source,self.adapted,self.audio,self.output,transcriber=lambda *_:self.adapted.read_text())
+            self.assertFalse(result['source_to_adapted']['approved'])
 
 
 if __name__=='__main__':unittest.main()
