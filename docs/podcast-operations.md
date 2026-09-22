@@ -87,3 +87,11 @@ npm test --prefix podcast
 首次运行会下载开源模型；音频不上传到第三方转写 API。报告含完整正文，应仅放在私有工作目录。
 
 只把私有 RSS 地址直接添加到播客客户端，不向公开节目目录投稿。持有地址即有读取权限，不是 Apple 账号级 DRM。
+
+## 临时交互登录（仅人工触发）
+
+`podcast-login.yml` 创建最长 30 分钟的云端可视浏览器，使用短时 HTTPS Tunnel、随机访问令牌及独立 Secure/HttpOnly/SameSite Cookie。VNC 和门户仅监听 loopback；没有公网调试端口或终端。用户亲自登录/处理验证并点击保存，程序不会自动操作登录页面。
+
+仅导出 Pi/Inflection 域的浏览器状态（含 IndexedDB），以 AES-256-GCM 加密后暂存 `podcast/login/<run-id>/state.enc`。密钥使用独立 `PODCAST_LOGIN_KEY` Secret；入口元信息同样加密，公开日志不含访问地址、令牌、截图或会话。密文绑定运行 ID、类型和有效期；该前缀另设一天对象生命周期兜底。登录态导入 GitHub Secret 后删除传输对象。
+
+首次人工登录成功后，仍须用新的 Actions 任务执行 `probe` 验证认证复用。不得因保存状态就开启定时；若再次需要验证，保持自动化关闭。不宣称永久登录，也不自动绕过挑战。
