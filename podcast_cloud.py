@@ -52,6 +52,19 @@ def child(command, env, failure_code, timeout=3900):
         raise CloudError(failure_code)
 
 
+def probe(env):
+    try:
+        result = subprocess.run(['node', str(BASE / 'podcast/pi_probe.mjs')], cwd=BASE,
+                                env=env, capture_output=True, text=True, timeout=180)
+        status = json.loads(result.stdout).get('status')
+    except (OSError, subprocess.SubprocessError, ValueError, AttributeError):
+        raise CloudError('pi_cloud_probe_error') from None
+    if status == 'needs_login':
+        raise CloudError('pi_cloud_needs_login')
+    if status != 'available' or result.returncode:
+        raise CloudError('pi_cloud_probe_error')
+
+
 def write_auth(raw, directory, created):
     try:
         state = json.loads(raw)
@@ -102,7 +115,7 @@ def orchestrate(action, task=None, *, root=BASE, env=None):
         env['PODCAST_PYTHON'] = sys.executable
         if action in {'probe', 'automatic'}:
             # No article submission or state mutation during cloud compatibility checks.
-            child(['node', str(BASE / 'podcast/pi_probe.mjs')], env, 'pi_cloud_unavailable', timeout=180)
+            probe(env)
             if action == 'probe':
                 return {'status': 'completed', 'action': 'probe'}
         sync = [sys.executable, str(BASE / 'podcast_sync.py')]
