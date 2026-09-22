@@ -13,6 +13,7 @@ import subprocess
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 from archive import save_article_archive
+from podcast_sources import enqueue_source
 from app_config import (
     ARCHIVE_DIR,
     BOOKMARKS_URL,
@@ -143,6 +144,11 @@ def main():
     outdir = OUTDIR
     archive_only = "--archive-only" in sys.argv[1:]
     send_only = "--send-only" in sys.argv[1:]
+    podcast_only = "--podcast-only" in sys.argv[1:]
+    podcast_queue = podcast_only or "--podcast-queue" in sys.argv[1:]
+    if podcast_only and archive_only:
+        print("ERROR: --podcast-only cannot be combined with --archive-only.", file=sys.stderr)
+        sys.exit(2)
 
     args = sys.argv[1:]
     for i, arg in enumerate(args):
@@ -158,6 +164,9 @@ def main():
     archived_urls = load_archived_urls() if archive_only else set()
     failures = 0
     unavailable = 0
+    podcast_enqueued = 0
+    podcast_existing = 0
+    podcast_failures = 0
 
     with sync_playwright() as p:
         launch_kwargs = {
@@ -186,7 +195,7 @@ def main():
         results = []
         for i, url in enumerate(urls, 1):
             print(f"\n[{i}/{len(urls)}] {url}")
-            if archive_only and url in archived_urls:
+            if archive_only and url in archived_urls and not podcast_queue:
                 print("  SKIP: this URL is already archived.")
                 continue
             try:
@@ -206,6 +215,25 @@ def main():
                     unavailable += 1
                     continue
                 print(f"  {title!r} | {n_txt} text blocks, {n_img} images, {total_chars} chars")
+
+                # Audio has its own history: even Kindle-delivered articles need
+                # a durable source snapshot before the Kindle skip below.
+                if podcast_queue and is_long_article(content, total_chars):
+                    try:
+                        task = enqueue_source(url=url, title=title, author=author, items=items)
+                        if task["enqueued"]:
+                            podcast_enqueued += 1
+                        else:
+                            podcast_existing += 1
+                        print(f"  Podcast: {'queued' if task['enqueued'] else 'already queued'} {task['id']}")
+                    except Exception as exc:
+                        podcast_failures += 1
+                        print(f"  Podcast snapshot FAILED ({type(exc).__name__}); Kindle processing continues.", file=sys.stderr)
+                if podcast_only:
+                    results.append((title, None, 0))
+                    continue
+                if archive_only and url in archived_urls:
+                    continue
 
                 if url in sent_history and not archive_only:
                     print("  SKIP: this URL was already sent before.")
@@ -283,6 +311,13 @@ def main():
     # Summary
     print(f"\n{'='*50}")
     print(f"Done. {len(results)} article(s) processed.")
+    if podcast_queue:
+        print(f"  Podcast: {podcast_enqueued} queued, {podcast_existing} existing, {podcast_failures} snapshot failures, {failures} extraction/processing failures.")
+    if podcast_only:
+        print("  Emails and blog: skipped (podcast-only mode)")
+        if podcast_failures or failures:
+            sys.exit(1)
+        return
     succeeded = [(t, f, n) for t, f, n in results if f]
     if archive_only:
         print(f"  Archived: {len(succeeded)} article(s) → {ARCHIVE_DIR}")
