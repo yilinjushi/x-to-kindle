@@ -6,7 +6,8 @@ Every extracted article is also preserved as Markdown with locally downloaded im
 
 ## Public reading archive
 
-- Durable source: Markdown under `archive/<year>/` and images under `site/assets/`
+- Durable source: Markdown under `archive/<year>/` in the private repository `yilinjushi/x-to-kindle-archive`, and images under `site/assets/`
+- Workflows check the private repository out to `archive-repo/` with the `ARCHIVE_DEPLOY_KEY` deploy key and point `ARCHIVE_DIR` at `archive-repo/archive`. Local runs write to `archive/` (gitignored) unless `ARCHIVE_DIR` is set.
 - Published output: plain HTML and CSS under `site/`
 - Rebuild locally: `python build_site.py`
 - Cloudflare Pages output directory: `site`
@@ -15,6 +16,13 @@ Every extracted article is also preserved as Markdown with locally downloaded im
 - Blog synchronization also runs hourly at minute 17 (UTC), scanning the latest 50 bookmarks. GitHub scheduling and Pages deployment can add delay; saving a bookmark does not instantly update the site.
 - Blog sync includes short posts and skips URLs already present in the archive, independently of Kindle sent history. Manual runs default to 15 bookmarks; increase `count` for a larger backlog.
 - Failed extractions make the sync fail visibly; successful archives are still committed so the next run can retry only missing items.
+
+## NotebookLM mirror
+
+- A Claude Code routine (Haiku, every 3 days at 12:00 UTC) writes `category: "<slug>"` into new archive files, using `categories.json` in the private repository as the fixed category table.
+- `.github/workflows/notebooklm-sync.yml` runs daily at 13:00 UTC and calls `notebooklm_sync.py`: categorized articles are deduplicated, merged into one text source per category and month, and uploaded to one NotebookLM notebook per category (a new notebook `<name> · 2` is created when one is full). Changed sources are replaced; sources or notebooks deleted in the NotebookLM web UI are re-uploaded on the next run.
+- Sync state lives in `state/notebooklm.json` in the private repository. Preview the plan without signing in: `python notebooklm_sync.py --archive-dir <archive> --categories <categories.json> --state <state.json> --dry-run`.
+- It uses the unofficial [`notebooklm-py`](https://github.com/teng-lin/notebooklm-py) client, which can break when Google changes internal endpoints.
 
 ## What counts as a long article
 
@@ -45,6 +53,8 @@ Create a new **private** GitHub repository and add these repository secrets:
 - `GMAIL_USER`: the Gmail sender account
 - `GMAIL_APP_PASSWORD`: the Gmail app password
 - `X_SESSION_JSON`: the full contents of your local `x_session.json`
+- `ARCHIVE_DEPLOY_KEY`: private SSH key whose public half is a write-enabled deploy key on `yilinjushi/x-to-kindle-archive`
+- `NOTEBOOKLM_STORAGE_STATE`, `NOTEBOOKLM_MASTER_TOKEN`: contents of `storage_state.json` and `master_token.json` from `notebooklm login --master-token`
 
 The workflow in `.github/workflows/kindle-delivery.yml` runs twice a day:
 

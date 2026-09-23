@@ -32,3 +32,5 @@ x_session.json
 !site/**/*.png
 !site/**/*.gif
 !site/**/*.webp
+archive/
+archive-repo/

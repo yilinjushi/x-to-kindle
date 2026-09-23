@@ -8,7 +8,7 @@ import fetch_bookmarks
 
 
 class BookmarkSyncTests(unittest.TestCase):
-    def _run_archive_only(self, root: Path, urls: list[str], contents):
+    def _run_archive_only(self, root: Path, urls: list[str], contents, argv=None):
         session_file = root / "x_session.json"
         session_file.write_text("{}", encoding="utf-8")
 
@@ -33,7 +33,7 @@ class BookmarkSyncTests(unittest.TestCase):
             patch.object(fetch_bookmarks, "save_article_archive", return_value=root / "archive.md"),
             patch.object(fetch_bookmarks, "send_article"),
             patch.object(fetch_bookmarks, "save_sent_history"),
-            patch.object(sys, "argv", ["fetch_bookmarks.py", "--archive-only", "--count", "2"]),
+            patch.object(sys, "argv", argv or ["fetch_bookmarks.py", "--archive-only", "--count", "2"]),
             patch("builtins.print"),
             patch.object(fetch_bookmarks, "KINDLE_EMAIL", "test@example.com"),
         ]
@@ -137,6 +137,41 @@ class BookmarkSyncTests(unittest.TestCase):
         archive_mock = mocks[6]
         archive_mock.assert_called_once()
         self.assertEqual(archive_mock.call_args.kwargs["url"], successful_url)
+
+    def test_normal_mode_sends_already_archived_url_without_archiving_again(self):
+        archived_url = "https://x.com/old/status/700"
+        new_url = "https://x.com/new/status/800"
+        article = {
+            "title": "Long article",
+            "author": "Writer",
+            "is_article": True,
+            "items": [{"type": "para", "text": "body"}],
+        }
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            with patch.object(fetch_bookmarks, "load_archived_urls", return_value={archived_url}), patch.object(
+                fetch_bookmarks, "load_sent_history", return_value={}
+            ), patch.object(fetch_bookmarks, "build_docx") as build_mock:
+                doc = MagicMock()
+                doc.save.side_effect = lambda path: Path(path).write_bytes(b"docx")
+                build_mock.return_value = (doc, 0)
+                page, mocks = self._run_archive_only(
+                    root,
+                    [archived_url, new_url],
+                    [dict(article), dict(article)],
+                    argv=["fetch_bookmarks.py", "--count", "2"],
+                )
+                mocks[7].return_value = True
+                with patch.object(fetch_bookmarks, "make_all_black"):
+                    fetch_bookmarks.main()
+
+        archive_mock = mocks[6]
+        send_mock = mocks[7]
+        self.assertEqual([call.args[0] for call in page.goto.call_args_list], [archived_url, new_url])
+        archive_mock.assert_called_once()
+        self.assertEqual(archive_mock.call_args.kwargs["url"], new_url)
+        self.assertEqual(send_mock.call_count, 2)
 
 
 if __name__ == "__main__":

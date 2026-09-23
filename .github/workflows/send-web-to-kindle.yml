@@ -33,9 +33,17 @@ jobs:
       KINDLE_EMAIL: ${{ secrets.KINDLE_EMAIL }}
       GMAIL_USER: ${{ secrets.GMAIL_USER }}
       GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+      ARCHIVE_DIR: ${{ github.workspace }}/archive-repo/archive
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Check out private archive
+        uses: actions/checkout@v4
+        with:
+          repository: yilinjushi/x-to-kindle-archive
+          path: archive-repo
+          ssh-key: ${{ secrets.ARCHIVE_DEPLOY_KEY }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -55,16 +63,31 @@ jobs:
           --title "${{ inputs.title }}"
           --source "${{ inputs.source || 'iphone_shortcut' }}"
 
-      - name: Commit sent-web history and archive updates
+      - name: Commit archive updates to private archive
         shell: bash
+        working-directory: archive-repo
         run: |
-          git add state/sent_web_articles.json archive/ site/
+          git add archive/
           if git diff --cached --quiet; then
-            echo "No sent-web history or archive changes to commit."
+            echo "No archive changes to commit."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Update sent web article history and archive"
+          git commit -m "Archive web article"
+          git pull --rebase
+          git push
+
+      - name: Commit sent-web history and site updates
+        shell: bash
+        run: |
+          git add state/sent_web_articles.json site/
+          if git diff --cached --quiet; then
+            echo "No sent-web history or site changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Update sent web article history and site"
           git pull --rebase
           git push

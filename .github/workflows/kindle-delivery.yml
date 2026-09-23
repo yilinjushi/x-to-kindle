@@ -55,9 +55,17 @@ jobs:
       GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
       MIN_TEXT_CHARS: "1200"
       TARGET_COUNT: "15"
+      ARCHIVE_DIR: ${{ github.workspace }}/archive-repo/archive
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Check out private archive
+        uses: actions/checkout@v4
+        with:
+          repository: yilinjushi/x-to-kindle-archive
+          path: archive-repo
+          ssh-key: ${{ secrets.ARCHIVE_DEPLOY_KEY }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -78,14 +86,29 @@ jobs:
           EOF
 
       - name: Run bookmark delivery
-        run: python fetch_bookmarks.py --send-only
+        run: python fetch_bookmarks.py
 
-      - name: Commit sent-history and archive updates
+      - name: Commit archive updates to private archive
+        shell: bash
+        working-directory: archive-repo
+        run: |
+          git add archive/
+          if git diff --cached --quiet; then
+            echo "No archive changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Archive delivered X bookmarks"
+          git pull --rebase
+          git push
+
+      - name: Commit sent-history and site updates
         shell: bash
         run: |
-          git add state/sent_articles.json
+          git add state/sent_articles.json site/
           if git diff --cached --quiet; then
-            echo "No sent-history changes to commit."
+            echo "No sent-history or site changes to commit."
             exit 0
           fi
           git config user.name "github-actions[bot]"

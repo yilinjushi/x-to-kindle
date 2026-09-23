@@ -154,7 +154,7 @@ def main():
 
     Path(outdir).mkdir(parents=True, exist_ok=True)
     sent_history = load_sent_history()
-    archived_urls = load_archived_urls() if archive_only else set()
+    archived_urls = load_archived_urls()
     failures = 0
     unavailable = 0
 
@@ -227,7 +227,9 @@ def main():
                     x["text"] for x in items if x["type"] != "image" and x.get("text")
                 )
                 archive_path = None
-                if not send_only:
+                if not send_only and url in archived_urls:
+                    print("  Archive: already archived; skipping archive step.")
+                elif not send_only:
                     archive_path = save_article_archive(
                         url=url,
                         title=title,
@@ -240,9 +242,9 @@ def main():
                         cookies={c["name"]: c["value"] for c in context.cookies()},
                     )
                     print(f"  Archived: {archive_path}")
+                    archived_urls.add(url)
 
                 if archive_only:
-                    archived_urls.add(url)
                     results.append((title, str(archive_path), n_images))
                     continue
 

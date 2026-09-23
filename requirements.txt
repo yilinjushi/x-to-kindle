@@ -5,3 +5,4 @@ beautifulsoup4==4.12.3
 readability-lxml==0.8.1
 lxml_html_clean==0.4.1
 Markdown==3.8.2
+notebooklm-py[headless]==0.8.2

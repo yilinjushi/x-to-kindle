@@ -1,0 +1,86 @@
+name: NotebookLM Sync
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Print the sync plan without signing in
+        required: false
+        default: false
+        type: boolean
+  schedule:
+    # 13:00 UTC = 21:00 UTC+8, after the classification routine (12:00 UTC).
+    - cron: "0 13 * * *"
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+concurrency:
+  group: notebooklm-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      NOTEBOOKLM_HOME: ${{ runner.temp }}/notebooklm
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Check out private archive
+        uses: actions/checkout@v4
+        with:
+          repository: yilinjushi/x-to-kindle-archive
+          path: archive-repo
+          ssh-key: ${{ secrets.ARCHIVE_DEPLOY_KEY }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Restore NotebookLM sign-in
+        if: ${{ !inputs.dry_run }}
+        shell: bash
+        env:
+          NOTEBOOKLM_STORAGE_STATE: ${{ secrets.NOTEBOOKLM_STORAGE_STATE }}
+          NOTEBOOKLM_MASTER_TOKEN: ${{ secrets.NOTEBOOKLM_MASTER_TOKEN }}
+        run: |
+          profile="$NOTEBOOKLM_HOME/profiles/default"
+          mkdir -p "$profile"
+          printf '%s' "$NOTEBOOKLM_STORAGE_STATE" > "$profile/storage_state.json"
+          printf '%s' "$NOTEBOOKLM_MASTER_TOKEN" > "$profile/master_token.json"
+          chmod 600 "$profile"/*.json
+
+      - name: Sync categorized articles
+        env:
+          DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}
+        run: >
+          python notebooklm_sync.py
+          --archive-dir archive-repo/archive
+          --categories archive-repo/categories.json
+          --state archive-repo/state/notebooklm.json
+          $DRY_RUN
+
+      - name: Commit sync state to private archive
+        if: ${{ !cancelled() && !inputs.dry_run }}
+        shell: bash
+        working-directory: archive-repo
+        run: |
+          git add state/notebooklm.json 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "No NotebookLM state changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Sync NotebookLM sources"
+          git pull --rebase
+          git push
