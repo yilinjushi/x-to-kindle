@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="你搭的 Claude Skills，还能提升10倍效果——使用Karpathy 的 autoresearch 方法 【译】">
+  <title>你搭的 Claude Skills，还能提升10倍效果——使用Karpathy 的 autoresearch 方法 【译】 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">实践哥 Li @MinLiBuilds · 2026-03-31</div><div class="prose"><h1>你搭的 Claude Skills，还能提升10倍效果——使用Karpathy 的 autoresearch 方法 【译】</h1>
+<p>作者：Ole Lehmann</p>
+<p>原文链接：How to 10x your Claude Skills (using Karpathy&#x27;s autoresearch method)</p>
+<p>本文作者Ole Lehmann （@itsolelehmann）是一位在 AI 领域极具影响力的内容创作者和教育者，特别是在将 AI 应用于商业自动化和个人生产力方面。如果你对工作流自动化、AI Agent 的商业落地或者提升个人杠杆率感兴趣，他是目前 X 上最值得跟踪的头部博主之一。他的风格非常务实，很少谈论虚无缥缈的理论，更多是“手把手”教你如何配置一个能够帮你赚钱或省时间的 AI 工具。</p>
+<p>这篇文章的价值在于：你能将任何skill，任何工作流，任何研究事项，只要他是可度量可量化的，都可以通过autoresearch的方法升级，持续优化，效果变成原来的十倍。原理非常简单，评估，优化，评估，优化.....无限执行。作者还提供了开源的链接，可以直接使用。你也可以用ai找Karpathy的autoresearch进行改造。</p>
+<p>Ole Lehmann
+@itsolelehmann
+·
+Mar 17
+ Article
+How to 10x your Claude Skills (using Karpathy&#x27;s autoresearch method) 
+Your Claude skills probably fail 30% of the time and you don&#x27;t even notice. 
+I built a method that auto-improves any skill on autopilot, and in this article I&#x27;m going to show you exactly how to run it...
+86
+590
+5.3K
+2.5M</p>
+<p>你的 Claude skill，有30%的时间都在悄悄骗人——你的客户可能比你先发现。</p>
+<p>三个月前，我把自己搭的落地页文案 skill 交给一个客户用，拍着胸脯说&quot;绝对靠谱&quot;。他们要给新产品写上线文案，我说放心，这个 skill 我自己一直在用。</p>
+<p>结果当天晚上，客户发来截图：CTA 是&quot;了解更多&quot;，标题是&quot;转变你的业务&quot;。</p>
+<p>我在手机上看了三秒，关掉，重新打开，还是那个截图。</p>
+<p>那一刻我才意识到，我根本不知道这个 skill 什么时候好用、什么时候在糊弄人。</p>
+<p>我搭了一套方法，能在 autopilot 模式下自动迭代任何 skill。这篇文章教你怎么自己跑起来。</p>
+<p>你启动它，agent 就开始不停地测试、打磨这个 skill，不需要你做任何事。</p>
+<p>我的落地页文案 skill，质量检查通过率从56%涨到了92%。全程零手动。</p>
+<p>agent 自己在那反复测试、收紧 prompt。</p>
+<p>下面是整套方法，以及我搭好的具体 skill，你可以直接拿来用：</p>
+<p>P.S. 每周想收到更多这类 AI workflow？关注我。</p>
+<h2>这个方法从哪里来</h2>
+<p>Andrej Karpathy（OpenAI 联合创始人、特斯拉前 AI 负责人、&quot;vibe coding&quot;这个词的发明者）发布了一套叫 autoresearch 的方法。</p>
+<p><img alt="Article image" src="/assets/2026-03-31-你搭的-claude-skills，还能提升10倍效果——使用karpathy-的-autoresearch-方法-【译-35bf951d06/01.jpg"></p>
+<p>核心思路很简单：不让你手动改进，而是让 AI agent 在循环里替你干。</p>
+<p>它试一个小改动。看结果变好了没有。变好就留下，没变好就扔掉。</p>
+<p>然后再来一次。再来一次。</p>
+<p>他最初是用在机器学习代码上的。但这套方法适用于任何能衡量、能改进的东西。</p>
+<p>这让我想到一个让人有点不舒服的事实：</p>
+<p>你每天用的那些 AI workflow，你真的知道它们&quot;表现好&quot;还是&quot;只是在输出文字&quot;吗？</p>
+<p>大多数人分不清。因为没人教你怎么分。</p>
+<p>你上了多少 AI 课、学了多少 prompt 技巧——但有人告诉过你，怎么验证你搭好的东西真的在工作吗？</p>
+<p>没有。大家都在教你怎么搭，没人教你怎么测。</p>
+<p>我也曾经分不清。</p>
+<p>我后来想了很久，这种失效到底是怎么发生的。</p>
+<p>最让我难受的不是那次客户截图。是在那之后——我开始数，到底有多少次我以为&quot;还行&quot;，但其实已经在悄悄跑偏了。</p>
+<p>有一种失效，你完全感知不到。prompt 没明确禁止的东西，模型会慢慢漂向&quot;安全感&quot;——输出越来越模糊，越来越像模板，每次都过得去，但每次都差一点。等你发现，根本不知道是从第几轮开始出问题的。</p>
+<p>还有一种，更难受：你只看得到那些&quot;还不错&quot;的输出——打开、用掉、关掉。那些悄悄失效的，格式跑了、关键要素漏了，你永远不知道它们有多频繁。因为你根本不会去翻。</p>
+<p>第三种是自欺欺人。偶尔发现问题，手动改一改那次输出，告诉自己&quot;修了&quot;。但你改的是那一次，不是 skill 本身。下次还是会在同一个地方出错。</p>
+<p>我以前三种都干过。</p>
+<p>包括你在 Claude 里搭的 skill。</p>
+<p>我把他的方法做成了一个可以在 Claude Code 和 Cowork 里跑的 skill。想用的时候，直接在其他 skill 上运行它就行。</p>
+<p>说一句&quot;对我的落地页 skill 跑 autoresearch&quot;，剩下的它全搞定。</p>
+<h2>一次循环怎么自动提升你的 skill</h2>
+<p>这么想象。</p>
+<p>你有一个菜谱，十次里有七次做得不错。另外三次，总有些地方不对劲。也许是酱汁淡了，也许是调味出了问题。</p>
+<p>你不是从头重写整个菜谱，而是换一种配料。用这个改动做十次。</p>
+<p>变好了？留下这个改动。</p>
+<p>变差了？换回原来的。</p>
+<p>然后改下一个。再做十次。变好还是变差？留下还是撤销。</p>
+<p>经过50轮这样的过程，你的菜谱十次里有9.5次都能成功。</p>
+<p>这正是 autoresearch 对你 skill 做的事。</p>
+<p>&quot;菜谱&quot;是你的 skill prompt。 &quot;做菜&quot;是跑这个 skill。 &quot;试味&quot;是给输出结果打分。</p>
+<h2>你唯一要做的，是给出评分标准</h2>
+<p>告诉 agent&quot;什么叫好&quot;的 checklist，这是你在整个过程里唯一要干的事。</p>
+<p>用一个简单的是/否问题 checklist 来定义它。</p>
+<p>每个问题检查输出的一个具体方面。通过或失败，就这么简单。</p>
+<p>agent 用这个 checklist 给每次输出打分，分数告诉它：这次改动是在帮忙还是在帮倒忙。</p>
+<p>想象老师用 checklist 批卷子。</p>
+<p>不是&quot;给写作质量打个1-10分&quot;（模糊，每次结果都不一样），而是每一项都清清楚楚是或否：</p>
+<ul>
+<li>
+<p>学生有没有写论点？是或否。</p>
+</li>
+<li>
+<p>每处引用都注明出处了吗？是或否。</p>
+</li>
+<li>
+<p>篇幅在5页以内吗？是或否。</p>
+</li>
+</ul>
+<p>用这份 checklist 批100份卷子，每次结果都一致。</p>
+<p>落地页文案 skill 的 checklist 可能长这样：</p>
+<ul>
+<li>
+<p>&quot;标题有没有包含具体数字或可量化结果？&quot;（不是&quot;更好的文案&quot;，而是&quot;3天回收广告费&quot;）</p>
+</li>
+<li>
+<p>&quot;开头第一句有没有点出一个具体的、有名字的痛苦场景？&quot;（不是&quot;很多人都有这个问题&quot;，而是&quot;你发了邮件但对方根本没回&quot;）</p>
+</li>
+<li>
+<p>&quot;CTA 是否清楚告诉用户做完这一步之后会发生什么？&quot;（不是&quot;立即注册&quot;，而是&quot;注册后3分钟内收到你的分析报告&quot;）</p>
+</li>
+<li>
+<p>&quot;全文有没有出现&#x27;颠覆性&#x27;&#x27;行业领先&#x27;&#x27;最优解&#x27;这类零信息量词汇？&quot;</p>
+</li>
+<li>
+<p>&quot;第一段内，有没有提到用户拿到结果之后的具体生活变化？&quot;</p>
+</li>
+</ul>
+<p>这些不需要你自己想。启动 autoresearch 时，agent 会全程引导你。</p>
+<p>它会问你什么叫好，帮你把模糊的感觉变成能打勾的问题。你有风格指南的话，直接丢给它。</p>
+<p>3-6个问题是最佳数量。千万别贪多。我试过加到10个，skill 开始专门应付 checklist，输出反而更烂——就像学生背答案、根本没理解题目。</p>
+<p>我现在有个自己的规则：任何 skill，没跑过 autoresearch 的，我不拿出去用。不是完美主义，是因为我踩过那个坑。我知道那种自信其实只是无知。</p>
+<h2>怎么跑起来</h2>
+<p>第一步：下载 skill。 从这里获取，放进你在 Claude Code 或 Cowork 里的 skills 文件夹。</p>
+<p>第二步：选一个要改进的 skill。 说&quot;对我的[skill 名称] skill 跑 autoresearch&quot;。选最让你头疼的那个——时好时坏、输出不稳定的那个。</p>
+<p>第三步：agent 问你3件事。 要优化哪个 skill、用什么测试输入（比如&quot;为一款 AI 生产力工具写落地页文案&quot;），以及你的 checklist 问题是什么。</p>
+<p>第四步：它跑一遍你的 skill，给出起始分数。</p>
+<p>这是基准线。我的落地页 skill 起步56%——标题模糊、流行词泛滥、CTA 软弱。超过一半的检查项都没过。</p>
+<p>第五步：浏览器弹出实时 dashboard。</p>
+<p>分数曲线、每项 checklist 的通过/失败、每次改动日志。每10秒刷新一次。</p>
+<p>第六步：走开。</p>
+<p>agent 开始循环。找最薄弱的地方，改一点，测试，分数升就留，分数降就撤。</p>
+<p>然后再来一次。再来一次。</p>
+<p>一直跑，直到你叫停，或者连续三次超过95%。</p>
+<p>你可以盯着看，也可以去喝杯咖啡。它不需要你。</p>
+<h2>我的落地页 skill 发生了什么</h2>
+<p>我在自己的落地页文案 skill 上跑了一遍。结果：</p>
+<p>56% → 92%。4轮改动，3个留下，1个撤销。</p>
+<p>agent 实际对我的 skill prompt 做了这些改动：</p>
+<ul>
+<li>
+<p>针对最高频失败项，加了一条明确规则：&quot;标题必须包含具体数字或结果。禁止使用&#x27;转变你的业务&#x27;这类模糊承诺。&quot;</p>
+</li>
+<li>
+<p>加了禁用流行词列表：&quot;绝不使用：revolutionary、cutting-edge、synergy、next-level、game-changing、leverage、unlock、transform。&quot;</p>
+</li>
+<li>
+<p>加了一段高质量落地页的实际示例，并标出了痛点开场白和 CTA 所在位置，让 skill 能直接看到好的样子，而不是靠猜。</p>
+</li>
+<li>
+<p>尝试了更严格的字数限制，然后撤销了，因为文案变得太单薄，CTA 也跟着变差。（系统能识别出那些单独看像改进、但实际损害整体输出的改动。）</p>
+</li>
+</ul>
+<p>最终我拿到了：</p>
+<ul>
+<li>
+<p>改进后的 skill，单独保存（原版完好，随时可以恢复）</p>
+</li>
+<li>
+<p>每一轮分数的结果日志</p>
+</li>
+<li>
+<p>完整的 changelog：每次改动是什么、agent 为什么这么改、结果如何</p>
+</li>
+<li>
+<p>原始 skill 的备份</p>
+</li>
+</ul>
+<p>那个 changelog 可能是最值钱的东西。它是这个 skill 完整的&quot;经验总结&quot;——什么有用，什么没用，一清二楚。</p>
+<p>等更强的模型出来，把这份 changelog 交给它，它就能从上一个 agent 停下的地方接着干。</p>
+<p>说实话，跑完那次 autoresearch，改变最大的不是分数。是感觉。</p>
+<p>以前每次交付 skill，心里多少有点虚：希望这次没问题。现在不一样了——我知道它在什么情况下能工作，在什么情况下会出错，出错了怎么找到问题。</p>
+<p>从靠运气，变成靠系统。这才是最值钱的东西。</p>
+<h2>这套方法能用的地方远不止 skill</h2>
+<p>任何能打分的东西，都能用这套方法。</p>
+<p>网站速度： 有人用它优化页面加载时间。改一处，测量速度，留下或撤销。67轮之后，从1100ms降到了67ms。</p>
+<p>陌生客户开发邮件： 定义你的 checklist：&quot;有没有提到对方的公司？是否在75字以内？是否以具体问题收尾？&quot;让 agent 跑50个变体。</p>
+<p>Newsletter 开篇： &quot;开场白有没有个人细节？&quot;&quot;有没有陈词滥调？&quot;让 agent 在 autopilot 上帮你打磨文字。</p>
+<p>任何你反复使用的 prompt。</p>
+<p>能打分，就能 autoresearch。</p>
+<h2>去跑一遍吧</h2>
+<p>挑你表现最差的 skill，启动 autoresearch，回来就是一个真正稳定好用的东西。</p>
+<p>在这里下载 skill（上传到 Dropbox）</p>
+<p>或者去我的 GitHub 看看</p>
+<p>你有没有遇到过：满心以为 skill 在好好工作，结果被客户或者同事抓到一个你完全没注意到的问题？</p>
+<p>评论里说说你的故事——哪个环节出了问题？我看每一条。</p></div><a class="source" href="https://x.com/MinLiBuilds/status/2034533228162187444" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

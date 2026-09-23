@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Claude Code创始人刚分享的15个隐藏功能，看完我傻了">
+  <title>Claude Code创始人刚分享的15个隐藏功能，看完我傻了 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">木马人 @cnyzgkc · 2026-04-01</div><div class="prose"><h1>Claude Code创始人刚分享的15个隐藏功能，看完我傻了</h1>
+<p>Hi，大家好！我是木马人。</p>
+<p>上周整理之前写的 Claude Code 相关内容，翻出了之前写的一篇 标题是《Claude Code 创始人亲授：Anthropic 内部都在用的 10 个效率技巧》。</p>
+<p>说实话，看完我觉得有点尴尬。</p>
+<p>因为昨天 Claude Code 创始人 Boris Cherny 又分享了 15 个隐藏功能，我看完第一反应是：之前那 10 个算什么啊。。。</p>
+<p>我用 Claude Code 也有大半年了，自认为还算会用，但看完 Boris 这 15 个功能，才发现自己连皮毛都没摸到。</p>
+<p>有一说一，这不是我的问题，是这些功能藏得太深了。</p>
+<p>那话不多说，我把这 15 个功能按照我自己的理解，分成 5 个方向跟你聊聊。</p>
+<p><img alt="Article image" src="/assets/2026-04-01-claude-code创始人刚分享的15个隐藏功能，看完我傻了-be38138206/01.jpg"></p>
+<h2>一. 随时随地写代码</h2>
+<h2>第一个，手机也能写代码</h2>
+<p>我一直觉得，手机写代码是个伪需求。屏幕那么小，打字那么累，图什么呢？</p>
+<p>但 Boris 说他很多代码都是在手机上写的，这让我重新想了想。</p>
+<p>Claude Code 有移动 app，iOS 和 Android 都有。下载之后，点左边的 Code 标签，就能审代码、批 PR、写代码。</p>
+<p>我自己试了一下，在地铁上批 PR 的感觉确实有点奇怪，但你会发现，很多时候你不需要完整的开发环境，只是想快速看一眼代码、改个小 bug、批个 PR。</p>
+<p>这时候手机就够了。</p>
+<p>真的，很多需求，手机就能解决。</p>
+<p>XIMGPH_2</p>
+<p><img alt="Article image" src="/assets/2026-04-01-claude-code创始人刚分享的15个隐藏功能，看完我傻了-be38138206/02.jpg"></p>
+<h2>第二个，云端和本地随意切换</h2>
+<p>/teleport 和 /remote-control 是一对功能。</p>
+<p>Teleport 把云端会话拉到本地终端，Remote Control 在手机上控制本地运行的会话。</p>
+<p>Boris 直接在配置里开了&quot;所有会话都启用远程控制&quot;。</p>
+<p>这意味着什么？</p>
+<p>你在公司电脑上跑着一个 Claude 会话，回家路上用手机就能接着干。不是重新开始，是真的接着干。</p>
+<p>在我看来，这不是一个功能，而是一种工作方式的改变。</p>
+<p><img alt="Article image" src="/assets/2026-04-01-claude-code创始人刚分享的15个隐藏功能，看完我傻了-be38138206/03.jpg"></p>
+<h2>二. 让 Claude 自己管自己</h2>
+<h2>第三个，/loop，最强自动化</h2>
+<p>我看到这个功能的时候，真的，直接愣住了。</p>
+<p>/loop 可以让 Claude 按固定间隔自动执行任务，最长能跑一周。</p>
+<p>Boris 的真实用法是这样的：</p>
+<ul>
+<li>
+<p>/loop 5m /babysit — 每 5 分钟自动处理 code review、自动 rebase、推 PR 上线</p>
+</li>
+<li>
+<p>/loop 30m /slack-feedback — 每 30 分钟自动把 Slack 反馈整理成 PR</p>
+</li>
+<li>
+<p>/loop 1h /pr-pruner — 每小时关闭过期的 PR</p>
+</li>
+</ul>
+<p>你睡觉的时候，Claude 还在帮你干活。</p>
+<p>说实话，我第一反应是：这不就是雇了个 24 小时不睡觉的实习生吗？</p>
+<p>不过转念一想，这可能就是 AI 工具的本质——不是替代你，而是帮你做那些重复的事。</p>
+<p><img alt="Article image" src="/assets/2026-04-01-claude-code创始人刚分享的15个隐藏功能，看完我傻了-be38138206/04.jpg"></p>
+<h2>第四个，/schedule，定时任务</h2>
+<p>和 /loop 类似，但用 cron 表达式控制。</p>
+<p>适合&quot;每天早上 9 点做 XX&quot;这种固定时间的任务。</p>
+<p>不过我自己用下来，感觉 /loop 更灵活，/schedule 更适合有明确时间要求的场景。</p>
+<p><img alt="Article image" src="/assets/2026-04-01-claude-code创始人刚分享的15个隐藏功能，看完我傻了-be38138206/05.jpg"></p>
+<h2>第五个，Hooks，生命周期钩子</h2>
+<p>这个更高级。</p>
+<p>你可以在 Claude 的生命周期里插入自定义逻辑：</p>
+<ul>
+<li>
+<p>SessionStart — 每次启动 Claude 时自动加载上下文</p>
+</li>
+<li>
+<p>PreToolUse — 记录 Claude 执行的每一条 bash 命令</p>
+</li>
+<li>
+<p>PermissionRequest — 把权限请求转发到 WhatsApp，你在手机上批准</p>
+</li>
+<li>
+<p>Stop — Claude 停下来的时候自动戳它继续干活</p>
+</li>
+</ul>
+<p>这不是一个功能，而是把 Claude 改造成完全符合你工作流的样子。</p>
+<p>相信我，这个功能，一旦用上就回不去了。</p>
+<p><img alt="Article image" src="/assets/2026-04-01-claude-code创始人刚分享的15个隐藏功能，看完我傻了-be38138206/06.jpg"></p>
+<h2>三. Claude 不只写代码</h2>
+<h2>第六个，Dispatch，远程控制桌面</h2>
+<p>Boris 说他不写代码的时候就在用 Dispatch。</p>
+<p>能干什么？回 Slack 消息、处理邮件、管理文件、用你电脑上的 MCP、浏览器、鼠标键盘。</p>
+<p>我自己试了一下，发现它不是编程助理，而是远程助理。</p>
+<p>你在外面，想让 Claude 帮你处理电脑上的事，Dispatch 就是这个入口。</p>
+<p>有一说一，这个功能，对于经常需要远程处理事情的人来说，真的是刚需。</p>
+<p><img alt="Article image" src="/assets/2026-04-01-claude-code创始人刚分享的15个隐藏功能，看完我傻了-be38138206/07.jpg"></p>
+<h2>第七个，Chrome 扩展，前端开发必备</h2>
+<p>Boris 强调了一个观点：给 Claude 一个验证输出的方式，它就会迭代到完美。</p>
+<p>想象一下让一个人做网站，但不让他用浏览器看效果。结果肯定一团糟。</p>
+<p>Chrome 扩展的作用就是：Claude 写完代码自动打开浏览器看效果，发现问题自动改，迭代到满意为止。</p>
+<p>Boris 说这个扩展比其他类似的 MCP 更稳定。</p>
+<p>我自己做前端的时候，确实发现有了这个扩展，Claude 改 bug 的速度快了很多。</p>
+<p>这不是锦上添花，这是雪中送炭。</p>
+<p><img alt="Article image" src="/assets/2026-04-01-claude-code创始人刚分享的15个隐藏功能，看完我傻了-be38138206/08.jpg"></p>
+<h2>第八个，Desktop App，自动启动测试服务器</h2>
+<p>桌面版 Claude 可以自动跑你的 web server，还能在内置浏览器里测试。</p>
+<p>CLI 和 VSCode 也能用 Chrome 扩展实现类似效果，但桌面版是开箱即用。</p>
+<p>说实话，我一开始觉得桌面版没什么特别的，用了之后才发现，开箱即用真的很重要。</p>
+<p><img alt="Article image" src="/assets/2026-04-01-claude-code创始人刚分享的15个隐藏功能，看完我傻了-be38138206/09.jpg"></p>
+<h2>四. 同时开几十个 Claude</h2>
+<h2>第九个，Git Worktree，并行工作的基础</h2>
+<p>Boris 说他同时跑着几十个 Claude 会话。</p>
+<p>我第一反应是：怎么做到的？</p>
+<p>答案是 Git Worktree。</p>
+<p>简单来说，正常情况下一个 git 仓库只能在一个分支上工作，Worktree 让你同时在多个分支上工作，每个 Worktree 跑一个 Claude 会话。</p>
+<p>用法很简单：</p>
+<p>[bash]
+claude -w</p>
+<p>或者在桌面版勾选&quot;worktree&quot;选项。</p>
+<p>相信我，一旦用上 Worktree，你就再也不想回到单分支的时代了。</p>
+<p><img alt="Article image" src="/assets/2026-04-01-claude-code创始人刚分享的15个隐藏功能，看完我傻了-be38138206/10.jpg"></p>
+<h2>第十个，/batch，大规模代码迁移</h2>
+<p>/batch 会先问你一堆问题，然后自动开几十个、几百个、甚至几千个 worktree agent 并行干活。</p>
+<p>适合大规模代码迁移、批量重构、跨文件的统一修改。</p>
+<p>一个人干不完的活，Claude 开一百个分身帮你干。</p>
+<p>说实话，这个功能我还没敢试，但想想就觉得很恐怖。。。</p>
+<p><img alt="Article image" src="/assets/2026-04-01-claude-code创始人刚分享的15个隐藏功能，看完我傻了-be38138206/11.jpg"></p>
+<h2>第十一个，/branch，分叉会话</h2>
+<p>有时候你想试试另一个方案，但不想丢掉当前的进度。</p>
+<p>两种方式：</p>
+<ul>
+<li>
+<p>在会话里运行 /branch</p>
+</li>
+<li>
+<p>命令行运行 claude --resume &lt;session-id&gt; --fork-session</p>
+</li>
+</ul>
+<p>分叉之后，原会话和新会话各走各的路，互不影响。</p>
+<p>这个功能，其实不是什么新技术，但用在 AI 会话上，感觉完全不一样。</p>
+<p><img alt="Article image" src="/assets/2026-04-01-claude-code创始人刚分享的15个隐藏功能，看完我傻了-be38138206/12.jpg"></p>
+<h2>五. 榨干每一分性能</h2>
+<h2>第十二个，/btw，不打断工作流的提问</h2>
+<p>Boris 说他天天用这个。</p>
+<p>Claude 正在干活的时候，你突然想问个问题，但不想打断它。</p>
+<p>用法很简单：</p>
+<p>/btw dachshund 怎么拼？</p>
+<p>它会回答你，但不影响主线任务。</p>
+<p>问完继续干活，就像什么都没发生一样。</p>
+<p>这个功能，真的，用了之后你会发现，之前打断 Claude 再重新开始，浪费了好多时间。</p>
+<p><img alt="Article image" src="/assets/2026-04-01-claude-code创始人刚分享的15个隐藏功能，看完我傻了-be38138206/13.jpg"></p>
+<h2>第十三个，--bare，SDK 启动快 10 倍</h2>
+<p>如果你用 Claude 的 SDK，TypeScript 或 Python 都可以，加上 --bare 参数可以跳过加载本地配置。</p>
+<p>启动速度直接快 10 倍。</p>
+<p>[bash]
+claude -p &quot;总结这个代码库&quot; \
+    --output-format=stream-json \
+    --verbose \
+    --bare</p>
+<p>Boris 说这是当初设计失误，未来会把 --bare 变成默认行为。</p>
+<p>我测了一下，确实快到飞起。</p>
+<p>说实话，这种设计失误，多来点也没关系。。。</p>
+<p><img alt="Article image" src="/assets/2026-04-01-claude-code创始人刚分享的15个隐藏功能，看完我傻了-be38138206/14.jpg"></p>
+<h2>第十四个，--add-dir，跨仓库工作</h2>
+<p>在一个仓库里启动 Claude，但想让它访问另一个仓库？</p>
+<p>用法很简单：</p>
+<p>[bash]
+--add-dir /path/to/other/repo</p>
+<p>或者在会话里运行 /add-dir。</p>
+<p>这不只是让 Claude&quot;看到&quot;另一个仓库，还会给它操作权限。</p>
+<p>也可以在团队的 settings.json 里配置 additionalDirectories，每次启动自动加载。</p>
+<p>我经常用这个在前端和后端仓库之间跳来跳去。</p>
+<p>这个功能，不是为了解决什么大问题，而是让日常工作更顺畅。</p>
+<p><img alt="Article image" src="/assets/2026-04-01-claude-code创始人刚分享的15个隐藏功能，看完我傻了-be38138206/15.jpg"></p>
+<h2>第十五个，--agent，自定义 Agent</h2>
+<p>在 .claude/agents/ 里定义一个自定义 agent，然后运行：</p>
+<p>[bash]
+claude --agent=&lt;agent名字&gt;</p>
+<p>能干什么？限制工具权限，比如只读 agent；自定义系统提示词；指定特定模型。</p>
+<p>比如：</p>
+<ul>
+<li>
+<p>代码审查专用 agent，只能读不能写</p>
+</li>
+<li>
+<p>文档生成 agent，只操作 markdown 文件</p>
+</li>
+<li>
+<p>数据分析 agent，只能跑查询不能改代码</p>
+</li>
+</ul>
+<p>这个功能，不是给新手用的，但一旦你需要自定义，就会发现它有多强大。</p>
+<p><img alt="Article image" src="/assets/2026-04-01-claude-code创始人刚分享的15个隐藏功能，看完我傻了-be38138206/16.jpg"></p>
+<p>现在回头看，这 15 个功能，其实不是什么黑科技，而是 Boris 自己每天在用的东西。</p>
+<p>我一直觉得，工具的本质，不是用来炫技的，而是用来解决问题的。</p>
+<p>这 15 个功能，不是每个都要用，而是找到适合你的那几个，用熟了，就够了。</p>
+<p>相信我，用熟了之后，你会发现，之前的工作方式，真的有点低效。</p>
+<p>我也希望你能找到适合自己的那几个功能。</p></div><a class="source" href="https://x.com/cnyzgkc/status/2038783557112647718" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

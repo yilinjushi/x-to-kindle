@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Vibe Coding 的尽头是规划先行">
+  <title>Vibe Coding 的尽头是规划先行 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">SagaSu @sujingshen · 2026-07-02</div><div class="prose"><h1>Vibe Coding 的尽头是规划先行</h1>
+<p>你对 Claude Code 说了一句话。2分钟后，一个注册页面跑起来了。</p>
+<p>表单能提交。校验有提示。UI 干净整洁。</p>
+<p>你正准备开香槟，低头看一眼那个黄色的警告框——</p>
+<p><img alt="Article image" src="/assets/2026-07-02-vibe-coding-的尽头是规划先行-46c3e71b3d/01.jpg"></p>
+<p>「密码需要唯一。该密码已被用户 r***88 使用。请选择一个不同的密码。」</p>
+<p>Agent 替你做了一个暴露其他用户密码信息的注册系统。</p>
+<p><img alt="Article image" src="/assets/2026-07-02-vibe-coding-的尽头是规划先行-46c3e71b3d/02.jpg"></p>
+<p>它没有写错任何一行代码。表单验证触发得恰到好处，提示语清晰友好。问题不在代码——在于你脑子里想的“注册页面”和 Agent 理解的“注册页面”，根本不是同一个东西。你没告诉它密码应该单向哈希。你没告诉它错误提示不能区分“用户不存在”和“密码错误”。你没告诉它永远不要在 UI 上暴露另一个用户的任何信息。</p>
+<p>你省下了一小时的需求描述时间。你用三个小时来找遍代码里所有这类 bug，再一个一个修掉。</p>
+<p>这不是 bug。这是 vibe coding 在 2026 年的本来面目。</p>
+<h2>口喷需求：描述 ≠ 定义</h2>
+<p><img alt="Article image" src="/assets/2026-07-02-vibe-coding-的尽头是规划先行-46c3e71b3d/03.jpg"></p>
+<p>Vibe coding 这个名字诞生于 2024 年末。当时它指的是在 Cursor 里“凭感觉 Tab 补全直到程序跑起来”——Andrej Karpathy 那句著名的“fully give in to the vibes”勾勒了一个画面：开发者不再思考，只是不断地按 Tab。</p>
+<p>两年过去了，vibe coding 升级了。你不再需要狂按 Tab——你只需要打开 Claude Code 或 Codex，对着终端说一句话。Agent 替你分析代码库、生成实现、跑测试、提 PR。你甚至不需要知道它具体写了什么。这是 Andreessen Horowitz 最近描述为“从 keyboard-first 到 intent-first”的转变：你表达意图，Agent 替你执行。</p>
+<p>但这里有一个根本性的混淆：描述你想做什么，和定义你该做什么，是两件完全不同的事。</p>
+<p>OpenAI 在 A Practical Guide to Building Agents 中对 Agent 的定义是“能独立代替你完成整个流程的系统”。问题恰恰出在“独立”这两个字上：Agent 独立了，但它的判断基准还是你输入那句话时隐含在脑中的所有假设——那些你没说出口、Agent 也猜不到的假设。</p>
+<p>你以为你说了“注册页面”。Agent 以为你说的是“一个能接收邮箱和密码、验证格式、提示错误、完成注册的表单页面”。</p>
+<p>它完美地实现了它理解的版本。它只是不知道——你也没告诉它——密码不能明文对比、错误提示不能区分用户、邮箱不能暴露给其他用户的 session。</p>
+<p>DeepLearning. AI 在它的 SDD 课程里说得直白：“Vibe coding is fast, but it often produces code that doesn‘t match what you asked for. Spec-driven development is the disciplined alternative.”不是 Agent 不够聪明。是自然语言本身就不是精确接口。</p>
+<h2>模糊性不是漏洞，是自然语言的默认状态</h2>
+<p><img alt="Article image" src="/assets/2026-07-02-vibe-coding-的尽头是规划先行-46c3e71b3d/04.jpg"></p>
+<p>每一种自然语言都建立在共享上下文的基础上。当两个人对话时，他们在调用几十年共同生活在这个世界上的经验来填充对方没说出口的部分。你说“去吃饭”，对方知道你不是去吃早餐。你说“把灯关一下”，对方知道你指的是这间屋子最亮的那盏灯。共享上下文越深厚，语言越简洁。</p>
+<p>你跟 Agent 之间没有共享上下文。</p>
+<p>当你说“帮我做一个注册页面”，Agent 唯一能参考的是它训练数据里成千上万个“注册页面”的平均模样。那个平均值里有邮箱输入框、密码框、重复密码框、注册按钮——但是没有“不要暴露其他用户的密码”这条规则。因为训练数据里的大多数注册页面也不考虑这个——它们只是在演示 UI，不是在实现真正的安全系统。</p>
+<p>这不是 Agent 的漏洞。这是自然语言的系统属性：每说一句话，你都省略了无数细节。跟人类对话时，那些细节由你们的共同经验自动补全。跟 Agent 对话时，那些细节由 Agent 的训练数据平均值自动补全——但那个平均值不是你的经验，也不是你的项目标准。</p>
+<p>你省下的需求澄清时间不是消失了。它们被推迟了。推迟到了代码跑起来之后。</p>
+<p>当你回过头修 bug、补安全漏洞、改“看起来没问题但逻辑完全不对”的业务规则时，你正在用 debug 的时间偿还你在 prompt 里省下的需求描述时间。debug 的代价比需求描述高得多——不仅因为你要翻代码、定位问题、验证修复，更因为你已经在错误的方向上建了一些东西，那些东西会成为未来方向性返工的沉没成本。</p>
+<p>一种更精确的表述：你是把“理解成本”从 Agent 启动前转移到了 Agent 产出后。后者的单价远高于前者。</p>
+<h2>一个反直觉的对比：慢在开头，快在全程</h2>
+<p>回到那个注册页面的案例。如果接到这个任务时，你先花十五分钟，把自己踩过的坑、学到的教训、项目里约定俗成的规则——那些本来只存在于你脑子和团队 Slack 聊天记录里的东西——沉淀成一份结构化的说明。你可以自己写，也可以对着 Claude Code 说「帮我整理一份注册功能的安全约束和验收标准」，然后 review 它输出的内容，把你不同意的改掉、把你漏掉补上。写完之后，你得到的是这样一份东西——</p>
+<p>注册功能 Spec</p>
+<p>概述：为平台提供邮箱注册入口。用户通过邮箱 + 密码创建账号，注册成功后跳转至登录页。本期仅做邮箱注册，后续版本考虑社交登录和邮箱验证。</p>
+<p>用户流程：访问 /register → 填写邮箱 + 密码 + 确认密码 → 前端校验格式 → POST /api/auth/register → 后端校验 → 写入数据库 → 返回成功，前端跳转登录页。</p>
+<p>数据字段</p>
+<ul>
+<li>
+<p><code>email</code>：字符串，必填，RFC 5322 格式校验（前后端均做）</p>
+</li>
+<li>
+<p><code>password</code>：字符串，必填，最小长度 8 位（产品决策：不做大小写/特殊字符复杂度要求，降低注册摩擦）</p>
+</li>
+<li>
+<p><code>created_at</code>：自动生成</p>
+</li>
+</ul>
+<p>安全要求</p>
+<ul>
+<li>
+<p>密码使用 bcrypt 存储，cost factor ≥ 10，不可逆</p>
+</li>
+<li>
+<p>错误提示不做过度模糊化：区分「该邮箱已注册」和「密码长度不足」——这两种情况用户可以修正，不需要藏起来。但不附带任何关联账户信息（如注册时间、上次 IP 等字段不暴露）</p>
+</li>
+<li>
+<p>接口响应中不返回其他用户的数据，即便是脱敏后的也不返回</p>
+</li>
+</ul>
+<p>接口</p>
+<ul>
+<li>
+<p><code>POST /api/auth/register</code>，请求体 <code>{ email, password }</code></p>
+</li>
+<li>
+<p>成功 → 201，body <code>{ message: “注册成功” }</code></p>
+</li>
+<li>
+<p>失败 → 400（校验失败）或 409（邮箱冲突），body <code>{ error: string }</code>，仅含用户可操作的提示</p>
+</li>
+</ul>
+<p>边缘情况</p>
+<ul>
+<li>
+<p>空字段 → 400，指明哪些字段必填</p>
+</li>
+<li>
+<p>密码前后空格 → 自动 trim</p>
+</li>
+<li>
+<p>重复提交（竞态）→ 数据库唯一索引兜底</p>
+</li>
+</ul>
+<p>明确不做（本期）</p>
+<ul>
+<li>
+<p>不发送验证邮件</p>
+</li>
+<li>
+<p>不做社交登录（Google / GitHub / 微信）</p>
+</li>
+<li>
+<p>不做 CAPTCHA / 注册频率限制（先上线，后续加日志监控滥用量）</p>
+</li>
+</ul>
+<p>验收标准</p>
+<ul>
+<li>
+<p>[ ]  新邮箱 + 合规密码 → 201，数据库密码字段为 bcrypt 哈希</p>
+</li>
+<li>
+<p>[ ]  已注册邮箱 → 409，提示「该邮箱已注册」</p>
+</li>
+<li>
+<p>[ ]  密码 &lt; 8 位 → 400，提示密码长度不足</p>
+</li>
+<li>
+<p>[ ]  非法邮箱格式 → 400，提示邮箱格式不正确</p>
+</li>
+<li>
+<p>[ ]  任一必填字段为空 → 400</p>
+</li>
+<li>
+<p>[ ]  接口响应中不出现其他用户的标识信息</p>
+</li>
+</ul>
+<p><img alt="Article image" src="/assets/2026-07-02-vibe-coding-的尽头是规划先行-46c3e71b3d/05.jpg"></p>
+<p>这十五分钟感觉“慢”了。你没在写代码，你在写一份看起来像需求的文档。十五分钟过去了，你一行功能代码都没写出来。</p>
+<p>但 Agent 读完这份 spec 之后——它一次就做对了。它不会在密码对比上走捷径，不会在错误提示上过度友好，不会在响应里附带“哦对了你隔壁用户的密码跟你一样要不要换一个”。因为你把这些约束写进了 spec。</p>
+<p>而在没有 spec 的场景里，你七秒钟打完那行 prompt，Agent 开始吭哧吭哧干活——你省下的那十四分五十三秒，会在接下来的三天里变成：定位“password uniqueness”提示泄露了其他用户密码 ≈ 30 分钟、排查为什么密码存储是明文 ≈ 1 小时、重构错误提示逻辑 ≈ 2 小时、写安全补丁 + 测试 ≈ 半天、给你的技术 Leader 解释“为什么上次 code review 没发现问题”：不可估量。</p>
+<p>七秒钟省下的时间，用三天来还。</p>
+<h2>你以为这是方法论推广，其实是生存本能</h2>
+<p><img alt="Article image" src="/assets/2026-07-02-vibe-coding-的尽头是规划先行-46c3e71b3d/06.jpg"></p>
+<p>Philippe Haldermans 是比利时的一个技术负责人。2025 年，他写了一篇后来在 Medium 上流传很广的文章——Building Software with AI Agents: A Practical Guide Using OpenAI Codex。他在文章开篇就说了一句实话：“The difference between a demo and something production-worthy is mostly discipline: clear specs, tests, and boundaries. Without that, you move quickly but drift into rework.”</p>
+<p>他的团队不是哪个咨询公司教他们用 SDD 的。他们是自己跌进坑里然后爬出来的。他们一开始也是纯 prompt 驱动——对着 Codex 说“帮我做一个 X”，Codex 做了，看起来不错，交上去，出问题，返工。重复了几次之后，团队自然演化出了一套“先写 spec，再交给 Agent”的工作方式。Haldermans 管这个过程叫“从 prompting 到 process”。</p>
+<p>这篇文章在 2026 年 6 月更新了一次。Haldermans 在更新里说了一句话，可能比原文更能说明问题：“My thinking has moved on since I wrote this.”意思是，方法论还在演化——因为 AI Agent 本身还在演化。但有一个方向他更坚定了：文档不是次要的，不是“等代码写完了再补”的，不是 bureaucracy。文档是 Agent 工作流的基础设施。</p>
+<p>这不是孤立的故事。Towards Data Science 上那篇被广泛引用的 From Vibe Coding to Spec-Driven Development 记录了一个几乎相同的演化路径：作者从 vibe coding 开始——“描述一下功能，Agent 就给你一个能跑的版本”——然后逐渐发现代码在不停漂移，每个新功能都会和旧功能产生意料之外的交互。他开始在每次编码前写一份 constitution 和 spec，然后才交给 Agent。这个转变的结果是：他用 SDD 方式在 4.5 小时内完成了一个完整的健身 App MVP——从 spec 到可运行的原型。</p>
+<p>4.5 小时，一个健身 App。如果他走 vibe coding 路线，写代码可能只要 2 小时——修两周的 bug。</p>
+<p>DeepLearning.AI 用另一种语言说了同一件事。他们把这门课叫做 Spec-Driven Development with Coding Agents，直译就是“带着规范让 Agent 编码”。课程的核心论点极其简单：vibe coding 快但不可靠，SDD 是可重复的工程方法。你写一份 Markdown 格式的 spec，Agent 按照 spec 实现，你 review——这个循环是可控的、可迭代的、可验证的。</p>
+<p>“Many of the best developers already work this way.”这句话不是课程宣传语。它是一个正在发生的事实：最好的开发者已经自发走到了文档驱动的路上，不是因为有人写了白皮书，而是因为不这样就活不下去。</p>
+<p>那篇被引用最多的文章——Andrej Karpathy 自己在 2025 年发布的一篇著名推特长文里，在提到 vibe coding 之余，其实也给出了一段关键的自我修正：“我发现，当我开始给 AI 更详细的约束和目标时，产出质量大幅提升。本质上，我是在用自然语言做 spec。”</p>
+<p>连 vibe coding 这个词的发明者，都在偷偷写 spec。</p>
+<h2>你不是在写文档，你是在建立对齐锚点</h2>
+<p><img alt="Article image" src="/assets/2026-07-02-vibe-coding-的尽头是规划先行-46c3e71b3d/07.jpg"></p>
+<p>Spec-Driven Development 这个名字容易让人误解。它听起来像是一种笨重的流程：你要写很多文档，你要填很多表格，你要在开始写代码之前走完一个冗长的审批流程。</p>
+<p>它不是。</p>
+<p>SDD 的核心操作是：在让 Agent 开始干活之前，你先花一点时间，用结构化的方式定义三件事——</p>
+<ul>
+<li>
+<p>什么是成功（验收标准：Agent 做到什么程度算完成任务）</p>
+</li>
+<li>
+<p>什么是底线（约束：Agent 绝对不能做什么，不管它觉得怎么做更好）</p>
+</li>
+<li>
+<p>什么是边界（范围：这个任务到哪里为止，Agent 不要自作主张扩展到相邻功能）</p>
+</li>
+</ul>
+<p>这三件事不需要长。那个注册页面的 spec 连一页都没写满。Haldermans 在文章里示范的那个 AGENTS.md 模板——包含了项目概述、命令、仓库布局、spec 文件位置、编码规范和领域规则——总共不到一千字。一千字。换 Agent 少踩五个坑。</p>
+<p>它的本质不是“写文档”，是建立对齐锚点——一份 Agent 和你都能参照的 shared understanding。在你输入 prompt 的那一瞬间，你脑子里有一个完整的画面：密码要哈希、提示要模糊、邮箱不能泄露、格式要校验——但 Agent 看不到那个画面。Spec 就是那个画面的文字版本。它把你没说出口的 100 个隐性约束，变成了 Agent 可以读取和遵循的显性条件。</p>
+<p>学术研究也在证实同一件事。一篇 2025 年的 arxiv 论文分析了 242 个真实仓库中的 253 个 CLAUDE.md 文件——这是一种被开发者放在项目根目录下、专门给 Claude Code 读取的项目说明文件。研究发现，这些 manifest 文件正在变成 Agent 的运行时上下文：它们定义了项目的身份、操作的边界、可以做什么和不可以做什么。另一篇覆盖了 Claude Code、GitHub Copilot、Cursor、Gemini 和 Codex 五种工具的论文进一步发现，AGENTS.md 这种文件格式正在成为跨工具的行业标准——项目文档正在从“人类协作文档”变成“Agent 配置层” [arxiv:2509.14744, arxiv:2602.14690]。</p>
+<p>这不是未来的趋势。这是已经发生的事实。你项目里的 CLAUDE.md 不是给别人看的——是给 Agent 看的。它每次启动都会读它。你不是在写文档，你是在编程——在给 Agent 编程。</p>
+<h2>下次打开 Claude Code，先别急着说话</h2>
+<p>Haldermans 在那篇文章的结尾有一段话，可能是整篇里最值得记住的：“When you hand Codex a spec, you‘re not asking it to ’build something.‘ You’re handing it a contract and saying: this is what success looks like.”</p>
+<p>把 spec 想象成一份 contract。你不需要长篇大论。你不需要完美。你只需要在 Agent 开始干活之前，把最重要的几条约束写清楚、放在 Agent 能读到的地方。</p>
+<p>这不会让你慢下来。这会让你真正快起来——不是“第一个版本出现”的速度，而是“最终版本交付”的速度。前者是 vibe coding 的幻觉，后者才是工程的真实节奏。</p>
+<p>下次打开 Claude Code，想说“帮我做一个注册页面”之前，先花 10 分钟写一份 spec。你省下的不是 10 分钟。</p>
+<p>是 3 天。</p>
+<p><img alt="Article image" src="/assets/2026-07-02-vibe-coding-的尽头是规划先行-46c3e71b3d/08.jpg"></p>
+<p>参考文献</p>
+<ul>
+<li>
+<p>Haldermans, P. (2025). Building Software with AI Agents: A Practical Guide Using OpenAI Codex. Medium.</p>
+</li>
+<li>
+<p>DeepLearning. AI. (2025). Spec-Driven Development with Coding Agents. Short course, taught by Paul Everitt (JetBrains).</p>
+</li>
+<li>
+<p>Towards Data Science. From Vibe Coding to Spec-Driven Development. Describes the 4.5-hour fitness app MVP case study.</p>
+</li>
+<li>
+<p>OpenAI. (2025). A Practical Guide to Building Agents. Official documentation.</p>
+</li>
+<li>
+<p>On the Use of Agentic Coding Manifests: An Empirical Study of Claude Code (arXiv:2509.14744). Analysis of 253 CLAUDE.md files across 242 repositories.</p>
+</li>
+<li>
+<p>Configuring Agentic AI Coding Tools: An Exploratory Study (arXiv:2602.14690). Covers AGENTS.md as an emerging cross-tool standard across Claude Code, Copilot, Cursor, Gemini, and Codex.</p>
+</li>
+</ul>
+<p>本文由 YouMind 自动从 Markdown 转换排版。</p></div><a class="source" href="https://x.com/sujingshen/status/2072497223850668513" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

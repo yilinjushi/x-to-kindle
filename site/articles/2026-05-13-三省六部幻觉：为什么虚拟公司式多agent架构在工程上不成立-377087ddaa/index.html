@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="三省六部幻觉：为什么&quot;虚拟公司&quot;式多Agent架构在工程上不成立">
+  <title>三省六部幻觉：为什么&quot;虚拟公司&quot;式多Agent架构在工程上不成立 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">SagaSu @sujingshen · 2026-05-13</div><div class="prose"><h1>三省六部幻觉：为什么&quot;虚拟公司&quot;式多Agent架构在工程上不成立</h1>
+<p>一个在AI社区广泛流传的架构思路，正在让大量团队走弯路。</p>
+<h2>先说结论</h2>
+<p>如果你正在考虑把多个AI Agent分别命名为&quot;产品经理&quot;、&quot;架构师&quot;、&quot;测试工程师&quot;，让它们像公司部门一样传递文档、协作完成任务——请停下来。</p>
+<p>这个模式看起来很直觉，逻辑上似乎很合理，但它在工程上有根本性的缺陷。更重要的是，Anthropic、OpenAI、Google三家厂商在构建自己的Agent系统时，没有一家采用这个模式。</p>
+<p>这不是巧合。</p>
+<h2>什么是&quot;三省六部&quot;式架构</h2>
+<p><img alt="Article image" src="/assets/2026-05-13-三省六部幻觉：为什么虚拟公司式多agent架构在工程上不成立-377087ddaa/01.jpg"></p>
+<p>这个比喻指的是一类在社区里广泛流行的多Agent设计思路，在不同框架和文章里有不同名字：role-based agents、virtual team、CrewAI式分工、MetaGPT式组织——本文统称&quot;三省六部&quot;。</p>
+<p>核心模式是：把一个复杂任务拆解成若干职能，每个Agent扮演一个角色——PM负责需求、Tech Lead负责架构、Dev负责实现、QA负责测试。任务在Agent之间流转，像一条流水线。</p>
+<p>这个模式在图示上非常好看。它满足了人类对&quot;分工协作&quot;的直觉，也让&quot;AI团队&quot;这个概念变得具象可解释。CrewAI等框架正是因此积累了大量用户。</p>
+<p>问题在于，它解决的是人类的瓶颈，不是AI的瓶颈。</p>
+<h2>为什么这个类比从根本上是错的</h2>
+<p>人类需要分工，是因为：</p>
+<ul>
+<li>
+<p>单个人的注意力有限，无法同时处理所有信息</p>
+</li>
+<li>
+<p>人有专业壁垒，学习切换成本高</p>
+</li>
+<li>
+<p>人与人之间需要接口来协调</p>
+</li>
+</ul>
+<p>但LLM的特性完全不同：</p>
+<ul>
+<li>
+<p>同一个模型既能写PRD又能写代码，没有&quot;职业边界&quot;</p>
+</li>
+<li>
+<p>模型的瓶颈不是注意力广度，而是推理深度和信息完整性</p>
+</li>
+<li>
+<p>模型之间没有&quot;文化&quot;和&quot;默契&quot;来补偿信息损耗</p>
+</li>
+</ul>
+<p>给Agent贴上&quot;产品经理&quot;的标签，不会让它更专业——但会让它拒绝越界。一个被框死在&quot;测试工程师&quot;角色里的Agent，看到架构层的问题可能直接跳过，因为&quot;不在我职责范围内&quot;。最有价值的推理往往发生在边界上，而三省六部模式在系统层面封死了这个可能性。</p>
+<p>角色扮演制造了假边界。这是第一个问题。</p>
+<h2>第二个问题：信息在流转中死亡</h2>
+<p><img alt="Article image" src="/assets/2026-05-13-三省六部幻觉：为什么虚拟公司式多agent架构在工程上不成立-377087ddaa/02.jpg"></p>
+<p>三省六部模式里，Agent A产出一个文档，传给Agent B。</p>
+<p>这个过程传递的是结论，不是推理过程。</p>
+<p>B拿到文档，重新理解，重新建立上下文。原始意图在衰减，隐含假设在丢失，每次传递都在累积误差。工作流越长，最终输出越&quot;局部正确但整体漂移&quot;——每个节点看起来合理，但整体已经偏离了最初的目标。</p>
+<p>人类组织靠会议、文化、非正式沟通来补偿这个信息损耗。Agent之间没有这些机制。</p>
+<p>这里有一个常见的反驳：三家厂商的解法（progress.txt、spec文件、runbook）不也是&quot;传文件&quot;吗？区别在哪？</p>
+<p>区别在于谁在写、写给谁、怎么更新。</p>
+<p>三省六部的信息流转是角色间的单向交接：A写完交给B，B不再回头，A也不知道B怎么用了这份文档。信息被压缩成结论，推理过程丢失，接棒就是断点。</p>
+<p>外部状态文件是同一任务的增量日志：执行主体在每个checkpoint时往同一份记录里追加，下一个session读取的是任务的完整历史，不是上一个&quot;同事&quot;的输出结论。写状态的人和读状态的人是同一个角色，只是时间不同。信息不是被&quot;压缩传递&quot;的，是被&quot;连续积累&quot;的。</p>
+<p>这个区别决定了推理链能不能跨session保持连续。</p>
+<p>大量token被浪费在Agent之间的&quot;交接文件&quot;上，而不是用于实际推理。你得到的是一个模拟公司行为的系统，而不是一个解决问题的系统。</p>
+<h2>三家厂商实际怎么做的</h2>
+<p>值得注意的是，当Anthropic、OpenAI、Google真正构建自己的生产级Agent系统时，他们的工程文档里几乎找不到&quot;角色扮演&quot;或&quot;部门分工&quot;的字眼。</p>
+<p>Anthropic：Context Engineering + 显式状态文件</p>
+<p>Anthropic内部把&quot;Prompt Engineering&quot;升级成了&quot;Context Engineering&quot;：问题不是怎么写好一个prompt，而是什么样的token配置最能产生想要的行为。</p>
+<p>在构建Claude Code和Research系统时，他们面对的核心挑战是：Agent必须在离散的session里工作，每个新session对之前发生的事情没有任何记忆。他们的比喻是&quot;轮班工程师&quot;——每个新班次的工程师到岗时对上一班的工作一无所知。</p>
+<p>解法不是让Agent扮演不同角色，而是：</p>
+<ul>
+<li>
+<p>claude-progress.txt：一个跨session的工作日志，Agent在每个session结束时更新，下一个session开始时读取</p>
+</li>
+<li>
+<p>Git history：作为状态锚点，记录每一个增量变化</p>
+</li>
+<li>
+<p>Initializer Agent：只在第一个session运行，建立环境、展开feature list、写好runbook，供后续所有session使用</p>
+</li>
+</ul>
+<p><img alt="Article image" src="/assets/2026-05-13-三省六部幻觉：为什么虚拟公司式多agent架构在工程上不成立-377087ddaa/03.jpg"></p>
+<p>关键洞察：推理链的连续性不靠模型&quot;记住&quot;，靠显式的外部状态来锚定。</p>
+<p>他们同时发现，把&quot;model能力假设&quot;硬编码进harness是危险的。Sonnet 4.5有&quot;context anxiety&quot;——快到context limit时会提前收尾，于是harness里加了context reset。但Opus 4.5这个行为消失了，reset变成了死重量。这说明：harness需要随模型迭代而演化，任何&quot;永久解法&quot;都只是当前阶段的工程妥协。</p>
+<p>在多Agent的Research系统里，Anthropic的架构是orchestrator-worker：一个lead agent分解任务、协调subagent，subagent并行探索不同方向，结果回流给lead agent综合。他们发现token消耗量本身就解释了80%的性能差异——多Agent的价值不是&quot;分工&quot;，而是用更多token覆盖更大的搜索空间。</p>
+<p>这里有一个容易混淆的地方：Anthropic的subagent看起来也像&quot;分工&quot;，但本质完全不同。三省六部是职能性分工——不同角色承担不同工种，PM做完传给Dev，Dev做完传给QA，每个角色只处理流水线的一段。Anthropic的subagent是功能性并行——多个相同性质的agent同时搜索不同方向，没有&quot;下一棒&quot;，结果全部汇聚回同一个orchestrator综合。前者是接力赛，后者是同时撒网捞鱼。</p>
+<p>OpenAI：Compaction + Skills + 结构化Spec文件</p>
+<p><img alt="Article image" src="/assets/2026-05-13-三省六部幻觉：为什么虚拟公司式多agent架构在工程上不成立-377087ddaa/04.jpg"></p>
+<p>OpenAI给出的长任务原则更直接：在任务开始时就为continuity做规划。</p>
+<p>他们的Codex实验里，工程师给agent一个spec文件（冻结目标，防止agent&quot;做出了很impressive但方向错误的东西&quot;），让它生成milestone-based plan，然后用一个runbook文件告诉agent如何操作。这个runbook同时也是共享记忆和审计日志。</p>
+<p>结果：GPT-5.3-Codex跑了约25小时不间断，完成了一个完整的设计工具，保持了全程的连贯性。</p>
+<p>Server-side compaction作为默认primitive，不是紧急fallback。多步骤任务里，previous_response_id让model能在同一个thread里继续工作，而不是每次重建上下文。</p>
+<p>他们还引入了Skills概念——可复用的、版本化的指令集，挂载进container，让agent执行特定任务时有稳定的操作规范。这不是&quot;角色&quot;，是工具和操作规程，是本质上不同的东西。</p>
+<p>Google：1M上下文 + Context-driven Development</p>
+<p>Google的方向是硬扩窗口：Gemini的1M token context是明确的差异化策略。他们的逻辑是：之前被迫使用的RAG切片、丢弃旧消息等技术，在足够大的窗口下可以被&quot;直接放进去&quot;所取代。</p>
+<p>但他们自己也承认这不够用。Google在Gemini CLI推出了Conductor扩展，核心思路和Anthropic如出一辙：把项目意图从聊天窗口里移出来，放进代码库里的持久化Markdown文件。哲学是：&quot;不依赖不稳定的聊天记录，依赖正式的spec和plan文件。&quot;</p>
+<p>Gemini 3还引入了Thought Signatures机制：在长session里保存推理链的关键节点，防止&quot;reasoning drift&quot;——长context里逻辑前后不一致的问题。</p>
+<h2>真正的架构原则是什么</h2>
+<p>从三家的工程实践中，可以提炼出几个共同的原则：</p>
+<p>推理链不能断，只能分叉再合并。 多Agent的正确用法不是流水线，而是一个主agent持有完整意图，子调用是为了深挖某个子问题，结果回流给主agent，不是传给下一个agent。</p>
+<p>显式外部状态，不靠模型记住。 progress.txt、git history、spec文件、数据库——形式不重要，原则是：推理链的关键节点必须外化到持久存储里，而不依赖模型在context window里&quot;记住&quot;。</p>
+<p>多Agent的价值是并行覆盖，不是分工。 Anthropic Research系统的结论很清楚：性能提升主要来自于&quot;花了更多token&quot;，而不是来自&quot;分工更合理&quot;。多Agent适合breadth-first类任务——需要同时探索多个独立方向的场景。不适合需要连续推理、深度依赖上下文的场景。</p>
+<p><img alt="Article image" src="/assets/2026-05-13-三省六部幻觉：为什么虚拟公司式多agent架构在工程上不成立-377087ddaa/05.jpg"></p>
+<p>验证Agent是否定者，不是接棒者。 如果要用多Agent做质量控制，正确的设计是让一个Agent专门找另一个Agent的问题，而不是&quot;传递工作成果&quot;。对抗性检验，不是流水线传递。</p>
+<p>工具是工具，不是角色。 给Agent配什么工具（bash、文件读写、搜索、代码执行）远比给它贴什么标签重要。工具决定了Agent能做什么；角色标签只是约束它愿意做什么。</p>
+<h2>那三省六部为什么会流行？</h2>
+<p>因为它好解释。</p>
+<p>&quot;这个Agent是PM，那个是QA&quot;——这句话任何人都能理解。它满足了人类对AI系统可解释性的渴望，也满足了管理层对&quot;AI像团队一样工作&quot;的想象。</p>
+<p><img alt="Article image" src="/assets/2026-05-13-三省六部幻觉：为什么虚拟公司式多agent架构在工程上不成立-377087ddaa/06.jpg"></p>
+<p>它还好展示。用流程图画出来，有部门、有箭头、有交接，非常直观。</p>
+<p>但好解释和好展示，和工程上是否成立是两件事。</p>
+<p>更深层的原因是：大多数采用这个模式的团队，并没有真正面对过&quot;上下文在多Agent间传递时的损耗&quot;这个问题。他们的任务可能不够复杂，或者问题被其他因素掩盖了。等到任务复杂度上来，系统开始出现诡异的&quot;局部正确整体错误&quot;时，问题才会暴露。</p>
+<h2>实践建议</h2>
+<p>最好的多Agent系统，不像公司。它更像一个思考者的多次草稿——同一个大脑，在不同维度上展开推理，最终合并成一个连贯的结论。</p>
+<p>从这个原则出发：</p>
+<p>不要问&quot;我需要几个Agent&quot;，要问&quot;这个任务的信息依赖结构是什么&quot;。</p>
+<p>如果任务需要连续推理、上下文高度依赖（比如写一个复杂功能的设计文档），单Agent + 好的context engineering通常优于多Agent。</p>
+<p>如果任务需要同时探索多个独立方向（比如同时研究10个竞品的不同模块），多Agent并行是合理的——每个subagent的任务相互独立，信息损耗代价最小。这正是Anthropic Research系统token量解释80%性能差异背后的原因：不是分工让它更好，是更大的搜索覆盖让它更好。</p>
+<p>如果任务跨越多个session，外部状态文件是必须的。一份有效的状态文件应该包含四类信息：</p>
+<ul>
+<li>
+<p>任务目标（不变，session开始时读取，防止漂移）</p>
+</li>
+<li>
+<p>已完成的步骤（追加，不覆盖，保留完整历史）</p>
+</li>
+<li>
+<p>当前状态（覆盖，反映最新进展）</p>
+</li>
+<li>
+<p>已知的坑（追加，避免下一个session重复踩）</p>
+</li>
+</ul>
+<p>这四类信息分开维护，合在一起就是&quot;下一个自己&quot;需要的完整上下文。</p>
+<p>如果要加验证环节，让验证Agent的唯一任务是找问题，不是&quot;接棒继续做&quot;。对抗性检验，不是流水线传递。</p>
+<p><img alt="Article image" src="/assets/2026-05-13-三省六部幻觉：为什么虚拟公司式多agent架构在工程上不成立-377087ddaa/07.jpg"></p>
+<p>最后：模型能力在快速提升，今天harness里需要的workaround，六个月后可能变成死重量。Anthropic已经验证了这一点——Sonnet 4.5的context anxiety在Opus 4.5里消失了，为它设计的context reset随即变成了无用代码。保持架构的可演化性，比选一个&quot;完美架构&quot;更重要。</p>
+<p><img alt="Article image" src="/assets/2026-05-13-三省六部幻觉：为什么虚拟公司式多agent架构在工程上不成立-377087ddaa/08.jpg"></p>
+<p>三省六部是一个让人感觉良好但工程上代价高昂的错觉。它的真正成本不是直接的失败，而是让你的系统在复杂度上升时，以一种难以诊断的方式退化——每个节点都&quot;看起来在工作&quot;，但整体在漂移。</p>
+<p>等你发现问题的时候，流水线已经很长了。</p>
+<p>参考来源：Anthropic Engineering Blog（Building Effective Agents, Effective Context Engineering, Multi-Agent Research System, Effective Harnesses for Long-Running Agents, Managed Agents）；OpenAI Developers Blog（Run Long Horizon Tasks with Codex, Shell + Skills + Compaction）；Google Developers Blog（Architecting Efficient Context-Aware Multi-Agent Framework, Conductor: Context-Driven Development for Gemini CLI）</p></div><a class="source" href="https://x.com/sujingshen/status/2043898494818410731" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="How to run Claude on autopilot in 14 steps: /loop, Routines, and the full automation stack.">
+  <title>How to run Claude on autopilot in 14 steps: /loop, Routines, and the full automation stack. · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Codez @0xCodez · 2026-06-06</div><div class="prose"><h1>How to run Claude on autopilot in 14 steps: /loop, Routines, and the full automation stack.</h1>
+<p>You’re paying $20–$200/month for Claude and using it like a paid version of ChatGPT. 9 out of 10 users have never set up automation that runs without them clicking buttons.</p>
+<p>No /loop, no scheduled tasks, no Routines, no triggers. The tool that’s supposed to work while you sleep is still waiting for you to type. This is the 14-step roadmap to the full automation stack - and the hours back in your week.</p>
+<p>Follow my Substack to get fresh AI alpha: movez.substack.com</p>
+<p>Claude Code has been quietly shipping an entire automation stack over the last three months. /loop launched.</p>
+<p>Auto Mode landed March 24. Cloud Routines opened in research preview April 14. By May 2026, the picture is complete: three layers of automation that go from your terminal to Anthropic’s cloud, each one earning its place by removing a different reason for you to babysit.</p>
+<p>This is the 14-step roadmap to all three layers - every detail verified against the official docs at code.claude.com/docs as of June 2026. The arc is simple: get the manual loop right, make it persist across restarts, push it to the cloud where your laptop doesn’t matter.</p>
+<p><img alt="Article image" src="/assets/2026-06-06-how-to-run-claude-on-autopilot-in-14-steps-loop,-routines,-a-db6f4c191e/01.png"></p>
+<p>14 steps. 3 tiers. One Claude that works while you sleep.</p>
+<h2>01. The /loop command. Explicit and natural language, both work.</h2>
+<p>The fastest way to make Claude Code do anything on a schedule. Inside any session, run /loop &lt;interval&gt; &lt;prompt&gt;.</p>
+<p>Under the hood it calls three native tools: CronCreate, CronList, CronDelete. The intervals use a number plus unit: m for minutes, h for hours, d for days. The minimum is 1 minute - 30s rounds up.</p>
+<p><img alt="Article image" src="/assets/2026-06-06-how-to-run-claude-on-autopilot-in-14-steps-loop,-routines,-a-db6f4c191e/02.jpg"></p>
+<p>python
+&gt; /loop 1m say hello</p>
+<p>▲ Claude
+  CronCreate(<em>/1 * * * * : say hello)
+✓ Scheduled c21d95a0 (Every minute)
+  - Job: say hello
+  - Cadence: Every 1 minute (</em>/1 * * * *)
+  - Job ID: c21d95a0
+  - Duration: Recurring tasks auto-expire after 7 days
+  - Cancel anytime: CronDelete c21d95a0</p>
+<p>You don’t actually need to type /loop at all. Claude understands natural language schedules just as well:</p>
+<ul>
+<li>
+<p>every 10 minutes, check the deployment status</p>
+</li>
+<li>
+<p>every weekday at 7am, summarize the overnight commits</p>
+</li>
+<li>
+<p>at 6:30pm today, post a status update to Slack</p>
+</li>
+</ul>
+<p>Times use the local machine’s time zone, not UTC. Any slash command available in Claude Code can be placed inside a /loop - including /run, /review, even another /loop if you’re feeling adventurous.</p>
+<h2>02. Real cron expressions for real schedules.</h2>
+<p>The CronCreate tool accepts standard 5-field cron expressions: minute hour day-of-month month day-of-week. All fields support wildcards (<em>), single values (5), steps (</em>/15), ranges (1-5), and comma-separated lists (1,15,30). Day-of-week uses 0 or 7 for Sunday through 6 for Saturday.</p>
+<p>What is NOT supported: extended syntax like L (last day), W (weekday), ?, or name aliases like MON or JAN. When both day-of-month and day-of-week are constrained, a date matches if either field matches - standard vixie-cron semantics.</p>
+<p>Cron patterns worth memorizing:</p>
+<p>python</p>
+<h1>Cron patterns that earn their keep</h1>
+<h1>every 5 minutes (only during business hours)</h1>
+<p>*/5 9-17 * * 1-5</p>
+<h1>every weekday at 7am</h1>
+<p>0 7 * * 1-5</p>
+<h1>first day of the month at 9am</h1>
+<p>0 9 1 * *</p>
+<h1>every 15 minutes</h1>
+<p>*/15 * * * *</p>
+<h1>nightly at 2:30am</h1>
+<p>30 2 * * *</p>
+<h1>every Friday at 4pm</h1>
+<p>0 16 * * 5</p>
+<h1>every 6 hours, on the hour</h1>
+<p>0 */6 * * *</p>
+<h2>03. Auto-expire and stop conditions</h2>
+<p>Four hard constraints that decide whether /loop is the right tool for the job. Memorize them or burn time figuring them out later:</p>
+<ul>
+<li>
+<p>7-day auto-expire. Every recurring task auto-deletes 7 days after creation. The task fires one final time, then removes itself. This bounds how long a forgotten loop can run. If you need it to live longer, cancel and recreate before the deadline - or use Routines (step 10).</p>
+</li>
+<li>
+<p>50 tasks max per session. Plenty for individual workflows. If you’re building something more elaborate, count your tasks; you won’t get a warning until you hit the wall.</p>
+</li>
+<li>
+<p>No catch-up firing. If a task is due while Claude is busy on a long-running request, it fires once when Claude becomes idle, not once per missed interval. A 5-minute loop that hits during a 20-minute refactor produces one fire after, not four.</p>
+</li>
+<li>
+<p>Session-scoped. Closing the terminal cancels everything. Restarting Claude Code clears all scheduled tasks. There is no persistence across sessions - that’s what Tier 2 and Tier 3 are for.</p>
+</li>
+</ul>
+<p>To list and cancel tasks mid-session, just ask in natural language - Claude routes to CronList and CronDelete:</p>
+<p>python
+&gt; show running cron jobs</p>
+<p>▲ CronList()
+   ID         JOB                       CADENCE
+   c21d95a0   say hello                 Every 1 minute
+   8f3aa412   check deploy status       Every 10 minutes
+   bb7c0d91   morning summary           0 7 * * 1-5</p>
+<p>&gt; kill the deploy status check</p>
+<p>▲ CronDelete(8f3aa412)
+✓ Cancelled. 2 jobs remaining.</p>
+<p>For CI environments or shared servers where background scheduling is undesirable, set CLAUDE_CODE_DISABLE_CRON=1 in your environment. The cron tools and /loop become unavailable, and any already-scheduled tasks stop firing.</p>
+<p>This is the right move for any environment where the user who runs Claude isn’t the user who owns the schedule.</p>
+<h2>04. Pair /loop with /goal</h2>
+<p>A /loop on its own asks Claude to do something repeatedly. A /loop paired with /goal asks Claude to do something repeatedly until a specific condition is met - and to keep looping past intermediate “done enough” declarations.</p>
+<p><img alt="Article image" src="/assets/2026-06-06-how-to-run-claude-on-autopilot-in-14-steps-loop,-routines,-a-db6f4c191e/03.jpg"></p>
+<p>This pairing solves agentic laziness inside a recurring task. Without /goal, a loop might address 20 of the 50 items it’s meant to handle and call the rest “handled.” With /goal, the stop condition is explicit and enforced:</p>
+<p>python
+A /loop on its own asks Claude to do something repeatedly. 
+A /loop paired with /goal asks Claude to do something repeatedly until a specific condition is met — and to keep looping past intermediate “done enough” declarations.</p>
+<p>This pairing solves agentic laziness inside a recurring task.
+Without /goal, a loop might address 20 of the 50 items it’s meant to handle and call the rest “handled.” With /goal, the stop condition is explicit and enforced:</p>
+<p>The three patterns where this pairing earns its keep:</p>
+<ul>
+<li>
+<p>Flaky test debugging. Reproduce, form theories, test them, until one holds.</p>
+</li>
+<li>
+<p>Long-running migrations. Process items, save progress, continue until the queue is empty.</p>
+</li>
+<li>
+<p>Inbox-style triage. Process pending items, continue until nothing new arrives in a full cycle.</p>
+</li>
+</ul>
+<p>Four steps and you have a working manual loop. Now make it survive a restart.</p>
+<h2>05. Desktop scheduled tasks.</h2>
+<p>The Claude Desktop app has its own scheduler, separate from the CLI’s /loop. Create scheduled tasks from Schedule → New task → New local task.</p>
+<p>You define a name, prompt, frequency, permissions, and working folder. Each fire starts a fresh Claude Code session - no shared context with anything else.</p>
+<p><img alt="Article image" src="/assets/2026-06-06-how-to-run-claude-on-autopilot-in-14-steps-loop,-routines,-a-db6f4c191e/04.jpg"></p>
+<p>What this layer gives you that /loop doesn’t:</p>
+<ul>
+<li>
+<p>Survives restarts. Reboot your machine, close all terminals - tasks still fire when their time comes.</p>
+</li>
+<li>
+<p>Fresh context each fire. No accumulated state from previous runs. Each task is essentially independent.</p>
+</li>
+<li>
+<p>Pre-configured permissions. Allowed tools, working folder, model, all locked in per-task.</p>
+</li>
+</ul>
+<p>What it still requires: your machine has to be awake. If your laptop is asleep when a task is due, the run is skipped. When the machine wakes or you reopen Claude Desktop, it checks the last 7 days for missed runs, starts one catch-up run for the most recently missed time, and shows a notification.</p>
+<p>To prevent idle-sleep, enable Keep computer awake in Desktop Settings under General. Closing the laptop lid still triggers sleep.</p>
+<p>Desktop scheduled tasks are macOS and Windows only. Linux users have two options: (1) use the CLI’s /loop for session-scoped scheduling, or (2) set up system cron jobs running claude -p &lt;prompt&gt; in headless mode for persistent scheduling. Routines (step 10) work everywhere because they run in the cloud.</p>
+<h2>06. Token budgets and rate limits.</h2>
+<p>The single biggest surprise on a Pro plan: every scheduled fire starts a full Claude Code session, and each session counts toward your usage limits. A 5-minute loop running for 24 hours is 288 sessions.</p>
+<p>They’re not tiny - each one loads context, calls tools, possibly invokes subagents. Factor this in before you set up anything ambitious.</p>
+<p>Three habits that keep automation affordable:</p>
+<ul>
+<li>
+<p>Set explicit token budgets in the prompt. “Use at most 5k tokens. If you can’t complete in that budget, save partial progress and exit cleanly.” This caps each fire individually.</p>
+</li>
+<li>
+<p>Match the model to the task. Don’t default to Opus for everything. Most automation runs well on Sonnet. Cheap exploration runs on Haiku. The model picker inside the task config defaults to whatever the panel default is - not what your interactive sessions use. Set it explicitly per task.</p>
+</li>
+<li>
+<p>Pick the right plan for the volume. Pro plan tightens fast under heavy automation. Max gives 5× the headroom; Team and Enterprise more. If you’re shipping real automation, the upgrade pays for itself in not getting rate-limited at 3pm Tuesday.</p>
+</li>
+</ul>
+<h2>07. Configure permissions for unattended runs.</h2>
+<p>By default, Claude Code asks for approval before running any bash command, writing any file, or calling any external API.</p>
+<p>That’s fine when you’re watching. It’s a disaster when no one is. Three configuration patterns turn the default into something that can actually run unattended:</p>
+<ul>
+<li>
+<p>Pre-approve specific tools via settings.json - an allow list of safe commands and a deny list of forbidden ones.</p>
+</li>
+<li>
+<p>Use .claudeignore at the project root to block access to credentials, environment files, and sensitive directories before any unattended task touches them.</p>
+</li>
+<li>
+<p>Enable audit logging to record every autonomous action. Read it the next morning instead of trusting the run blind.</p>
+</li>
+</ul>
+<p>python
+{
+  &quot;permissions&quot;: {
+    &quot;autoApprove&quot;: [
+      &quot;Read(<em>)&quot;,
+      &quot;Grep(</em>)&quot;,
+      &quot;Bash(npm test)&quot;,
+      &quot;Bash(pytest)&quot;,
+      &quot;Bash(git status)&quot;,
+      &quot;Bash(git diff<em>)&quot;,
+      &quot;Bash(git log</em>)&quot;,
+      &quot;WebFetch(domain:docs.python.org)&quot;
+    ],
+    &quot;deny&quot;: [
+      &quot;Bash(rm -rf<em>)&quot;,
+      &quot;Bash(git push</em>)&quot;,
+      &quot;Bash(<em>--force</em>)&quot;,
+      &quot;Bash(curl<em>)&quot;,
+      &quot;Edit(.env</em>)&quot;,
+      &quot;Edit(secrets/*)&quot;
+    ]
+  },
+  &quot;auditLog&quot;: true
+}</p>
+<p>The right test for what to auto-approve: if this turns out wrong, what does it cost to undo? Cheap to undo (a comment on a draft PR) - auto-approve. Expensive to undo (a force-push to main) - never.</p>
+<p>The middle ground (creating a branch, opening a PR) is fine to auto-approve if you also have audit logs you actually read.</p>
+<h2>08. Auto Mode - AI-classified permissions</h2>
+<p>Auto Mode is the alternative to --dangerously-skip-permissions. Instead of blanket approval, an AI classifier evaluates each tool call against the active permission policy and decides whether to auto-approve, prompt, or block.</p>
+<p>Anthropic measured that users approve 93% of permission prompts; Auto Mode automates the 93% and keeps the human in the loop for the 7%.</p>
+<p><img alt="Article image" src="/assets/2026-06-06-how-to-run-claude-on-autopilot-in-14-steps-loop,-routines,-a-db6f4c191e/05.jpg"></p>
+<p>How it works in practice:</p>
+<ul>
+<li>
+<p>Three tiers. Permissive, Balanced, Restrictive. Pick the one that matches your risk tolerance for the project.</p>
+</li>
+<li>
+<p>Two layers of defense. A server-side prompt-injection probe scans tool outputs before they enter Claude’s context. Then a classifier evaluates each proposed action.</p>
+</li>
+<li>
+<p>Audit trail. Every autonomous decision is logged. You can review what was approved and why after the fact.</p>
+</li>
+</ul>
+<p>Plan availability as of May 2026: Max, Team, Enterprise, and API plans (through the Anthropic API). Not currently available on Pro, Bedrock, Vertex, or Foundry.</p>
+<p>Check code.claude.com/docs/en/auto-mode before planning around it. Once enabled, Auto Mode joins the Shift+Tab mode cycle alongside Accept Edits and Plan.</p>
+<p>Auto Mode is still in research preview. The classifier’s decision logic is being refined and behavior may change between releases.</p>
+<p>Pair it with .claudeignore and audit logs - Anthropic strongly recommends both. Don’t use it on shared team environments without additional safeguards.</p>
+<h2>09. Pick the right scheduler for the job.</h2>
+<p>Three schedulers, easy to confuse. The decision rule is one question: where does this need to run, and who needs to be awake for it?</p>
+<p><img alt="Article image" src="/assets/2026-06-06-how-to-run-claude-on-autopilot-in-14-steps-loop,-routines,-a-db6f4c191e/06.png"></p>
+<p>The compounding pattern: start with /loop in a session to find what works, then promote to Desktop tasks for daily use, then promote to Routines when you want it running independent of your hardware.</p>
+<p>Each tier earns its place by removing a different reason for you to be there.</p>
+<h2>10. Cloud Routines.</h2>
+<p>Released April 14, 2026 in research preview. Routines are saved Claude Code configurations - a prompt, repositories, connectors, permissions - that run on Anthropic-managed cloud infrastructure on a trigger.</p>
+<p>Your laptop can be off. The run still happens.</p>
+<p>Available on all paid plans (Pro, Max, Team, Enterprise). Create them at claude.ai/code/routines or with /schedule inside the CLI. The CLI creates schedule-triggered routines only; to add API or GitHub triggers, edit on the web.</p>
+<p><img alt="Article image" src="/assets/2026-06-06-how-to-run-claude-on-autopilot-in-14-steps-loop,-routines,-a-db6f4c191e/07.jpg"></p>
+<p>What a routine actually contains:</p>
+<ul>
+<li>
+<p>A self-contained prompt. The routine runs autonomously with no follow-up questions, so anything ambiguous becomes a coin flip on every run. Spell out what to do, what success looks like, where to send the result.</p>
+</li>
+<li>
+<p>One or more repositories. Cloned at the start of each run.</p>
+</li>
+<li>
+<p>Connectors. Slack, Linear, Drive, GitHub, anything you have wired up.</p>
+</li>
+<li>
+<p>An environment. Controls network access and secrets. Default is Trusted - allows package registries but not arbitrary outbound calls.</p>
+</li>
+<li>
+<p>One or more triggers. Schedule, API, GitHub event, or any combination.</p>
+</li>
+</ul>
+<p>By default, routines can only push to branches prefixed claude/. A poorly written routine cannot accidentally push to main. Disable this only if you have a downstream review process you actually trust. The default exists for a reason.</p>
+<h2>11. Schedule-triggered Routines</h2>
+<p>The most common trigger and the one to start with. Set a cadence - hourly, daily, weekdays, weekly, or a one-shot future time - and walk away.</p>
+<p>python
+&gt; /schedule weekdays at 7am
+  Goal: pull yesterday’s GitHub issues, classify by severity,
+  draft fixes for any &quot;P0&quot; or &quot;P1,&quot; open draft PRs for review.
+  Post a digest summary to #engineering on Slack.</p>
+<p>▲ Claude
+  Creating routine: morning-briefing
+  - trigger: schedule (0 7 * * 1-5)
+  - repositories: org/api, org/web
+  - connectors: github, slack
+  - environment: Trusted
+✓ Active · first run Monday 07:00 local time.
+  View at claude.ai/code/routines</p>
+<p>Three patterns that pay for themselves fast:</p>
+<ul>
+<li>
+<p>Morning briefing. Pull yesterday’s metrics and incidents, summarize new GitHub issues, post a digest to Slack. By 8am you know what happened overnight, without you opening anything.</p>
+</li>
+<li>
+<p>PR review pass. Every weekday at 9am, scan open PRs assigned to you, leave a first-pass review comment with security and style flags. Human review starts pre-cleaned.</p>
+</li>
+<li>
+<p>Documentation drift detection. Weekly, scan code changes and flag any docs that haven’t been updated alongside them. Open a draft PR with the corrections.</p>
+</li>
+</ul>
+<p>Times are in your local zone and converted automatically. Runs may start a few minutes after the scheduled time due to stagger - consistent per routine.</p>
+<h2>12. API-triggered Routines</h2>
+<p>An API trigger gives a routine a unique HTTP endpoint and a bearer token. POST to it from anywhere - alerting systems, deploy pipelines, monitoring tools, your own apps - and the routine runs. Optional JSON body becomes one-shot context appended to the routine’s prompt.</p>
+<p>python</p>
+<h1>Fire a routine from anywhere with HTTP access</h1>
+<p>curl -X POST https://api.anthropic.com/v1/claude_code/routines/$ROUTINE_ID/fire \
+  -H &quot;Authorization: Bearer $ROUTINE_TOKEN&quot; \
+  -H &quot;anthropic-version: 2023-06-01&quot; \
+  -H &quot;anthropic-beta: experimental-cc-routine-2026-04-01&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{&quot;text&quot;: &quot;Sentry alert SEN-4521 fired in prod. Stack trace attached.&quot;}&#x27;</p>
+<h1>Response includes claude_code_session_id + URL to watch live</h1>
+<p>Two operational details that matter:</p>
+<ul>
+<li>
+<p>The token is shown only once at creation. Store it immediately in a secret store - you can’t retrieve it later.</p>
+</li>
+<li>
+<p>Watch the beta header. The /fire endpoint ships under experimental-cc-routine-2026-04-01. Request and response shapes may change during preview. Anthropic guarantees the two most recent header versions keep working - migrate during the deprecation window.</p>
+</li>
+</ul>
+<p>What this trigger pattern actually unlocks: Claude becomes a callable workflow from any system in your stack.</p>
+<p>CI fails → fire a routine to investigate and open a fix PR. PagerDuty alert → fire a routine to triage and post initial context.</p>
+<p>Stripe webhook → fire a routine to update an internal dashboard.</p>
+<h2>13. GitHub-triggered Routines.</h2>
+<p>The GitHub trigger hooks a routine into the Claude GitHub App webhook. Supported events are broad: pull request, push, issue, check run, workflow run, discussion, release, merge queue.</p>
+<p>Each matching event starts an independent session - no session reuse across events.</p>
+<p><img alt="Article image" src="/assets/2026-06-06-how-to-run-claude-on-autopilot-in-14-steps-loop,-routines,-a-db6f4c191e/08.jpg"></p>
+<p>Where this trigger earns its place:</p>
+<ul>
+<li>
+<p>PR open events → routine runs a code review pass, flags security and style issues, leaves a first-pass comment. Authors get pre-review feedback before human reviewers arrive.</p>
+</li>
+<li>
+<p>Issue create events → routine triages new issues, applies labels, links related code, drafts a first response. Backlog stays clean without anyone managing it manually.</p>
+</li>
+<li>
+<p>Workflow run events → routine investigates CI failures, identifies likely root causes, opens a draft fix PR. Failed builds stop being a manual chore.</p>
+</li>
+<li>
+<p>Release events → routine drafts release notes, posts to the changelog, notifies stakeholders. No more “who’s writing the changelog this sprint.”</p>
+</li>
+</ul>
+<p>Pull request filters let you scope precisely: author, title, body, base branch, head branch, labels, draft state, merged state, from-fork.</p>
+<p>A routine that only fires on PRs labeled needs-security-review against main is one filter set away.</p>
+<h2>14. Compose with Skills and Dynamic Workflows.</h2>
+<p>The last step closes the loop with everything Claude Code shipped before. Each layer of automation gets more powerful when you pair it with the rest of the stack.</p>
+<p><img alt="Article image" src="/assets/2026-06-06-how-to-run-claude-on-autopilot-in-14-steps-loop,-routines,-a-db6f4c191e/09.jpg"></p>
+<ul>
+<li>
+<p>Skills inside Routines. A Skill is a reusable instruction file. Drop your “PR review” or “morning briefing” Skill into ~/.claude/skills/, then point the routine prompt at it: “Use the morning-briefing skill.” The skill is your reusable recipe; the routine is the trigger that runs it.</p>
+</li>
+<li>
+<p>Dynamic Workflows inside Routines. For complex automation that benefits from parallel subagents - deep verification, tournaments, fan-out research - have the routine prompt invoke a workflow. Routines provide the scheduling; workflows provide the structure.</p>
+</li>
+<li>
+<p>Routines triggered by other Routines. One routine’s output (a PR open, a Slack message, a label change) can be the trigger for another routine. The composition isn’t a feature you toggle - it’s a pattern you set up by pointing one routine’s output at another’s trigger.</p>
+</li>
+<li>
+<p>Permissions per routine, not global. Each routine carries its own permission configuration. The morning-briefing routine reads everywhere but can’t push. The auto-fix routine pushes only to claude/ branches. The security-scan routine has the deny list maximized. Treat each routine’s permission file as part of its security boundary.</p>
+</li>
+</ul>
+<p>The whole stack at peak looks like this: Skills as your recipes, Dynamic Workflows as the orchestration, Routines as the trigger layer, Auto Mode as the permission classifier, Audit logs as your morning review. Every step in this article configures one slice of that stack.</p>
+<p>You don’t need all of it on day one. Start with /loop. Promote to Desktop. Promote to Routines. Pair with Skills. Add Workflows when complexity demands it.</p>
+<h2>The habits that waste money on Claude automation</h2>
+<ul>
+<li>
+<p>Never trying /loop in the first place. The easiest tier of automation costs nothing and you’ve been ignoring it for three months.</p>
+</li>
+<li>
+<p>Forgetting the 7-day auto-expire. Set up a critical loop, walk away, wonder a week later why nothing happened.</p>
+</li>
+<li>
+<p>Using /loop for tasks that should outlast your terminal. The whole point of Tier 2 and 3 is exactly this case — promote it.</p>
+</li>
+<li>
+<p>Letting Automations default the model. Opus on every fire when Sonnet would do the same job for less. Check the model picker per task.</p>
+</li>
+<li>
+<p>No /goal on loops that should run until done. The loop stops at “handled enough” instead of the actual stop condition.</p>
+</li>
+<li>
+<p>Blanket approval via --dangerously-skip-permissions. One bad prompt away from a git push --force origin main. Use Auto Mode or an allow list.</p>
+</li>
+<li>
+<p>Vague routine prompts. A routine runs autonomously with no follow-up. Ambiguous prompts produce coin-flip behavior on every fire.</p>
+</li>
+<li>
+<p>No audit logs. “Trust the automation” without reviewing what it did is how silent failures become loud incidents.</p>
+</li>
+<li>
+<p>Disabling the claude/ branch prefix. The default exists for a reason. Don’t turn it off until your downstream review process is actually solid.</p>
+</li>
+<li>
+<p>Running automations on Pro. Heavy automation hits rate limits fast. If you’re shipping real workflows, the Max upgrade pays for itself in not getting blocked.</p>
+</li>
+</ul>
+<h2>Conclusion:</h2>
+<p>Claude does not stop working when you stop typing.</p>
+<p>The automation stack has been shipping in pieces for three months. /loop in March. Auto Mode two weeks later. Routines in April. The whole thing is live, documented, and available on plans you’re already paying for.</p>
+<p>The only thing standing between “Claude as expensive chatbot” and “Claude as workforce” is fourteen steps of configuration.</p>
+<p>Most users will keep typing prompts manually and stop there. That’s fine for casual use and bad at everything else. The 1% running real automation have Claude triaging issues at 7am, refreshing dashboards every hour, drafting Slack replies every 10 minutes - all while they sleep. They’ve set up the manual loop, promoted it to Desktop, promoted that to Routines.</p>
+<p>Pick one step you weren’t doing - probably your first /loop in the terminal - and add it tomorrow. Then the next. The output of Claude follows the configuration of Claude. Configure it for autopilot, and that’s what you get.</p></div><a class="source" href="https://x.com/0xCodez/status/2062926176117469477" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

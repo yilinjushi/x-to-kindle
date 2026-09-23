@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="AI Agent 真正的门槛不是模型，是Harness">
+  <title>AI Agent 真正的门槛不是模型，是Harness · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Kyrie @KyrieCheungYep · 2026-06-07</div><div class="prose"><h1>AI Agent 真正的门槛不是模型，是Harness</h1>
+<p>同一个模型，两个团队。一个 Agent 接到工单就提了 PR，另一个 Agent 在同一个文件上转了 30 分钟。差距没出在模型上，出在了 harness 上。</p>
+<p>2025 年 12 月，Vercel 的软件主管 Andrew Qu 写了一篇复盘，标题挺挑衅：《我们砍掉了 Agent 80% 的工具》。</p>
+<p>他们花了几个月做内部 text-to-SQL Agent，名字叫 d0。公司里任何人都可以在 Slack 里用大白话问数据，它负责翻成 SQL，再去查结果。</p>
+<p>为了让它靠谱，团队给它堆了一整套&quot;脚手架&quot;：schema 查找、查询校验、错误恢复、意图澄清、join 路径查找、语法校验。前后十六个专用工具，再加上大量 prompt 约束和手写的上下文检索逻辑。</p>
+<p>结果呢？</p>
+<p>&quot;勉强能用。&quot;</p>
+<p>慢，脆，还要人一直盯着。每多一个边界情况，就要补一块规则。模型升级一次，约束也要重新调。团队的时间慢慢被脚手架吃掉了，真正改进 Agent 的时间反而少了。</p>
+<p>后来他们做了一件反直觉的事：把大部分工具删掉，只留下一个工具，执行任意 bash 命令。</p>
+<p>让 Claude 直接访问文件，自己用 grep、cat、ls 去找路。</p>
+<p>数据是这样的。同样 5 个代表性查询，新旧架构对打：</p>
+<p><img alt="Article image" src="/assets/2026-06-07-ai-agent-真正的门槛不是模型，是harness-c3dbae7931/01.jpg"></p>
+<p>最极端的那个 case，旧架构跑了 724 秒，走了 100 步，烧掉 145,463 个 token，最后失败。新架构用了 141 秒，19 步，67,483 个 token，成功。</p>
+<p>Andrew Qu 的判断很直接：&quot;别跟重力对着干（Don&#x27;t fight gravity）。&quot;</p>
+<p>他们原来一直在替模型做判断。到了 Opus 4.5 这一代模型，这种&quot;帮忙&quot;已经开始拖后腿。</p>
+<p>我第一次读到这篇时，心里确实被打了一下。</p>
+<p>我这段时间，每天都要跟客户聊&quot;你们的 AI 到底能不能干活&quot;。这篇文章让我意识到一件事：很多人说&quot;AI 不行&quot;，问题常常不在模型能力，而在模型外面那层东西。</p>
+<p>那层东西有个正式名字：harness。</p>
+<p>故事来源：Vercel Engineering Blog《We removed 80% of our agent&#x27;s tools》(Andrew Qu, 2025-12-22)</p>
+<h2>一、为什么现在必须搞懂 harness</h2>
+<p>先把词说清楚：</p>
+<p>Agent = Model + Harness。模型之外，全是 harness。</p>
+<p>这句话是 Viv Trivedy 说的。现在，它已经变成了一个专门的工程学科名词：harness engineering。</p>
+<p>模型本身是个无状态函数。文字进，文字出。它不能自己读文件、跑命令、记住项目上下文。循环、工具、上下文、系统提示、控制流、安全闸，这些都靠 harness 提供。</p>
+<p>为什么 2026 年这件事突然变重要？</p>
+<p>因为模型这一端在收敛，harness 这一端在快速分化。看三个数据就够了。</p>
+<p>数据点 1：同一个模型，换个 harness，跑分差 25 分。</p>
+<p>Endor Labs 的基准测试里，GPT-5.5 跑在 Codex 自带 harness 里得 61.5%。同一周、同一个模型，跑在 Cursor 的 harness 里得 87.2%。25 分的差距，模型没变，只换了 harness。Opus 4.7 从 Claude Code 换到 Cursor，也从 87.2% 跳到 91.1%。</p>
+<p>数据点 2：连 OpenAI 的 CEO 都分不清了。</p>
+<p>Sam Altman 跟 Ben Thompson 聊过一件事：有些 Codex 结果太惊艳，他也很难每次都判断清楚，到底是模型的功劳，还是 harness 的功劳。</p>
+<p>我不觉得这是他没看懂。更可能是这两层已经耦合到一起了。</p>
+<p>数据点 3：只改 harness，把 Agent 从 Top 30 拉到 Top 5。</p>
+<p>Viv 的团队在 Terminal Bench 2.0 上固定模型，只调整 harness，把一个 coding agent 从 Top 30 拉进了 Top 5。</p>
+<p>Anthropic 自己也把方向说得很明白。他们把 &quot;Claude Code SDK&quot; 正式改名成 &quot;Claude Agent SDK&quot;，还直接用 &quot;agent harness&quot; 这个词描述驱动 Claude Code 的那套东西。官方原话大意是：Claude Code 现在驱动了他们几乎所有主要的 agent 循环。</p>
+<p>这件事翻译成人话，对做技术、也要谈单的人特别有用。</p>
+<p>客户说&quot;等下一代模型出来就好了&quot;，很多时候只是把问题往后推。今天模型能做的事，和你实际看到的效果之间，隔着一整层工程系统。</p>
+<p>模型你改不了。循环、工具描述、上下文管理、权限闸，这些都是你能写的代码。</p>
+<p>HumanLayer 那个著名的 &quot;skill issue&quot; 重构，说的也是这个意思。Agent 做了蠢事，别急着甩锅给模型，先看配置和 harness。</p>
+<h2>二、最小循环：40 行就能跑</h2>
+<p>理解 harness，最好的办法是先看它的裸核。</p>
+<p>所有花活拆掉，harness 的心脏就是一个 while 循环：</p>
+<ol>
+<li>调用模型（把当前消息传进去）</li>
+<li>看模型的回复：<ul>
+<li>是最终答案？      → 结束循环</li>
+<li>是工具调用？      → 去第 3 步</li>
+</ul>
+</li>
+<li>执行工具</li>
+<li>把工具结果追加进消息</li>
+<li>回到第 1 步</li>
+</ol>
+<p>这就是 ReAct 模式：think → act → observe，一直转。用 Python + Anthropic SDK 写出来，40 行就够：</p>
+<p>python
+import anthropic
+client = anthropic.Anthropic()</p>
+<p>TOOLS = [{
+    &quot;name&quot;: &quot;run_bash&quot;,
+    &quot;description&quot;: &quot;Run a bash command and return its output.&quot;,
+    &quot;input_schema&quot;: {
+        &quot;type&quot;: &quot;object&quot;,
+        &quot;properties&quot;: {&quot;command&quot;: {&quot;type&quot;: &quot;string&quot;}},
+        &quot;required&quot;: [&quot;command&quot;],
+    },
+}]</p>
+<p>def execute_tool(name, args):
+    import subprocess
+    if name == &quot;run_bash&quot;:
+        r = subprocess.run(args[&quot;command&quot;], shell=True,
+                           capture_output=True, text=True, timeout=30)
+        return (r.stdout + r.stderr)[:4000]   # 截断结果，保护上下文
+    return f&quot;Unknown tool: {name}&quot;            # 防幻觉工具</p>
+<p>def agent_loop(task, max_steps=20):           # 步数上限 = 保证终止
+    messages = [{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: task}]
+    for step in range(max_steps):
+        resp = client.messages.create(
+            model=&quot;claude-sonnet-4-5&quot;, max_tokens=2048,
+            system=&quot;You are a coding agent. Use tools to complete the task.&quot;,
+            tools=TOOLS, messages=messages,
+        )
+        messages.append({&quot;role&quot;: &quot;assistant&quot;, &quot;content&quot;: resp.content})
+        tool_uses = [b for b in resp.content if b.type == &quot;tool_use&quot;]
+        if not tool_uses:                     # 没有工具调用 = 最终答案
+            return resp.content
+        results = []
+        for tu in tool_uses:
+            output = execute_tool(tu.name, tu.input)
+            results.append({&quot;type&quot;: &quot;tool_result&quot;,
+                            &quot;tool_use_id&quot;: tu.id, &quot;content&quot;: output})
+        messages.append({&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: results})
+    return &quot;Step limit reached&quot;               # 失败也要干净地停</p>
+<p>就这些。</p>
+<p>一个 while 循环，工具执行，消息注入。Claude Code、Cursor，本质上都建在这个骨架上。只是外面继续加了上下文管理、子 agent、钩子、权限、更好的工具和更好的系统提示。</p>
+<p>这有现成案例。Mihail Eric 那篇刷屏的《How to Code Claude Code in 200 Lines》已经证明过，三个工具，读文件、写文件、跑 bash，就能完成很多事。Damian Demasi 又用 TypeScript 复刻了一遍。byoharness.dev 干脆把它做成了一套动手课，开篇就点明：现代 coding agent 的主角是 harness，model 只是其中一层。</p>
+<p>我建议你真的跑一遍这 40 行。</p>
+<p>跑过之后，会有一种祛魅后的踏实感。你不再觉得 Claude Code 是黑魔法，你会开始问另一个问题：从这 40 行到生产级 Claude Code，中间到底补了什么？</p>
+<p>答案就是下面这九个组件。</p>
+<h2>三、九个组件，逐个拆</h2>
+<p><img alt="Article image" src="/assets/2026-06-07-ai-agent-真正的门槛不是模型，是harness-c3dbae7931/02.jpg"></p>
+<p>下面挑四个最容易被低估、也最能体现工程功力的组件，展开讲实操。</p>
+<p>组件 2：上下文管理</p>
+<p>上下文管理最难，也最少人认真谈。</p>
+<p>模型的上下文窗口是有限的。循环每转一步，都在往里面塞新东西。</p>
+<p>这里有个关键认知：上下文窗口更像工作台，不像 RAM。</p>
+<p>工作台不能无限堆料。它只应该摊开当前任务需要的东西。</p>
+<p>Claude Code 的做法是，用到大约 80-90% 窗口时触发一次 compaction，也就是压缩。最近的消息保留全文，更早的内容总结掉。</p>
+<p>就算 Opus 现在有 100 万 token 窗口，这件事也重要。长上下文里的注意力并不均匀。90 万 token 的窗口，不代表模型会同样重视第 1 个 token 和第 89 万个 token。前面和后面通常更好用，中间更容易被忽略，这就是 context rot。</p>
+<p>一个实操坑：压缩时，到底要不要保留完整的工具调用入参和出参？</p>
+<p>全留，更忠实，也更贵。只留结果，更便宜，但会丢掉一部分过程证据。没有标准答案，要看任务类型。</p>
+<p>组件 4：子 agent</p>
+<p>子 agent 的套路可以缩成三个词：spawn, restrict, collect。</p>
+<p>派生一个职责很窄的子 agent。限制它的工具权限，只给够完成那件事的能力。最后只把摘要收回主上下文，不把整段对话记录搬回来。</p>
+<p>这对探索型任务特别有用。</p>
+<p>比如让 Agent 摸一个代码库，它可能要读进几万 token 的原始信息。如果全塞进主上下文，又贵，质量也会掉。让子 agent 去做重活，回来交一段 2,000 token 的摘要，主 agent 就能把注意力放在决策上。</p>
+<p>组件 7：系统提示组装</p>
+<p>这个组件很容易被误解。</p>
+<p>生产级 harness 里的系统提示通常不会写死，更像一条运行时流水线。harness 会沿着目录往上找 AGENTS.md、CLAUDE.md 这些文件，读出来，再动态注入进系统提示。</p>
+<p>你团队的代码规范、部署流程、测试策略，都可以活在这些 markdown 里。</p>
+<p>有个细节不能忽略：顺序。</p>
+<p>静态部分放前面，动态内容放后面。反过来会破坏 prefix caching。生产级 harness 很依赖 prompt 缓存，动态内容如果插在静态前面，每一轮都可能让缓存失效。</p>
+<p>这一点 Manus 的教训更狠，后面会讲。</p>
+<p>组件 8：钩子</p>
+<p>钩子是在循环特定时点运行的确定性代码：工具执行前、文件编辑后、提交前。</p>
+<p>它适合放那些 Agent 不该忘、但经常忘的事。</p>
+<p>Addy Osmani 和 HumanLayer 都强调过一个原则：success is silent, failures are verbose。</p>
+<p>typecheck 通过，Agent 什么也听不到。失败时，错误文本被注入循环，Agent 自己改。这样一来，常见情况下几乎没有额外成本，出问题时又能把反馈直接送到模型面前。</p>
+<p>关于第 3、5、9 这几个组件，可以记住一个统一的设计哲学：渐进式披露（progressive disclosure）。</p>
+<p>这是 Anthropic Skills 的设计思路。技能分三级加载：第 1 级只读 YAML 头部的名字和描述，每个大约 100 token；第 2 级在确认要用时才加载完整的 skill.md，通常 1-2k token；第 3 级只在具体需要时才加载参考文件。</p>
+<p>让发现变便宜，让执行保持丰富。</p>
+<h2>四、怎么知道你的 harness 做对了</h2>
+<p>这里要分清一个概念：model eval 和 harness eval 是两件事。</p>
+<p>Model eval:   harness 固定，比 模型 A vs 模型 B
+Harness eval: 模型固定，比 harness A vs harness B</p>
+<p>&quot;这模型好不好&quot;是 model eval。</p>
+<p>&quot;这套 harness 好不好&quot;要单独测。核心方法很朴素：固定模型，只换 harness。</p>
+<p>大多数人只做前者，很少做后者。</p>
+<p>那 harness eval 量什么？</p>
+<p><img alt="Article image" src="/assets/2026-06-07-ai-agent-真正的门槛不是模型，是harness-c3dbae7931/03.jpg"></p>
+<p>我从 Chaos and Order 那篇里整理了一份生产前自检清单，建议你直接对着勾。</p>
+<ul>
+<li>
+<p>[ ] 循环有明确的终止条件吗？步数上限和 token 预算都要有。</p>
+</li>
+<li>
+<p>[ ] 工具入参在执行前校验吗？校验失败后，错误会返回给模型自纠吗？</p>
+</li>
+<li>
+<p>[ ] 工具在沙箱里跑吗？还是直接在主机上跑？</p>
+</li>
+<li>
+<p>[ ] 每个工具调用都有超时吗？</p>
+</li>
+<li>
+<p>[ ] 巨大的工具输出，比如 10 万行日志，会截断或总结吗？</p>
+</li>
+<li>
+<p>[ ] 有上下文压缩、裁剪策略吗？</p>
+</li>
+<li>
+<p>[ ] 探索型子任务隔离到子 agent 了吗？</p>
+</li>
+<li>
+<p>[ ] 高危工具有权限闸吗？</p>
+</li>
+<li>
+<p>[ ] 有重复动作检测吗？</p>
+</li>
+<li>
+<p>[ ] 幻觉出来的工具名，会被注册表过滤吗？</p>
+</li>
+<li>
+<p>[ ] 自纠循环有次数上限吗？</p>
+</li>
+<li>
+<p>[ ] 你单独评估过 harness 吗？也就是固定模型，只换 harness。</p>
+</li>
+</ul>
+<p>这十二条，每一条背后都是别人踩过的坑。</p>
+<h2>五、三个反直觉的数据点</h2>
+<ol>
+<li>砍掉 80% 的工具，Agent 反而更强</li>
+</ol>
+<p>就是开头 Vercel 那个故事。</p>
+<p>16 个工具变成 1 个 bash，成功率从 80% 到 100%，速度快 3.5 倍。</p>
+<p>Andrew Qu 有句原话：&quot;加法靠减法（Addition by subtraction is real）。最好的 Agent 可能是工具最少的那个。每多一个工具，都是你在替模型做一个选择。有时候，模型自己选得更好。&quot;</p>
+<p>另一层意思也值得产品团队记住：按六个月后的模型来构建，别被今天手上的模型绑住。</p>
+<ol start="2">
+<li>Manus 把整个框架重写了四次</li>
+</ol>
+<p>做 Manus 的 Peak Ji 坦白，他们的 agent 框架重写了四次。每一次，都是因为团队发现了更好的上下文塑造方式。</p>
+<p>他们管这个手动试错的过程叫 &quot;Stochastic Graduate Descent&quot;（随机研究生下降）。</p>
+<p>不优雅，但有用。</p>
+<p>教训也很朴素：先简单，观察失败，再按真实问题补基础设施。</p>
+<p>Manus 还甩出几个硬核结论：</p>
+<ul>
+<li>
+<p>KV-cache 命中率是生产级 Agent 的头号指标。Claude Sonnet 缓存命中的输入 token 是 $0.30/MTok，未命中是 $3/MTok，差了 10 倍。系统提示前缀必须稳定，别在开头放精确到秒的时间戳，那一下会把缓存打废。</p>
+</li>
+<li>
+<p>&quot;遮蔽，别删除（Mask, Don&#x27;t Remove）&quot;：循环中途不要动态加删工具。那会让后面的 KV-cache 失效，也会让模型困惑。要控制工具选择，用 mask 屏蔽 logits，别动工具定义。</p>
+</li>
+<li>
+<p>&quot;把错的留在上下文里（Keep the Wrong Stuff In）&quot;：Agent 犯错后，别急着擦掉重试。让它看见失败动作和报错，它下次才有证据调整判断。抹掉失败，就是抹掉证据。</p>
+</li>
+</ul>
+<ol start="3">
+<li>自动生成的配置，往往不如人手写的</li>
+</ol>
+<p>HumanLayer 反复强调，很多 Agent 失败都是配置问题。LLM 自己生成的那套 agent 配置文件，常常更啰嗦，更费 token，效果还更差。</p>
+<p>他们把 AGENTS.md 控制在 60 行以内。</p>
+<p>配套原则叫 &quot;棘轮（ratchet）&quot;：每一条规则都应该追溯到一次具体失败。亲眼见过 Agent 栽在某件事上，再加那条规则。等更强的模型让某条规则变得多余，再删掉。</p>
+<p>这更像飞行员的检查清单，不像风格指南。</p>
+<p>我把这篇浓缩成三句话：</p>
+<ul>
+<li>
+<p>Agent = 模型 + harness。模型是发动机，harness 是车。同样的发动机，装进赛车和装进破卡车，开起来完全是两回事。</p>
+</li>
+<li>
+<p>harness 是可工程化的。模型你改不了，但循环、终止条件、工具描述、上下文管理、权限闸、失败恢复，全是你能设计的代码。下一个十年的 AI 工程，重心不在等更大的模型，在搭更好的 harness。</p>
+</li>
+<li>
+<p>从 40 行到九个组件，是一条可以亲手走完的路。先跑通最小循环祛魅，再对着九组件清单逐个补，最后用 harness eval 量出来。</p>
+</li>
+</ul>
+<p>最后说点跟我自己相关的。</p>
+<p>我转型之后，这套框架给我最大的帮助，是让我多了一种判断力。</p>
+<p>当客户跟你说&quot;我们也想上 AI Agent，但效果不行&quot;，你现在可以继续往下问：他到底缺的是模型，还是缺 harness？</p>
+<p>缺模型，那就要等、要换、要重新评估。</p>
+<p>缺 harness，那就是能落地、能报价、能交付的活。</p>
+<p>我现在认为，90% 的情况是后者。</p>
+<p>这个判断力，恰恰是一个既懂代码、又坐在谈判桌前的人，最稀缺的筹码。</p>
+<p>快去搞懂吧。</p>
+<p>先把那 40 行跑起来。</p>
+<p>关于作者</p>
+<p>Kyrie — 前国内大厂 R&amp;D 工程师，现居曼谷，做中国科技企业出海 BD。持续分享出海一线真实记录、AI 在业务里的实战用法，偶尔也聊聊美股投资和国外生活。</p>
+<ul>
+<li>X：.@KyrieCheungYep</li>
+</ul></div><a class="source" href="https://x.com/KyrieCheungYep/status/2063113824975327568" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

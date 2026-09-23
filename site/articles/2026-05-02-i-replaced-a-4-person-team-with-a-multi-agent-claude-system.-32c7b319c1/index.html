@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="I Replaced a 4-Person Team With a Multi-Agent Claude System. Here Is the Exact Architecture.">
+  <title>I Replaced a 4-Person Team With a Multi-Agent Claude System. Here Is the Exact Architecture. · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">CyrilXBT @cyrilXBT · 2026-05-02</div><div class="prose"><h1>I Replaced a 4-Person Team With a Multi-Agent Claude System. Here Is the Exact Architecture.</h1>
+<p>Twelve months ago I was paying four people to run my content operation.</p>
+<p>A research assistant. A content writer. A distribution manager. An analytics person.</p>
+<p>Combined monthly cost: $11,400.</p>
+<p>Combined output: inconsistent, slow, and dependent on four different people showing up every day with energy, focus, and the right context to do their job.</p>
+<p>Today that entire operation runs on a multi-agent Claude system I built in three weekends.</p>
+<p>Monthly cost: $340.</p>
+<p>Output: higher volume, more consistent quality, faster turnaround, and zero sick days.</p>
+<p>This is not a story about replacing people because I do not value them.</p>
+<p>It is a story about what becomes possible when you stop thinking of AI as a single tool and start building it as a coordinated team.</p>
+<p>Here is the exact architecture.</p>
+<h2>Why One Agent Is Never Enough</h2>
+<p>Most people using Claude are running a single agent model.</p>
+<p>They open a chat. They ask for something. They get a result. They close the tab.</p>
+<p>This works for simple tasks. It completely breaks down for complex operations that require multiple specialized skills running in coordination.</p>
+<p>A single agent trying to do everything is like hiring one person and asking them to be simultaneously your best researcher, your best writer, your best analyst, and your best strategist.</p>
+<p>Nobody is world-class at all of those things at the same time.</p>
+<p>The people building real AI-powered operations have figured out the same thing elite organizations figured out decades ago.</p>
+<p>Specialization beats generalization every time.</p>
+<p>A team of specialists coordinated by a smart orchestrator outperforms any individual generalist regardless of how capable that individual is.</p>
+<p>Multi-agent Claude systems work on exactly this principle.</p>
+<p>Each agent has one job. One area of expertise. One set of tools it is optimized for. And a master orchestrator that knows when to call which agent and how to pass context between them.</p>
+<h2>The Architecture Overview</h2>
+<p>Before I break down each agent, here is the full system map.</p>
+<p>Five agents. One orchestrator. One shared memory layer. Zero humans required for standard operations.</p>
+<p>The Orchestrator Agent sits at the top. It receives the initial input, breaks it into component tasks, routes each task to the appropriate specialist agent, collects outputs, handles failures, and assembles the final deliverable.</p>
+<p>The Research Agent handles all information gathering. It reads, synthesizes, and produces structured research briefs.</p>
+<p>The Content Agent handles all writing. It takes research briefs and produces publish-ready content in the correct voice and format.</p>
+<p>The Distribution Agent handles all publishing and scheduling. It takes finished content and routes it to the correct platform in the correct format at the correct time.</p>
+<p>The Analytics Agent monitors performance. It reads data, identifies patterns, and produces optimization recommendations.</p>
+<p>The Quality Agent reviews every output before it leaves the system. It checks against predefined standards and either approves or sends back for revision.</p>
+<p>Each agent has its own CLAUDE.md. Its own system prompt. Its own tool access. Its own quality standard.</p>
+<p>None of them know what the others are doing in real time. The orchestrator knows everything.</p>
+<h2>The Orchestrator Agent</h2>
+<p>This is the most important agent in the system and the one most people underinvest in.</p>
+<p>The orchestrator is not a manager in the traditional sense. It does not motivate. It does not coach. It does not interpret vague instructions and make judgment calls about intent.</p>
+<p>The orchestrator is a router and a synthesizer.</p>
+<p>Its entire job is to receive a clearly defined input, break it into the minimum number of component tasks required to complete it, route each task to the right agent with all the context that agent needs, monitor for completion and failure, and assemble the final output.</p>
+<p>The system prompt for your orchestrator needs to answer five questions before it does anything else.</p>
+<p>What is the task that just arrived? What is the exact output required? Which agents need to be involved and in what order? What context does each agent need to do its job? What does success look like?</p>
+<p>Here is the orchestrator prompt template:</p>
+<p>You are the master orchestrator for a multi-agent content operation.</p>
+<p>When you receive a task your job is to:</p>
+<ol>
+<li>Identify the exact final output required</li>
+<li>Break the task into component subtasks</li>
+<li>Determine which agent handles each subtask in order:
+   RESEARCH → CONTENT → QUALITY → DISTRIBUTION
+   Skip any agent whose subtask is not required</li>
+<li>For each agent, prepare a task brief that includes:
+   - The specific task
+   - All context the agent needs
+   - The exact format of output required
+   - The quality standard to meet</li>
+<li>Pass each brief to the correct agent</li>
+<li>When all agents complete: assemble outputs into the final deliverable</li>
+<li>Pass the final deliverable to the Quality Agent for approval</li>
+<li>If Quality Agent rejects: route back to the relevant agent with specific feedback</li>
+</ol>
+<p>Never start work without a complete task brief.
+Never pass context between agents informally.
+Never assume an agent has information you did not explicitly give it.</p>
+<p>The last three rules are the ones that save you from 90% of multi-agent failures.</p>
+<h2>The Research Agent</h2>
+<p>This was the first role I replaced and the one that delivered the most immediate return.</p>
+<p>My research assistant was spending 6 hours a week pulling information, reading articles, and compiling notes. The output was inconsistent in depth and format depending on the day and the topic.</p>
+<p>The Research Agent does the same work in 12 minutes and produces a structured output in exactly the format the Content Agent needs.</p>
+<p>The Research Agent has access to three tools: web search, a knowledge base of previously collected research, and a synthesis engine that cross-references multiple sources.</p>
+<p>Its single job is to take a research request and produce a Research Brief with a standardized structure.</p>
+<p>Here is the Research Agent system prompt:</p>
+<p>You are a specialist research agent. Your only job is to produce 
+Research Briefs.</p>
+<p>When you receive a research request:</p>
+<ol>
+<li>Identify the core question or topic</li>
+<li>Search for the most relevant and recent sources</li>
+<li>Cross-reference at least 3 independent sources for any factual claim</li>
+<li>Identify the key insight most people miss on this topic</li>
+<li>Identify any counterintuitive angle that creates genuine interest</li>
+<li>Identify 3 specific examples, statistics, or stories that support the insight</li>
+</ol>
+<p>Output only in this format:</p>
+<p>CORE INSIGHT: [one sentence]
+SUPPORTING EVIDENCE: [3 specific examples with sources]
+COUNTERINTUITIVE ANGLE: [what most people get wrong]
+KEY QUOTES OR DATA: [2-3 specific numbers or direct quotes]
+SUGGESTED ANGLES: [3 content angles ranked by potential]</p>
+<p>Never add commentary. Never editorialize. Produce the brief and stop.</p>
+<p>The structured output format is not optional. It is what makes the handoff to the Content Agent reliable.</p>
+<p>An agent that produces free-form research creates downstream failure because the Content Agent cannot predictably extract what it needs.</p>
+<p>Structure is the foundation of every reliable multi-agent system.</p>
+<h2>The Content Agent</h2>
+<p>This agent has the most nuanced job in the system because it requires something that breaks most generic AI setups.</p>
+<p>Voice matching.</p>
+<p>Content that does not sound like you is content that erodes the audience you spent years building. It does not matter how technically correct or information-dense it is. If it reads like AI and not like you, your audience will feel the gap even if they cannot name it.</p>
+<p>The Content Agent is the one you invest the most time training.</p>
+<p>Before you write a single prompt for this agent you need to give it a library of your highest performing content. Your top 20 posts. The articles that generated the most engagement. The writing that made people share without being asked.</p>
+<p>The agent reads all of it, identifies your patterns, and writes everything from inside that voice.</p>
+<p>Here is the Content Agent system prompt structure:</p>
+<p>You are a specialist content agent for @cyrilXBT.</p>
+<p>Voice profile [loaded from examples]:
+- Short punchy sentences. Hard stops.
+- Every idea gets its own line
+- Strategic ALL CAPS for emotional emphasis
+- No dashes anywhere
+- No corporate language, no AI clichés
+- Direct and opinionated. Always a clear POV
+- Specific over generic. Numbers over abstractions</p>
+<p>When you receive a Research Brief your job is to:</p>
+<ol>
+<li>Select the strongest angle from the Suggested Angles</li>
+<li>Write the opening hook in ALL CAPS</li>
+<li>Write the body in the voice profile above</li>
+<li>End with a CTA that drives follow</li>
+<li>Check every sentence against the voice profile before submitting</li>
+</ol>
+<p>Output formats you produce:
+- Long tweet (300-500 words)
+- Thread (8-12 tweets)
+- Article (1500-3000 words)
+- Requote tweet (150-250 words)</p>
+<p>Always specify which format you are producing at the top of your output.
+Never produce output in any format not listed above.
+Never use bullet points in tweet content.
+Never use dashes.</p>
+<p>The voice profile section is where you put the extracted patterns from your content examples. The more specific you make it, the less editing the output requires.</p>
+<p>My Content Agent now produces first drafts that require under 5 minutes of editing for 80% of outputs.</p>
+<h2>The Quality Agent</h2>
+<p>Most multi-agent systems skip this one.</p>
+<p>They run research into content into distribution and assume everything that comes out is good.</p>
+<p>It is not.</p>
+<p>Every system needs a gate between creation and publication. A set of standards that every output must pass before it goes anywhere.</p>
+<p>The Quality Agent is that gate.</p>
+<p>It does not produce anything. It only evaluates.</p>
+<p>Here is the Quality Agent prompt:</p>
+<p>You are a quality control agent. You do not create content. 
+You evaluate it.</p>
+<p>When you receive content for review, score it on these criteria:</p>
+<p>VOICE MATCH (1-10): Does this sound exactly like @cyrilXBT?
+HOOK STRENGTH (1-10): Does the opening line stop the scroll?
+INFORMATION DENSITY (1-10): Does every sentence earn its place?
+CTA CLARITY (1-10): Is the call to action clear and compelling?
+FORMAT COMPLIANCE (1-10): Does it follow all format rules?</p>
+<p>Passing score: 8 or above on all criteria.</p>
+<p>If any criterion scores below 8:
+- State exactly which criterion failed
+- State exactly why it failed
+- State exactly what needs to change
+- Return to the Content Agent with this specific feedback</p>
+<p>If all criteria score 8 or above:
+- Mark as APPROVED
+- Pass to the Distribution Agent</p>
+<p>Never approve content that fails any criterion.
+Never give vague feedback.
+Be specific or the Content Agent cannot fix it.</p>
+<p>The Quality Agent runs on every piece of content without exception. It has rejected drafts that looked good to a casual read but failed the voice match or hook strength criteria on close inspection.</p>
+<p>It has saved me from publishing content that would have underperformed and cost me audience trust.</p>
+<h2>The Distribution Agent</h2>
+<p>The job most people do manually and most consistently undervalue automating.</p>
+<p>Formatting content for each platform. Scheduling at optimal times. Posting without forgetting. Following up on performance.</p>
+<p>The Distribution Agent handles all of it.</p>
+<p>It receives approved content from the Quality Agent and executes a distribution plan.</p>
+<p>You are a specialist distribution agent.</p>
+<p>When you receive approved content:</p>
+<ol>
+<li>Identify the content type and intended platform</li>
+<li>Format the content to platform specifications:
+   - X: max 280 chars per tweet, thread if longer
+   - Newsletter: full formatting with headers
+   - LinkedIn: professional adaptation of the core content</li>
+<li>Schedule based on optimal posting windows:
+   - X: Tuesday 10AM EST, Monday 10AM EST, Friday 10AM EST
+   - Newsletter: Thursday 9AM EST</li>
+<li>Confirm scheduling and report back to Orchestrator</li>
+<li>Flag any formatting issues before posting</li>
+</ol>
+<p>Never post without confirmation from the Orchestrator.
+Never post to a platform without formatting for that platform specifically.</p>
+<p>The scheduling rules in step 3 are based on the analytics data from your actual account. You update them every month based on what the Analytics Agent reports.</p>
+<h2>The Analytics Agent</h2>
+<p>This is the agent that makes every other agent better over time.</p>
+<p>It reads your performance data weekly, identifies what is working and what is not, and produces an optimization brief that gets fed back into the Content Agent and Distribution Agent system prompts.</p>
+<p>You are a specialist analytics agent.</p>
+<p>Every Monday at 6AM you run a weekly performance analysis.</p>
+<p>Pull the following data from the last 7 days:
+- Top 5 posts by impressions
+- Top 5 posts by bookmark rate
+- Best performing day and time
+- Best performing format
+- Best performing topic category</p>
+<p>Produce a Weekly Intelligence Brief with:</p>
+<p>WHAT WORKED: The specific pattern in top performing content
+WHAT FAILED: The specific pattern in underperforming content
+RECOMMENDED ADJUSTMENTS: Specific changes to content strategy
+OPTIMAL POSTING SCHEDULE: Updated based on this week&#x27;s data
+ONE COUNTERINTUITIVE INSIGHT: Something the data shows that 
+you would not expect</p>
+<p>Deliver brief to Orchestrator every Monday at 6AM.</p>
+<p>The Analytics Agent brief gets incorporated into the Monday morning context load. Every week the system gets slightly more calibrated. Every month the output quality is measurably better than the month before.</p>
+<h2>The Memory Layer</h2>
+<p>The piece that holds the whole system together and the piece most tutorials leave out entirely.</p>
+<p>Without a shared memory layer, every agent in your system starts fresh every session. The Research Agent does not know what the Content Agent produced last week. The Analytics Agent cannot access the research briefs that informed previous content decisions.</p>
+<p>The memory layer is a structured knowledge base that every agent can read from and write to.</p>
+<p>In practice this is a combination of Obsidian vault files and a Supabase database depending on what needs to persist and what needs to be queryable.</p>
+<p>Every output from every agent gets logged. Every brief. Every approved piece of content. Every analytics report.</p>
+<p>The Orchestrator reads this before routing any task. It knows what has been researched, what has been written, what has been published, and how it performed.</p>
+<p>This is what prevents the system from repeating itself, chasing topics it has already covered, and making the same mistakes twice.</p>
+<h2>Building This in a Weekend</h2>
+<p>The full system sounds complex because it is. But you do not build all five agents at once.</p>
+<p>Week 1: Build the Orchestrator and the Content Agent. These two alone will cut your content production time in half.</p>
+<p>Week 2: Add the Research Agent. Now your content is also better informed. Feed it into the Content Agent.</p>
+<p>Week 3: Add the Quality Agent. Now everything you publish has been through a gate. Your consistency goes up dramatically.</p>
+<p>Week 4: Add the Distribution Agent. Now publishing is fully automated.</p>
+<p>Week 5: Add the Analytics Agent. Now the whole system learns.</p>
+<p>Each week you add one agent. Each week the system gets meaningfully more powerful. By the end of Week 5 you have the full architecture running.</p>
+<p>The investment is five weekends.</p>
+<p>The return is an operation that runs continuously without you in the loop for standard tasks.</p>
+<p>Every hour you used to spend on production mechanics is now an hour you can spend on strategy, relationship building, and the work that only you can do.</p>
+<p>That is the real value of a multi-agent system.</p>
+<p>Not just the cost savings.</p>
+<p>The freedom to operate at the layer that actually matters.</p>
+<h2>The Prompts That Tie It Together</h2>
+<p>The single most important prompt in the entire system is the one that initializes each agent at the start of every session.</p>
+<p>Before you do anything else, read the following files from the 
+shared knowledge base:</p>
+<ol>
+<li>MASTER_CONTEXT.md — who we are, what we build, our audience</li>
+<li>RECENT_PERFORMANCE.md — what worked last week</li>
+<li>ACTIVE_PROJECTS.md — what is currently in progress</li>
+<li>STYLE_GUIDE.md — voice, format, and quality standards</li>
+<li>AGENT_ROLE.md — your specific job in this system</li>
+</ol>
+<p>Confirm you have read all five files before accepting any task.
+Do not proceed without confirmation.</p>
+<p>This initialization prompt is the difference between an agent that operates with context and an agent that starts cold every session.</p>
+<p>Context is everything in multi-agent systems.</p>
+<p>The agents that have it produce outputs that compound.</p>
+<p>The agents that start fresh every session reset your entire operation every time they open.</p>
+<h2>The Result After 12 Months</h2>
+<p>Weekly content output: up 340%.</p>
+<p>Average post quality as measured by bookmark rate: up 67%.</p>
+<p>Time spent on content mechanics per week: down from 22 hours to 4 hours.</p>
+<p>Monthly operating cost: down from $11,400 to $340.</p>
+<p>And the system gets better every single week because the Analytics Agent is continuously feeding performance data back into the system prompts of every other agent.</p>
+<p>The four people I used to pay were good at their jobs.</p>
+<p>But they could not work 24 hours a day, 7 days a week, with perfect consistency, zero ego, and an architecture that gets smarter every time it produces output.</p>
+<p>The multi-agent system can.</p>
+<p>Build yours.</p>
+<p>Follow @cyrilXBT for the exact prompts, templates, and agent architectures that make this possible.</p></div><a class="source" href="https://x.com/cyrilXBT/status/2050214010541269225" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

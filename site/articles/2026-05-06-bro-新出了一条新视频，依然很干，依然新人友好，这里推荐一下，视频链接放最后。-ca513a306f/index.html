@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="bro 新出了一条新视频，依然很干，依然新人友好，这里推荐一下，视频链接放最后。">
+  <title>bro 新出了一条新视频，依然很干，依然新人友好，这里推荐一下，视频链接放最后。 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Elliot 艾略特 @elliotchen100 · 2026-05-06</div><div class="prose"><h1>bro 新出了一条新视频，依然很干，依然新人友好，这里推荐一下，视频链接放最后。</h1>
+<p>「我试了 100 多个 Claude Code skill, 这 6 个是最好的」。</p>
+<ol>
+<li>
+<p>skill-creator
+Anthropic 官方出的, 用法直接到不能再直接: 让 Claude 帮你写 skill。
+之前你想做一个自己的 skill, 得先去搞清楚 SKILL.md 的格式, frontmatter 怎么写, 触发条件怎么定。这一步把 80% 的人挡在门外。skill-creator 把这层壳子拆了, 你只要把脑子里的 workflow 用人话讲一遍, 它输出一整个 skill 目录给你。
+/plugin install skill-creator@claude-plugins-official
+我的看法: 这个不算最实用, 但它是别的 skill 的入口。装了它你才会开始写自己的。</p>
+</li>
+<li>
+<p>superpowers
+社区里最大的多 agent 框架, GitHub 4 万 star, 作者是 obra。
+它不是单个 skill, 是一整套流程。brainstorm 让你先想清楚要做什么, write-plan 把任务拆成 2 到 5 分钟一个的小步骤, execute-plan 派 subagent 一个一个执行, 全程强制 TDD, 没有失败的测试不准动代码。
+/plugin install superpowers@claude-plugins-official
+我的看法: 适合做几小时不停的长任务。短任务装了它反而麻烦, 因为它逼你做计划。Nate 在视频里也提了这点, 想清楚再装。</p>
+</li>
+<li>
+<p>get-shit-done
+简称 GSD。我自己装在 global 里的就这个。
+它治的是 Claude 一上来就动手乱写代码的毛病。启动时先把你按住, 让你说清楚要做什么, 然后才放它去写。听起来很烦, 但装过的人都不会卸。
+npx get-shit-done-cc --claude --global
+我的看法: 三个流程类 skill (superpowers, GSD, context-mode) 里 GSD 最轻, 启动成本最低。如果你只装一个, 装这个。</p>
+</li>
+<li>
+<p>context-mode
+进项目第一件事, 把代码结构, 技术栈, 团队的命名约定, 重要文件路径全部一次性塞给 Claude。
+不装这个的代价是, 每个新 session 你都要重新解释一遍自己的项目。一个中等大小的代码库, 这一步光 token 就能烧掉几块钱, 一个月下来不少。
+/plugin marketplace add mksglu/context-mode
+/plugin install context-mode@context-mode
+我的看法: 这个 skill 的价值随项目复杂度指数级上涨。你写小脚本用不上, 维护一个三年的代码库用得着。</p>
+</li>
+<li>
+<p>claude-mem
+Claude 的跨 session 记忆系统。
+这条放进 6 个里我觉得最合理。所有 LLM 工具最大的短板就是健忘, 你每开一个新对话, 它就把你昨天说过的全忘光。claude-mem 让 Claude 记住你之前的决定, 偏好, 项目上下文, 下次直接接上。
+/plugin marketplace add thedotmack/claude-mem
+/plugin install claude-mem
+我的看法: AI memory 这个方向我自己也在 EverMind 做, 跟 claude-mem 的区别是我们更通用, 不限 Claude, 你在哪个工具产生的记忆都能存进来。回头单开一篇细讲, 这里就提一句。</p>
+</li>
+<li>
+<p>frontend-design
+Anthropic 官方, 每周 11 万下载, 目前最火的官方 skill 之一。
+它治的是 AI 写出来的网页全长一个样。明确禁用 Inter, Roboto, 紫色渐变, 圆角卡片这些「一眼 AI」的元素, 逼 Claude 在写代码前先选风格: brutalist, editorial, 90 年代复古, 随便挑, 但不能糊弄。
+/plugin install frontend-design@claude-plugins-official
+我的看法: 如果你给客户做 landing page, 这个必装。如果你做企业内部后台, 装了反而碍事。Nate 没提这个差别, 我提一下。
+视频里那句最有价值的话</p>
+</li>
+</ol>
+<p>整条视频我觉得最值钱的不是这 6 个 skill, 是 Nate 在最后讲怎么卖 skill 时说的一句话:
+「真正能卖钱的 skill 都是最无聊的那种。」
+不是炫技的多 agent, 不是抓眼球的 demo, 是把一个具体的, 反复出现的, 客户每周都要干 5 次的流程封装进去, 让他每次开 Claude 都离不开。
+这个观察跟我自己做产品的体感完全一致。最后挣钱的从来不是看起来最酷的那一类, 是嵌进别人日常工作里, 拿掉就难受的那一类。AI 工具这一波也一样。</p>
+<p>http://
+youtube.com/watch?v=eRS3Cm
+vrOvA
+…</p></div><a class="source" href="https://x.com/elliotchen100/status/2051818785125089434" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

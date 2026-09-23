@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="优化这七个Token消耗陷阱，你的Claude Code可以多用三倍">
+  <title>优化这七个Token消耗陷阱，你的Claude Code可以多用三倍 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">KK.aWSB @KKaWSB · 2026-05-05</div><div class="prose"><h1>优化这七个Token消耗陷阱，你的Claude Code可以多用三倍</h1>
+<p>如果你最近觉得Claude Code怎么用得这么快——周一开干，周三就撞限额，周末干脆没法用。</p>
+<p>你的第一反应大概率是：&quot;是不是模型变笨了？&quot; 或者 &quot;是不是订阅档位不够？&quot;</p>
+<p>这两个反应都是错的。</p>
+<p>3月底，Anthropic自己出来承认：&quot;用户撞到Claude Code额度限制的速度，比预期快得多。&quot;Discord和Reddit当时炸开了锅。Max 5订阅用户报告&quot;19分钟就用完了一天的额度&quot;——而预期是5小时。一个Pro $200订阅的用户写道：&quot;30天里我只能用12天——周一开始用，周二就满，要等到周六才重置。&quot;</p>
+<p>Anthropic给出了部分解释——&quot;高峰时段配额下调&quot;影响约7%的用户，加上prompt缓存层有两个独立bug，让某些会话的实际成本悄悄膨胀了10到20倍（这两个bug还不是Anthropic自己发现的，是用户逆向工程Claude Code二进制文件挖出来的，GitHub issue #40524）。</p>
+<p>但所有这些外部因素加起来，只能解释一部分撞额度的现象。剩下大半，是用户自己造成的——只是绝大多数人不知道。</p>
+<p>我用几百小时的时间跟踪了这件事。在Claude Code和Anthropic API之间架了HTTP代理，把每次请求的完整数据全部记录下来——时间戳、prompt、响应、token数、模型、退出原因——攒下几百万级的input token记录。</p>
+<p>然后做了一件大部分人都没做过的事：把所有token按用途分类。</p>
+<p>哪些是真正在帮我干活的（产出token）？哪些是各种&quot;隐形开销&quot;（overhead）？</p>
+<p>数据出来的时候我自己都愣了一下——</p>
+<p>真正有产出的token，只占大约三成。剩下近七成，全部被7个我自己几乎没意识到的模式吃掉了。</p>
+<p>不是因为我prompt写得烂——这点我很清楚。也不是因为我在小任务上动用了Opus这种贵模型——这种低级错误早避开了。</p>
+<p>是7个深一层的、博客文章基本不讲的、只有把数据扒出来才看得见的模式。</p>
+<p>如果你每周不止一次撞额度，你身上至少有3个这样的模式。如果你还订了一堆插件、装了好几个MCP——可能5个都不止。</p>
+<p>好消息是：把这7个陷阱全部修完，产出token占比能从三成升到六成五左右。综合体感，很多人会觉得&quot;额度突然多了2到3倍&quot;。</p>
+<p>下面是这7个陷阱的完整拆解，每一个都附30秒就能上手的修复方法。</p>
+<h2>心智模型先升级：会话不是白纸，是发票</h2>
+<p>在讲7个陷阱之前，必须先建立一个新的认知。否则你会修完发现自己又装回去了。</p>
+<p>大部分人对Claude Code会话的想象是这样的：一张白纸，你写什么它读什么，按你打的字算token。</p>
+<p>错。</p>
+<p>每一次会话其实是一张超长的发票，在你按下回车之前就已经预扣了一大堆费用：</p>
+<p>→ 你的CLAUDE.md（永远在加载） → 每个激活的插件Hook（永远在注入） → 每个激活的Skill的SKILL.md（一旦&quot;沾边&quot;就加载） → 每个连接的MCP的工具schema（永远在传输） → 当前会话之前的全部历史（永远在重读） → 缓存失效后的重新tokenize（5分钟没动就发生）</p>
+<p>所谓&quot;产出token&quot;，是这些预扣完之后的余数。</p>
+<p>关键认知是：要让额度多用三倍，你不能优化prompt，必须优化overhead。</p>
+<p>Prompt写得好，只在overhead小的时候有用。当overhead已经吃掉七成的时候，你prompt再精炼也救不了你。</p>
+<p>这就是为什么2026年到处都在吐槽&quot;Claude变笨了&quot;。模型没变笨。是用户的overhead在过去半年里悄悄膨胀了。</p>
+<h2>7个隐形陷阱（按吃token的重量级排序）</h2>
+<p>陷阱一：CLAUDE.md的&quot;层层叠加&quot;</p>
+<p>这个是杀伤力最大的，单独就能吃掉超过一成的总token。</p>
+<p>我的CLAUDE.md在半年里从几百字一路膨胀到接近5000个token。每写一条规则都觉得&quot;这个以后可能用得上&quot;，于是越垒越厚。</p>
+<p>问题是：这5000个token，每一轮对话都要完整加载一次。每开一个新会话，再来一遍。 一周200轮对话——光CLAUDE.md就吃掉100万token。绝大多数规则跟当前任务一点关系都没有。</p>
+<p>怎么修：</p>
+<p>打开终端，跑两条命令看看你的CLAUDE.md到底多大：</p>
+<p>wc -w ~/.claude/CLAUDE.md
+wc -w .claude/CLAUDE.md</p>
+<p>目标：合计不超过1200个英文词（约1500个token）。</p>
+<p>超了就重构。重构原则有四条：</p>
+<p>第一，框架特定的规则下沉到项目级CLAUDE.md——只在那个项目加载，不污染全局。</p>
+<p>第二，重复出现的复杂模式抽出来变成Skill——只在被调用时才加载，不调用就是零成本。</p>
+<p>第三，删掉那些你都想不起来为什么写的规则——你想不起来，Claude也不会用对。</p>
+<p>第四，把&quot;解释为什么&quot;的啰嗦句子改成3个词的祈使句。Claude不需要理由，需要的是命令。</p>
+<p>我把自己的从4800砍到了900。Claude的行为完全没变，但每一轮的baseline成本立刻降了三成。</p>
+<p>陷阱二：会话历史的指数级重读</p>
+<p>这个陷阱的可怕之处在于它随着对话长度指数增长。</p>
+<p>每发一条新消息，Claude会把之前的整段历史全部重新tokenize。第30条消息的时候，它正在为前29条消息付费——而每条消息你按500个token算，第30条消息花的token相当于第1条的30倍。</p>
+<p>我有过60+轮的会话。最后一条消息的成本是第一条的60倍。看到这个数字时我整个人是麻的。</p>
+<p>怎么修：</p>
+<p>最有效的做法不是&quot;克制使用&quot;，而是改变操作习惯：</p>
+<p>第一，错的时候改之前的消息，别追加新消息。 上箭头→编辑→重发。错的那一轮被替换，而不是被堆叠在历史顶上。</p>
+<p>第二，给会话定一个硬上限——20条消息。 超了就让Claude总结进度，开新会话，把总结当第一条消息。</p>
+<p>第三，需要保留连续性时用 /compact，不要 /clear。 /compact是总结后重启，保留精华丢弃冗余；/clear是直接清空，连有用的也丢了。</p>
+<p>我从平均60条降到平均15条之后，会话重读的成本下降了大约四成。</p>
+<p>陷阱三：插件的&quot;群体性偷塞&quot;</p>
+<p>这个陷阱有一个特别隐蔽的特征——它是悄悄发生的，没有任何提示。</p>
+<p>我装了4个插件。其中3个注册了UserPromptSubmit Hook——意思是每次你提交prompt之前，它们会自动往上下文里塞一段&quot;自认为有用&quot;的内容：当前git分支、最近改过的文件、记忆片段……每个都不大，每个都看起来&quot;挺贴心&quot;。</p>
+<p>但加起来：在Claude还没读到你的问题之前，已经被强行塞了6000多个token。</p>
+<p>更糟糕的是，插件还会在会话启动时通过SessionStart Hook塞各种&quot;加载完毕&quot;的通知消息——9个插件能累积到1400个token，全是&quot;我已经准备好了！&quot;这种废话。</p>
+<p>怎么修：</p>
+<p>先看看你被偷偷塞了什么：</p>
+<p>cat ~/.claude/settings.json | jq &#x27;.hooks.UserPromptSubmit&#x27;
+cat ~/.claude/settings.json | jq &#x27;.hooks.SessionStart&#x27;</p>
+<p>然后用一条铁律审计：任何你没法当场说清楚&quot;为什么需要它每次都触发&quot;的Hook，全部禁用。</p>
+<p>/plugin disable &lt;plugin-name&gt;</p>
+<p>我从4个UserPromptSubmit Hook减到1个（只留git分支），从9个SessionStart Hook减到2个。每次prompt少吃5800 token，每次会话启动少吃1200 token。</p>
+<p>陷阱四：缓存5分钟一过就失效</p>
+<p>这个陷阱让人读完直接想骂街——因为它纯粹是机制设计的问题。</p>
+<p>Anthropic的prompt缓存默认只有5分钟寿命。</p>
+<p>意思是：你停下来喝杯咖啡，超过6分钟回来——缓存失效。</p>
+<p>下一条消息触发的时候，系统prompt + CLAUDE.md + 工具schema这一整套约8000个token的东西，全部按原价重新tokenize——而不是按缓存读取价（仅基础价的10%）。</p>
+<p>我自己跟踪下来，这种&quot;喝杯咖啡导致缓存失效&quot;的事件，发生了600多次。</p>
+<p>怎么修：</p>
+<p>临时绕过法： 设个热键，绑一个超简单的&quot;ping&quot;命令。要离开桌面时随手发一个，让缓存活着。粗暴，但有效。</p>
+<p>正经解法： 升级到1小时缓存。机制是：缓存写入token按基础价的2倍计费（一次性的），缓存读取按0.1倍计费。算下来，只要你一次会话里有10次以上的缓存恢复，1小时缓存就回本了——而稍微长一点的工作日基本都会超过这个数。</p>
+<p>我换成1小时缓存之后，缓存失效的成本下降了八成左右。</p>
+<p>陷阱五：&quot;以防万一综合症&quot;</p>
+<p>这个陷阱合并了两件事——表面看是不同的，本质是一个毛病：装了一堆备而不用的东西，让它们永远在线。</p>
+<p>第一种表现是Skill过载。 我装了11个Skill。每个都设置了&quot;检测到相关性自动调用&quot;。Skill检测的逻辑非常保守——拿不准就加载。所以我做后端任务时，UI设计的Skill在加载；我写纯文本时，视频生成的Skill在加载。每个Skill的SKILL.md大约1500个token，9个全部沾边加载就是13500个token——而其中一个都没真用上。</p>
+<p>第二种表现是MCP工具schema常驻。 我连了12个MCP服务器。每个MCP都把自己的工具schema塞进每次请求——一个PostgreSQL MCP的schema就1200个token。12个加起来，每次请求7000多个token的工具定义。但80%的任务我只用到3个MCP。</p>
+<p>两件事合起来，每次请求多吃两万左右的token——纯粹是为了&quot;以防万一&quot;。</p>
+<p>怎么修：</p>
+<p>跑一个7天审计，看哪些Skill真的被调用过：</p>
+<p>grep -h &quot;skill_invoked&quot; ~/.claude/logs/*.log | sort | uniq -c | sort -rn</p>
+<p>不在输出里的Skill → 全部禁用。</p>
+<p>MCP同理：</p>
+<p>/mcp                    # 看看你连了多少
+/mcp disable &lt;server&gt;   # 不常用的当前会话禁用</p>
+<p>永久控制：编辑 ~/.claude/settings.json，把不常用的MCP从自动加载列表里删掉，需要时再单独启用。</p>
+<p>我从11个Skill砍到4个，从12个MCP砍到3个。两项加起来，每次请求省下大约15000个token。</p>
+<p>陷阱六：Extended Thinking的全局开关</p>
+<p>这个陷阱是最容易修的，但也最容易被忽略——因为大部分人不知道它默认是开着的。</p>
+<p>我全局开着Extended Thinking（高级推理模式）。Claude在那种完全不需要推理的小任务上——比如&quot;把这个变量改成驼峰式&quot;、&quot;加个空行&quot;——也会烧掉3000+的thinking token，先在脑子里&quot;深度思考&quot;半天。</p>
+<p>Extended Thinking在真正需要推理的问题上（架构决策、复杂debug）确实有价值。但在小任务上——它就是纯粹的浪费。</p>
+<p>怎么修：</p>
+<p>默认关闭Extended Thinking。需要时按消息开（Claude Code里是Alt+T）。</p>
+<p>判断什么时候开的标准很简单：你试一次，如果Claude的第一次答案不令人满意，就开Extended Thinking重试。 八成的任务你不需要它，剩下两成你会自己感觉到。</p>
+<p>陷阱七：让&quot;跑偏的回答&quot;跑完</p>
+<p>这个陷阱是输出端的浪费，也是大家最不会想到的。</p>
+<p>Claude开始写一段400行的回答。你看到前50行就发现它走错方向了。但大部分人会让它写完，然后再重新prompt一次。</p>
+<p>剩下那350行——纯浪费的输出token。而输出token是按基础价计费的，比输入token还贵。</p>
+<p>我估算了一下，让Claude把错的方向写完，每个月白扔$15以上。</p>
+<p>怎么修：</p>
+<p>Cmd+. (Mac) / Ctrl+. (Windows) 立刻停止生成。 Claude会保留它已经写的部分，你从那里接着改方向。</p>
+<p>训练自己在响应明显跑偏的前5秒就按下停止键——别&quot;再看看说不定后面就对了&quot;。它不会的。</p>
+<p>Claude Code终端用户还有一个特权：双击Esc打开checkpoint回滚——可以倒回任何一个之前的状态，重新换个方向尝试。</p>
+<h2>三倍产能怎么算出来的</h2>
+<p>把这7个陷阱全部修完，账面上的变化是这样的：</p>
+<p>修复前： 产出token大约只占三成，剩下七成全是overhead。 修复后： 产出token占比能稳定在六成五左右，overhead压到了三成五。</p>
+<p>光看这个比例，已经是单次请求有效产出翻了一倍多。</p>
+<p>但实际感受会更好。原因是修复带来的是复合收益——</p>
+<p>CLAUDE.md精简之后，每一轮对话都受益。会话长度收住之后，每一条新消息都受益。缓存稳定之后，每次离开回来都不再&quot;重新付款&quot;。Skill和MCP瘦身之后，每次请求都轻装上阵。</p>
+<p>这些收益不是简单相加，是叠加复利。 一次请求节省的token越少，但每天的请求次数越多——综合下来，很多人会有&quot;额度突然多了2到3倍&quot;的实际体感。</p>
+<p>也就是说，标题里说的&quot;多用三倍&quot;——不是营销话术。是数据上能算出来、操作上能跑出来的真实结果。</p>
+<p>不是100%——overhead永远有不可避免的下限。但三倍产能这个事情，对绝大部分Claude Code用户来说，是已经够用的。</p>
+<h2>哪些&quot;网传偏方&quot;其实没用</h2>
+<p>这里值得说一下，那些标准博客里反复推荐的&quot;老生常谈&quot;，我都试过，效果其实不大：</p>
+<p>&quot;简单任务用Haiku。&quot; 帮了一点点，约3%。但真正吃token的不是模型选择，是上下文膨胀。便宜模型跑膨胀的上下文，比贵模型跑精简的上下文还要贵。</p>
+<p>&quot;每个任务之间都/clear。&quot; 反作用。会丢掉你真的需要的上下文，反而让你不得不重新解释一遍。更好的策略是每个项目一个长会话，但配上精简的CLAUDE.md和审计过的Hook。</p>
+<p>&quot;把所有Skill都禁用。&quot; 一开始确实省token，但你会发现自己在每个prompt里都开始手动重写200个token的指令。净亏。 正确做法是保留3-4个真正在用的Skill，禁用其余的。</p>
+<p>&quot;避开高峰时段。&quot; 部分有效（约影响7%的用户）。但对大多数人，前面那7个杠杆比时段调整重要得多。</p>
+<h2>一段审计脚本：一次扫出全部7个陷阱</h2>
+<p>如果你想自己跑一遍，这是我整理出来的诊断脚本：</p>
+<h1>!/bin/bash</h1>
+<h1>在你的项目根目录运行</h1>
+<p>echo &quot;=== 1. CLAUDE.md大小 ===&quot;
+wc -w ~/.claude/CLAUDE.md 2&gt;/dev/null
+wc -w .claude/CLAUDE.md 2&gt;/dev/null
+echo &quot;目标：合计 &lt; 1200个词&quot;</p>
+<p>echo &quot;=== 2. UserPromptSubmit注入 ===&quot;
+cat ~/.claude/settings.json 2&gt;/dev/null | jq &#x27;.hooks.UserPromptSubmit&#x27;
+echo &quot;目标：1-2个，越少越好&quot;</p>
+<p>echo &quot;=== 3. SessionStart Hook ===&quot;
+cat ~/.claude/settings.json 2&gt;/dev/null | jq &#x27;.hooks.SessionStart&#x27;
+echo &quot;目标：只保留必要的&quot;</p>
+<p>echo &quot;=== 4. 已装Skills ===&quot;
+ls ~/.claude/skills/ 2&gt;/dev/null
+echo &quot;目标：3-5个匹配日常工作的&quot;</p>
+<p>echo &quot;=== 5. 已连接MCPs ===&quot;
+cat ~/.claude/settings.json 2&gt;/dev/null | jq &#x27;.mcpServers // {} | keys&#x27;
+echo &quot;目标：3个always-on，其余按需启用&quot;</p>
+<p>存下来，跑一遍，对着每一项修。每周复跑一次，直到每一行都达标。</p>
+<h2>最后的认知升级：你不是在打字，是在签订单</h2>
+<p>读到这里如果你只把它当成&quot;省钱攻略&quot;，那就低估了它的价值。</p>
+<p>这篇文章背后的核心认知是：</p>
+<p>你以为你在跟一个AI对话——但实际上你是在向一个庞大的系统提交订单。这个订单的最终价格，不是由你打了多少字决定的，而是由你在这个系统的各个角落布置了多少东西决定的。</p>
+<p>CLAUDE.md、各种Hook、各种插件、各种Skill、各种MCP连接、缓存策略——这些都是你过去几个月里&quot;为了让Claude更好用&quot;而装上去的。每一个都有它当初被装上去的理由。</p>
+<p>但没有任何一个工具或文档会告诉你：它们加起来的总成本是多少。</p>
+<p>直到某天你撞了限额，开始怀疑&quot;是不是模型变笨了&quot;。</p>
+<p>不是。是你给这个系统装了太多东西，但没人在管这些东西到底有没有真正被用上。</p>
+<p>这跟你的电脑越用越卡是同一个道理——不是CPU变慢了，是你装的东西越来越多，每一个都觉得自己很重要，每一个都在后台默默吃资源。</p>
+<p>真正的优化，从来不是&quot;让自己用得更聪明&quot;。是&quot;删掉那些其实没在帮你的东西&quot;。</p>
+<h2>今晚就能兑现的三倍产能</h2>
+<p>如果你只能记住一件事：</p>
+<p>七成的&quot;Claude变笨了&quot;，是overhead造成的。剩下三成才是模型本身。</p>
+<p>今晚抽15分钟，跑一遍前面那段审计脚本：</p>
+<p>把不必要的删掉。 把膨胀的精简掉。 把默认开着的关掉。</p>
+<p>然后明天再开Claude Code的时候，你会发现：同一个订阅，突然多出来一倍以上的产能。综合体感大概率是2到3倍。</p>
+<p>不是因为Anthropic给你升级了什么。</p>
+<p>是因为你终于把那些一直在背后偷偷吃token的东西，关掉了。</p>
+<p>❤️一键点关注 https://x.com/intent/follow?screen_name=kkawsb</p>
+<p>我在硅谷每周为你带来几篇最新的AI学习深度文章，让你轻松快人一步赶超这个时代。</p></div><a class="source" href="https://x.com/KKaWSB/status/2051123477697151468" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

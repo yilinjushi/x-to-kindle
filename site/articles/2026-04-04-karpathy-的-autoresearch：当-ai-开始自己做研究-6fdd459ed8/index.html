@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="KARPATHY 的 AUTORESEARCH：当 AI 开始自己做研究">
+  <title>KARPATHY 的 AUTORESEARCH：当 AI 开始自己做研究 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Mr Panda @PandaTalk8 · 2026-04-04</div><div class="prose"><h1>KARPATHY 的 AUTORESEARCH：当 AI 开始自己做研究</h1>
+<p>&quot;曾经，前沿 AI 研究是由肉体计算机在吃饭、睡觉、享乐的间隙完成的，它们偶尔通过一种叫&#x27;组会&#x27;的声波互连仪式进行同步。那个时代早已远去。如今，研究完全由自主 AI Agent 群在天空中的算力集群超级结构上完成。Agent 们声称代码库已经迭代到了第 10,205 代，反正也没人能验证——因为&#x27;代码&#x27;已经演化成了超越人类理解能力的自修改二进制程序。这个仓库，就是一切开始的地方。&quot; —— Andrej Karpathy，autoresearch README，2026 年 3 月</p>
+<p><img alt="Article image" src="/assets/2026-04-04-karpathy-的-autoresearch：当-ai-开始自己做研究-6fdd459ed8/01.jpg"></p>
+<h2>一句话概括</h2>
+<p>给 AI 一个 GPU、一个可以修改的训练脚本、一个评估指标，然后去睡觉。醒来时，它已经跑了上百个实验，发现了你花几个月都找不到的优化。</p>
+<p>这就是 AutoResearch。</p>
+<p>给不太熟悉 AI 领域的读者：
+GPU：图形处理器，原本用来玩游戏和渲染画面，现在是训练 AI 模型的核心硬件。一张高端 GPU（如 H100）价值约 3 万美元。
+LLM（大语言模型）：ChatGPT、Claude 这类能理解和生成文字的 AI 系统的统称。
+AI Agent（AI 智能体）：能自主执行任务的 AI 程序。不同于普通的 AI 对话——Agent 可以读文件、写代码、运行命令，像一个有手有脚的助手。
+训练：让 AI 模型从大量数据中&quot;学习&quot;的过程。就像人类通过阅读积累知识，模型通过训练变得越来越聪明。
+验证损失（validation loss）：衡量模型学得好不好的分数，越低越好。类似考试分数，但是反过来——0 分是满分。</p>
+<h2>这件事为什么重要</h2>
+<p>2026 年 3 月 7 日（周五），Andrej Karpathy 在 GitHub 上发布了一个名为 autoresearch 的仓库。两天内，他的推文获得了 860 万次浏览；截至 3 月底，仓库已超过 57,000 颗星。</p>
+<p>这不是一个复杂的框架，不是一个商业产品，甚至不是一个&quot;工具&quot;。用 Karpathy 自己的话说：</p>
+<p>&quot;你不是&#x27;使用&#x27;它，它只是一个配方/思路——把它交给你的 AI 编程助手，应用到你关心的任何领域。&quot;</p>
+<p>但正是这种极简的设计，揭示了一个深远的趋势：AI 研究的自动化已经从理论变成了现实。</p>
+<h2>从 VIBE CODING 到 AUTORESEARCH：KARPATHY 的三步进化</h2>
+<p>要理解 AutoResearch 的意义，需要把它放在 Karpathy 近一年来推动的编程范式演化中看：</p>
+<p>阶段时间人的角色AI 的角色类比Vibe Coding2025 年描述意图，审核代码写代码你说&quot;做个登录页面&quot;，AI 写代码，你审核Agentic Engineering2026 年 2 月实时编排多个 Agent执行具体任务你像项目经理，同时指挥几个 AI 干活AutoResearch2026 年 3 月写一份策略文档，然后去睡觉全自主循环你写一份研究方向，AI 通宵做实验</p>
+<p>每一步，人类的参与度都在降低，AI 的自主性都在提升。到 AutoResearch 这一步，人类的核心工作变成了定义问题和设定方向，而不是解决问题本身。</p>
+<p>Karpathy 在 No Priors 播客中描述自己的状态：</p>
+<p>&quot;我现在就处于一种「精神亢奋」的状态，试图搞清楚什么是可能的，把它推到极限。我觉得普通人真的没有意识到发生了什么，也没有意识到这有多戏剧性。&quot;</p>
+<h2>先聊聊背景：KARPATHY 是谁，NANOCHAT 又是什么</h2>
+<p>Andrej Karpathy：从斯坦福到 OpenAI 再到独立开发者</p>
+<p>如果你不熟悉 AI 圈，这个名字可能有点陌生。简单说：Andrej Karpathy 是当今世界最有影响力的 AI 教育者和实践者之一。</p>
+<ul>
+<li>
+<p>斯坦福大学博士（师从李飞飞，研究计算机视觉）</p>
+</li>
+<li>
+<p>OpenAI 联合创始成员，参与了 GPT 系列早期研发</p>
+</li>
+<li>
+<p>特斯拉 AI 总监，领导了自动驾驶视觉系统 Autopilot 团队</p>
+</li>
+<li>
+<p>2024 年离开特斯拉后，成为独立 AI 开发者和教育者</p>
+</li>
+<li>
+<p>他的 YouTube 频道（&quot;Neural Networks: Zero to Hero&quot;）是全球最受欢迎的深度学习入门教程之一</p>
+</li>
+<li>
+<p>他创造了 &quot;Vibe Coding&quot;（氛围编程）这个流行词</p>
+</li>
+</ul>
+<p>Karpathy 有一个独特的风格：把复杂的东西做到极简。他写的代码项目通常只有几百行，但能让你理解整个领域的核心。nanoGPT（用 600 行代码实现 GPT）、minbpe（用极简代码实现分词器）都是这种风格的代表作。</p>
+<p>nanochat：100 美元训练你自己的 ChatGPT</p>
+<p>nanochat 是 Karpathy 2025 年 10 月发布的开源项目（目前 50,000+ 星），用他自己的话说：&quot;100 美元能买到的最好的 ChatGPT&quot;。</p>
+<p>要理解这有多疯狂，看一个对比：</p>
+<p>时间项目成本2019 年OpenAI 训练 GPT-2~$43,0002026 年nanochat 训练同等能力模型~$48</p>
+<p>7 年间，成本下降了 900 倍。</p>
+<p>nanochat 的设计哲学是一个旋钮控制一切：你只需要设置 --depth（模型层数），所有其他超参数（宽度、学习率、训练时长、weight decay……）全部自动计算到最优值。depth=12 大约是 GPT-1 级别（5 分钟训练），depth=24-26 大约是 GPT-2 级别（约 2 小时训练）。</p>
+<p>nanochat 覆盖了 LLM 的全部阶段：分词、预训练、微调、评估、推理，甚至自带一个类似 ChatGPT 的网页聊天界面——训练完就能跟自己的模型对话。</p>
+<p>nanochat 排行榜：autoresearch 的战绩</p>
+<p>nanochat 维护着一个 &quot;Time to GPT-2&quot; 排行榜——在 8 张 H100 GPU 上，训练到 GPT-2 同等能力需要多长时间。AutoResearch 的成绩直接反映在这个排行榜上：</p>
+<h1>时间描述日期42.02 小时切换到 NVIDIA ClimbMix 数据集2026.3.451.80 小时autoresearch 第一轮2026.3.961.65 小时autoresearch 第二轮2026.3.14</h1>
+<p>从 2.02 小时到 1.65 小时，AutoResearch 两轮下来提升了 18%——超过了 Karpathy 和社区之前所有的手动优化。</p>
+<p>为什么 AutoResearch 选择 nanochat 作为实验对象</p>
+<p>这不是偶然。nanochat 的特点让它成为 AutoResearch 的完美&quot;试验田&quot;：</p>
+<ul>
+<li>
+<p>代码极简：核心训练代码只有几百行，Agent 能完全理解</p>
+</li>
+<li>
+<p>评估明确：val_bpb（验证集上的 bits per byte）是一个清晰、可量化的指标</p>
+</li>
+<li>
+<p>快速迭代：depth=12 的模型只需 5 分钟就能训练完</p>
+</li>
+<li>
+<p>已有人类基线：Karpathy 自己花了大量时间手动调优，Agent 的改进是在&quot;人类专家水平&quot;之上的</p>
+</li>
+</ul>
+<p>AutoResearch 本质上就是 nanochat 的单 GPU 精简版——把多 GPU 的分布式训练砍掉，只保留一个文件（train.py），让 Agent 可以在一台机器上自主跑实验。</p>
+<h2>AUTORESEARCH 的设计：极简到令人不安</h2>
+<p>整个系统只有 三个文件，延续了 Karpathy 一贯的风格——用最少的代码表达最核心的思想。</p>
+<ol>
+<li>prepare.py（不可修改）</li>
+</ol>
+<p>这是&quot;裁判&quot;。负责：</p>
+<ul>
+<li>
+<p>数据准备：把训练用的文本切分成模型能理解的&quot;token&quot;（可以理解为&quot;词片段&quot;），词汇表大小为 8,192</p>
+</li>
+<li>
+<p>数据加载器：负责在训练时把数据喂给模型</p>
+</li>
+<li>
+<p>评估函数 evaluate_bpb()：计算模型在验证集上的 bits per byte（bpb）——简单说，就是衡量模型&quot;猜下一个字&quot;有多准。数值越低，模型越聪明</p>
+</li>
+</ul>
+<p>关键设计：Agent 不能修改这个文件。这意味着无论 Agent 怎么改训练代码，评估标准始终一致。就像考试中的评分标准不能被考生篡改——你可以用任何方法学习，但评判你的标尺是固定的。</p>
+<ol start="2">
+<li>train.py（Agent 唯一可以修改的文件）</li>
+</ol>
+<p>约 630 行 Python 代码，包含了训练一个语言模型所需的一切：</p>
+<ul>
+<li>
+<p>模型架构：GPT 的完整结构（注意力机制、前馈网络等——这些决定了模型&quot;怎么思考&quot;）</p>
+</li>
+<li>
+<p>优化器（Muon + AdamW）：控制模型&quot;怎么学习&quot;的算法，就像调整学习策略</p>
+</li>
+<li>
+<p>训练循环：反复给模型看数据、计算错误、调整参数的过程</p>
+</li>
+</ul>
+<p>一切都可以改：模型结构、学习策略、各种参数、一次看多少数据（batch size）、模型多大……Agent 拥有完全的自由度，就像给了一个厨师完全的自由——食材（数据）固定，但烹饪方法随便你改。</p>
+<ol start="3">
+<li>program.md（人类编写，Agent 只读）</li>
+</ol>
+<p>这是最有意思的部分——一份用纯英文写的策略文档，也是 Karpathy 对 AutoResearch 最精妙的设计。README 里写得很直白：</p>
+<p>&quot;你不是像通常那样作为研究者去修改 Python 文件。相反，你是在编写 program.md 这个 Markdown 文件，为 AI Agent 提供上下文，搭建你的自主研究组织。&quot;</p>
+<p>它告诉 Agent：</p>
+<ul>
+<li>
+<p>目标：降低 val_bpb（&quot;The goal is simple: get the lowest val_bpb.&quot;）</p>
+</li>
+<li>
+<p>约束：每次训练 5 分钟，超过 10 分钟直接 kill</p>
+</li>
+<li>
+<p>工作流：修改→commit→训练→评估→保留或回滚</p>
+</li>
+<li>
+<p>卡住时怎么办：重读代码、查阅论文引用、组合之前的近似成功尝试、尝试更激进的架构变化</p>
+</li>
+</ul>
+<p>其中有两条铁律特别值得细品。</p>
+<p>第一条是永不停止：</p>
+<p>&quot;一旦实验循环开始，绝不暂停询问人类是否继续。人类可能在睡觉，或者不在电脑旁，他们期望你无限期地持续工作，直到被手动中断。你是自主的。如果你没有想法了，那就更努力地思考。&quot;</p>
+<p>第二条是简洁性准则：</p>
+<p>&quot;条件相同时，越简单越好。一个微小的改善如果引入丑陋的复杂度，不值得保留。反过来，删掉代码却得到相同或更好的结果，那是简化的胜利。val_bpb 提升了 0.001 但加了 20 行 hack？大概不值得。val_bpb 提升了 0.001 来自删除代码？绝对保留。&quot;</p>
+<p>这不是传统意义上的&quot;配置文件&quot;，它更像是你给一个博士生写的研究指南——而且是一个你信任到可以让他独自工作整晚的博士生。</p>
+<p>自主循环的工作流</p>
+<p>┌─────────────────────────────────────────┐
+│  1. 检查当前 git 状态                     │
+│  2. 基于假设修改 train.py                 │
+│  3. git commit                           │
+│  4. 运行: uv run train.py &gt; run.log      │
+│  5. 提取结果（grep val_bpb）              │
+│  6. 崩溃？→ 读 stack trace，尝试修复      │
+│  7. 记录到 results.tsv                    │
+│  8. 改善了？→ 保留 commit                 │
+│     没改善？→ git reset                   │
+│  9. 回到步骤 1，永不停止                   │
+└─────────────────────────────────────────┘</p>
+<p>每次实验固定 5 分钟训练时间。这意味着：</p>
+<ul>
+<li>
+<p>每小时约 12 个实验</p>
+</li>
+<li>
+<p>一夜约 100 个实验</p>
+</li>
+<li>
+<p>所有实验之间可以公平比较</p>
+</li>
+</ul>
+<h2>结果：超越人类专家</h2>
+<p>Karpathy 自己就是最好的测试者。他花了大量时间手动调优 nanochat 的训练代码，然后把 AutoResearch 跑了两天。</p>
+<p>结果让他自己都意外。3 月 10 日，他发了一条长推，全文值得仔细读：</p>
+<p>&quot;三天前我让 autoresearch 在 depth=12 的模型上调优了约 2 天。它找到了约 20 个改善验证损失的改动。我昨天测试了这些改动，它们全部是可叠加的，而且全部迁移到了更大的（depth=24）模型。叠加所有这些改动后，排行榜上的 &#x27;Time to GPT-2&#x27; 从 2.02 小时降到 1.80 小时（约 11% 的提升），这将成为新的排行榜记录。所以是的，这些都是真实的改进，它们确实产生了实际影响。&quot;</p>
+<p>然后他说了一段对自己 20 年研究生涯的反思：</p>
+<p>&quot;这对我来说是第一次，因为我非常习惯手动做神经网络训练的迭代优化。你想出点子，你实现它们，你检查是否有效（更好的验证损失），你基于结果想出新点子，你读几篇论文找灵感，等等等等。这就是我 20 年来每天在做的核心工作。看着 Agent 端到端地完成这整个工作流，在大约 700 次改动中完全自主地推进，太疯狂了。它真的在看实验结果的序列，然后据此规划下一个实验。&quot;</p>
+<p>具体发现</p>
+<p>Karpathy 在推文中逐一列出了 Agent 的主要发现。为了让非 ML 背景的读者也能理解，我对每个发现做了通俗解释：</p>
+<ul>
+<li>
+<p>QKnorm 缩放器：Karpathy 原来的无参数 QKnorm 没有缩放乘子，导致注意力过于分散（&quot;so my attention was too diffuse&quot;）。Agent 添加了乘子来锐化注意力。
+💡 通俗理解：&quot;注意力机制&quot;是 GPT 的核心——它决定模型在理解一句话时，该重点关注哪些词。Karpathy 的实现让模型的注意力太&quot;散&quot;了，像一个人同时看所有东西但什么都没看清。Agent 加了一个&quot;对焦旋钮&quot;让注意力更集中。</p>
+</li>
+<li>
+<p>Value Embedding 正则化：Agent 发现 Value Embeddings 需要正则化，而 Karpathy 之前完全没有施加（他自己写了 &quot;oops&quot;）。
+💡 通俗理解：正则化相当于给学习过程加&quot;纪律&quot;，防止模型死记硬背（过拟合）。模型里有一部分参数（Value Embeddings）一直在&quot;放飞自我&quot;，Agent 给它加上了约束。</p>
+</li>
+<li>
+<p>带状注意力扩展：原始的 banded attention 太保守——Karpathy 承认&quot;忘了调它&quot;（&quot;i forgot to tune it&quot;）。
+💡 通俗理解：为了节省计算，模型在处理长文本时只看&quot;附近&quot;的词（带状注意力）。但这个&quot;附近&quot;的范围设得太窄了，Agent 把窗口加宽，让模型能看到更多上下文。</p>
+</li>
+<li>
+<p>AdamW Betas 校正：Agent 发现原来的 beta 值&quot;全搞错了&quot;（&quot;were all messed up&quot;）。
+💡 通俗理解：AdamW 是模型的&quot;学习策略&quot;，betas 是其中两个关键参数，控制模型对过去经验的记忆程度——太高会学得太慢，太低会太震荡。这两个值原来设错了。</p>
+</li>
+<li>
+<p>Weight Decay 调度：Agent 调优了 weight decay 的调度策略。
+💡 通俗理解：Weight decay 是一种防止模型&quot;过度自信&quot;的技术，在训练过程中定期缩小参数值。Agent 找到了更好的调度节奏。</p>
+</li>
+<li>
+<p>网络初始化：Agent 调优了网络初始化参数。
+💡 通俗理解：训练开始时，模型的参数需要一个&quot;起点&quot;（初始化）。起点选得好，学习过程更顺利。Agent 找到了更好的起跑位置。</p>
+</li>
+</ul>
+<p>Karpathy 特别强调：这些改进是在他已经花了大量时间手动调优之后发现的。他干了 20 年的活，Agent 用 2 天就在他基础上又进了一步。相关代码改动记录在 nanochat 的这个 commit 中。</p>
+<p>最终结果：在 &quot;Time to GPT-2&quot; 排行榜上，训练时间从 2.02 小时降到 1.80 小时，提升约 11%，超过了 Karpathy 之前手动提交的所有记录。</p>
+<h2>当 CEO 也能做 ML 研究</h2>
+<p>最能说明 AutoResearch 影响力的案例来自 Shopify CEO Tobi Lütke。</p>
+<p>Lütke 不是 ML 研究员。但他把 AutoResearch 应用到 Shopify 内部的查询扩展模型（帮用户更好地搜索商品的 AI 模型）上，跑了一个晚上：</p>
+<ul>
+<li>
+<p>37 个实验，8 小时</p>
+</li>
+<li>
+<p>验证分数提升 19%</p>
+</li>
+<li>
+<p>一个 8 亿参数的小模型现在超过了之前 16 亿参数的大模型（意味着更快、更便宜、效果还更好）</p>
+</li>
+</ul>
+<p>Lütke 写道：</p>
+<p>&quot;我当然不是 ML 研究员……但看着它一步步推理实验过程，真的很迷人。我从中学到的东西比关注 ML 研究者几个月学到的还多。&quot;</p>
+<p>这揭示了 AutoResearch 真正的颠覆性：它把 ML 研究从&quot;需要专家知识&quot;变成了&quot;需要好的问题定义&quot;。</p>
+<h2>规模化：从一个 GPU 到 GPU 集群</h2>
+<p>AutoResearch 原本是给&quot;一个人+一张 GPU&quot;设计的。但 SkyPilot 团队想看看：如果给它一群 GPU 会怎样？</p>
+<p>他们把 AutoResearch 扩展到了 16 张高端 GPU（H100 和 H200 混用）的集群上：</p>
+<ul>
+<li>
+<p>8 小时内完成 910 个实验（vs 单 GPU 的约 96 个）</p>
+</li>
+<li>
+<p>吞吐量提升 9 倍</p>
+</li>
+<li>
+<p>val_bpb 从 1.003 降到 0.974（改善 2.87%）</p>
+</li>
+</ul>
+<p>最有趣的发现：Agent 自己学会了利用异构硬件——它发现 H200 比 H100 更快，于是自动把 H200 分配给验证任务（需要速度），把 H100 分配给筛选实验（可以慢一点）。没人教它这么做——它是从实验反馈中自己悟出来的。</p>
+<h2>&quot;KARPATHY 循环&quot;：一种新的范式</h2>
+<p>Fortune 杂志为这种模式起了个名字：The Karpathy Loop（Karpathy 循环）。</p>
+<p>它的核心只有三个要素：</p>
+<ul>
+<li>
+<p>一个 Agent，只能修改一个文件</p>
+</li>
+<li>
+<p>一个客观可测的指标</p>
+</li>
+<li>
+<p>固定的时间预算</p>
+</li>
+</ul>
+<p>这个模式的优雅之处在于它的约束。</p>
+<p>传统的自动机器学习工具（AutoML，如 Optuna、Ray Tune）只能调&quot;旋钮&quot;——比如学习率从 0.01 改成 0.02，模型层数从 8 改成 12。它们把模型当成一个黑盒子，只在外面拧螺丝。</p>
+<p>AutoResearch 则让 Agent 打开黑盒子，重写里面的零件——改注意力机制的实现方式、换一个全新的学习算法、重构整个训练流程。这就像前者只能调汽车的胎压和油量，而后者可以重新设计引擎。这是质的区别。</p>
+<p>但与此同时，通过限制可修改的范围（只有 train.py）、固定评估标准（prepare.py 不可改）、设定时间上限（5 分钟），它避免了 Agent 走向失控。</p>
+<p>约束催生创造力。 这可能是 AutoResearch 给 AI 领域最重要的启示。</p>
+<h2>社区爆发</h2>
+<p>AutoResearch 发布后三周内，社区做了什么：</p>
+<ul>
+<li>
+<p>macOS 移植（基于 MLX，支持 Apple Silicon）</p>
+</li>
+<li>
+<p>Windows RTX 移植</p>
+</li>
+<li>
+<p>AMD GPU 移植</p>
+</li>
+<li>
+<p>autoresearch@home：分布式版本，类似 SETI@home，让多台机器协作</p>
+</li>
+<li>
+<p>awesome-autoresearch：GitHub 上的精选资源列表</p>
+</li>
+</ul>
+<p>更有趣的是，Karpathy 循环被应用到了 ML 之外的领域：</p>
+<ul>
+<li>
+<p>GPU Kernel 优化：让 Agent 自动优化 CUDA kernel</p>
+</li>
+<li>
+<p>Shopify Liquid 模板引擎优化：93 个自动化 commit，渲染速度提升 53%</p>
+</li>
+<li>
+<p>Prompt 优化：用同样的循环自动迭代提示词</p>
+</li>
+<li>
+<p>营销优化：落地页、邮件、内容的 A/B 测试自动化</p>
+</li>
+</ul>
+<p>只要你能定义一个可量化的指标和一个可修改的文件，Karpathy 循环就能应用。</p>
+<h2>KARPATHY 的终极愿景</h2>
+<p>如果你认为 AutoResearch 只是一个巧妙的 hack，那你低估了 Karpathy 的野心。</p>
+<p>在同一条推文的结尾，他直接亮出了底牌：</p>
+<p>&quot;所有 LLM 前沿实验室都会做这件事。这是最终 Boss 战。在规模上当然要复杂得多——你不只是调一个 train.py 文件。但做这件事&#x27;只是工程问题&#x27;，而且它会奏效。你启动一群 Agent，让它们协作调优小模型，把最有前途的想法逐步推进到更大规模，人类（可选地）在边缘贡献。&quot;</p>
+<p>然后他把格局再拉大一层：</p>
+<p>&quot;更一般地说，任何你关心的、可以高效评估的指标（或者有更高效的代理指标，比如训练一个更小的网络），都可以被 Agent 群自主研究。值得想想你的问题是否也属于这个范畴。&quot;</p>
+<p>他在另一条推文中描述了下一步：</p>
+<p>&quot;AutoResearch 的下一步是实现 Agent 间的异步大规模协作（想想 SETI@home 模式）。目标不是模拟一个博士生，而是模拟一个博士生研究社区。&quot;</p>
+<p>想象一下：不是一个 Agent 在一个 GPU 上跑实验，而是成千上万个 Agent 在分布式集群上协作研究，共享发现，组合创新，7×24 小时不间断。</p>
+<p>这不再是&quot;辅助工具&quot;的概念。这是AI 研究基础设施的概念。</p>
+<h2>需要冷静思考的问题</h2>
+<p>AutoResearch 令人兴奋，但也引发了严肃的讨论：</p>
+<ol>
+<li>递归自我改进的风险</li>
+</ol>
+<p>&quot;递归自我改进&quot;是 AI 安全领域最核心的担忧之一：如果 AI 能改进训练 AI 的代码，改进后的 AI 又能更好地改进代码……这个循环会不会失控？ Latent Space AI 的评论很直接：&quot;递归自我改进的火花&quot;。</p>
+<p>目前 AutoResearch 距离真正的失控还很远——评估指标是固定的，研究方向是人类定义的，Agent 不能修改自己的评判标准。但这条路的方向值得警惕。</p>
+<ol start="2">
+<li>验证集&quot;泄漏&quot;</li>
+</ol>
+<p>验证集本来是用来&quot;考试&quot;的——模型从没见过这些数据，所以考试成绩能反映真实水平。但如果你对同一套考题做了 700 次决策（每次实验都用它来判断好坏），你可能已经在间接&quot;背答案&quot;了——不是模型在背，而是你的选择过程在适应这套题。这是一个需要关注的统计学问题。</p>
+<ol start="3">
+<li>创造力的边界</li>
+</ol>
+<p>Agent 很擅长在既定框架内做优化——但框架本身是人类定义的。它可以在已知范围内做出令人惊讶的发现（比如打破某些&quot;约定俗成的最佳实践&quot;），但它不太可能提出全新的研究范式。</p>
+<p>打个比方：Agent 能在象棋规则内找到人类没想到的精妙走法，但它不会发明围棋。真正的突破性创新——比如从 RNN 到 Transformer 的范式跳跃（相当于从马车到汽车）——仍然需要人类的直觉和愿景。</p>
+<ol start="4">
+<li>人才结构的变化</li>
+</ol>
+<p>如果 CEO 可以在一夜之间完成 ML 研究员几周的工作，ML 研究这个职业会变成什么样？答案可能是：定义问题的能力比解决问题的能力更值钱了。</p>
+<h2>对普通开发者的启示</h2>
+<p>你不需要有 H100 才能从 AutoResearch 中获益。它的核心思想可以提炼为一个通用原则：</p>
+<p>把你的优化问题结构化为：一个可修改的文件 + 一个可量化的指标 + 一个时间预算，然后让 AI Agent 循环迭代。</p>
+<p>比如：</p>
+<ul>
+<li>
+<p>优化你的 API 响应时间：Agent 修改代码，跑 benchmark，保留改善</p>
+</li>
+<li>
+<p>优化你的 prompt：Agent 修改 prompt，跑测试集，保留得分更高的版本</p>
+</li>
+<li>
+<p>优化你的构建配置：Agent 修改 webpack/vite 配置，跑构建，保留更快的版本</p>
+</li>
+</ul>
+<p>关键在于约束。不是让 Agent 自由发挥，而是给它一个极其聚焦的战场。</p>
+<h2>写在最后</h2>
+<p>Karpathy 在 2025 年创造了&quot;Vibe Coding&quot;这个词。一年后，他用 AutoResearch 展示了一个更激进的可能：Vibe Researching——人类设定研究方向的&quot;氛围&quot;，AI 负责一切执行。</p>
+<p>AutoResearch 仓库只有 630 行核心代码。但它可能是 2026 年影响最深远的开源项目之一。不是因为代码本身，而是因为它证明了一件事：</p>
+<p>AI 不仅能写代码，它能做科学。</p>
+<p>也许不是完整的科学——它还不能选择研究什么问题。但在&quot;假设→实验→验证→迭代&quot;这个科学方法的核心循环上，它已经比大多数人类研究者更快、更不知疲倦、更不受偏见束缚。</p>
+<p>Karpathy 说：&quot;谁知道早期奇点可以这么有趣？&quot;</p>
+<p>也许这就是奇点的样子——不是某个戏剧性的时刻，而是一个周五晚上，有人在 GitHub 上推了 630 行代码，然后去睡觉了。醒来时，世界已经不一样了。</p>
+<p>参考资料：</p>
+<ul>
+<li>
+<p>GitHub: karpathy/autoresearch</p>
+</li>
+<li>
+<p>Karpathy 推文：AutoResearch 第一轮结果</p>
+</li>
+<li>
+<p>nanochat commit：AutoResearch Round 1 改动</p>
+</li>
+<li>
+<p>Fortune: The Karpathy Loop</p>
+</li>
+<li>
+<p>No Priors Podcast: Karpathy on AutoResearch</p>
+</li>
+<li>
+<p>SkyPilot: Scaling Autoresearch to GPU Cluster</p>
+</li>
+<li>
+<p>VentureBeat: Revolutionary Implications</p>
+</li>
+</ul></div><a class="source" href="https://x.com/PandaTalk8/status/2037317483884081443" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

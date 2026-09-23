@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="10大我希望早点知道的Claude code使用技巧">
+  <title>10大我希望早点知道的Claude code使用技巧 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">铁锤人 @lxfater · 2026-04-09</div><div class="prose"><h1>10大我希望早点知道的Claude code使用技巧</h1>
+<p>下面是我半年多，经常感叹要是早点知道就好的Claude code使用技巧。</p>
+<p>他们节约我大量的时间，让我在写代码，写内容时候进入丝滑的状态。</p>
+<p>文章分三部分：</p>
+<ul>
+<li>
+<p>三种启动方式</p>
+</li>
+<li>
+<p>运行中使用技巧</p>
+</li>
+<li>
+<p>使用配套软件解决人机协同效率问题</p>
+</li>
+</ul>
+<p>所有的这一切都是：让你更加专注于编程等手头的活动。</p>
+<p>我希望在几个月前时有人将这份教程发给我，让我少走弯路，开启丝滑：</p>
+<ul>
+<li>
+<p>保存这份指南，这周末花 30 分钟掌握 Claude code技巧。</p>
+</li>
+<li>
+<p>把它发给任何问你&quot;我觉得 Claude code难，但从来没试过&quot;的人。</p>
+</li>
+</ul>
+<p>好了，首先我们从最简单的启动开始（你没有看错，启动也有门道）</p>
+<h2>启动Claude的三种方式</h2>
+<p>简单启动</p>
+<p>启动Claude是一件十分简单的事情，简单在命令行</p>
+<p>bash
+claude</p>
+<p>但是对于不喜欢命令行工具的朋友，其实Claude code 其实是可视化界面的。</p>
+<p>如何做到呢？</p>
+<p>在这里网站：https://claude.com/download 下面Claude Desktop，按照下面步骤你就获得一个可视化的Claude。</p>
+<p><img alt="Article image" src="/assets/2026-04-09-10大我希望早点知道的claude-code使用技巧-bfcb79c519/01.jpg"></p>
+<p>这里不仅仅可以聊天，还附带了很多类似OpenClaw的功能。</p>
+<p><img alt="Article image" src="/assets/2026-04-09-10大我希望早点知道的claude-code使用技巧-bfcb79c519/02.jpg"></p>
+<p>可视化的界面对于普通人来说好用点，但是程序员更加喜欢命令行的启动方式。</p>
+<p>下面给大家介绍几个加速启动的命令。</p>
+<h2>命令行启动</h2>
+<p>在特定历史启动</p>
+<p>我们使用Claude code的过程中，经常碰到需要重启的情况，每当重启，就需要回复之前的上下文：  </p>
+<p>我之前我总是使用</p>
+<p>bash</p>
+<h1>启动</h1>
+<p>claude</p>
+<h1>恢复</h1>
+<p>/resume</p>
+<p>但是官方其实给了很不多不错的启动命令：</p>
+<h1>直接启动最近会话</h1>
+<p>claude -c</p>
+<h1>会话命名</h1>
+<p>claude -n &quot;page&quot;</p>
+<h1>直接启动特定会话</h1>
+<p>claude -r &quot;page&quot;</p>
+<h1>启动直接带提示词</h1>
+<p>claude &quot;你好&quot;</p>
+<p>这里面我高频使用的就是 cluade -c，短短的命令节约了我不少生命。</p>
+<p>-p 以自动化的方式启动</p>
+<p>Claude Code是可以以无UI的方式启动的，简单使用下面命令即可</p>
+<p>bash</p>
+<h1>以无头方式启动，特别适合自动化</h1>
+<p>claude -p &quot;分析input.cvs...&quot; --output-format json</p>
+<p>值得注意的是，现在你想使用本地的订阅Token来自动化任务，目前仅仅这种方式能做了</p>
+<p>下面是著名的 Obsidian + Claude Code 工具，就是自己做了一个SDK来这样使用本地的订阅Token。</p>
+<p><img alt="Article image" src="/assets/2026-04-09-10大我希望早点知道的claude-code使用技巧-bfcb79c519/03.jpg"></p>
+<p>我承认我前面说的可能有点复杂了，下面说说使用过程中几个简单的命令。</p>
+<h2>Claude code运行中必须知道的3个小技巧</h2>
+<p>优雅地终止和回退任务</p>
+<p>刚使用claude code的时候，大家还是喜欢使用Ctrl+C关闭当前对话，谁知道直接把Claude都关闭了。  正确的做法是按一次 Ese按键，就能来立马打断对话，避免事情恶化。</p>
+<p>假如Claude突然失智，我们就可以按两下Ese+Ese，接下面就会弹出一个列表</p>
+<p><img alt="Article image" src="/assets/2026-04-09-10大我希望早点知道的claude-code使用技巧-bfcb79c519/04.jpg"></p>
+<p>你可以使用这个功能，回到任意一个检查点，避免Claude code将代码搞乱。</p>
+<p>不离开Claude执行命令</p>
+<p>有时候我们会想自己运行一个测试命令, 但是为了不断当前Claude，不得不开启另外一个命令窗口</p>
+<p>其实我们可以使用！语法</p>
+<h1>这样子就可以不离开Claude，运行命令</h1>
+<p>!npm run lint</p>
+<h1>按下crtb+b，就可以将命令后置</h1>
+<p>再一次，这个小技巧节约我们30s的生命。</p>
+<p>上下文管理</p>
+<p>随着对话的继续，我们积累的聊天记录越多，单次消耗的token也就变多，这个时候Claude code会运行越来越冷慢。</p>
+<p>你有两个选择，新开窗口或者使用 /clear 命令</p>
+<p>一个简单的命令，清理无用的上下文，就行你一下子关闭20个chrome标签页一样。</p>
+<p>但是我不想清除这些上下文呢？使用 /compact，压缩一下。</p>
+<p>相当于让claude 喝杯红牛，提升醒脑。</p>
+<p>希望上面的一些小技巧能帮你使用Claude code更加丝滑。</p>
+<p>但这远远不够，由于Claude code是命令行工具，无论学多少命令，都是心智负担。</p>
+<p>幸运的是社群里面出了不少配套的软件来解决下面的痛点：</p>
+<ol>
+<li>
+<p>没有成熟的提示词方法论，编程效率低</p>
+</li>
+<li>
+<p>人打字比较慢，导致输入提示词效率低</p>
+</li>
+<li>
+<p>多任务过程中，人割裂开来，无法提高生产力</p>
+</li>
+</ol>
+<p>假如上面有任何一个是你的痛点，请继续看下去</p>
+<h2>使用配套软件解决人机协同问题</h2>
+<p>现在，我们慢慢发现了，人开始跟不上机器的速度了，为了社区里面出了一系列的软件来解决这个问题。</p>
+<p>首先我们需要一套成熟的编程方法论：</p>
+<p>Superpowers</p>
+<p>普通人Vibecoding的时候是没有啥章法的，想到哪就干到哪，这个Skills是一位老程序员总结的编程工作流。</p>
+<p>他把顶级软件工程最佳实践打包成一键 Skills。从需求梳理、Spec 确认、详细计划，到 TDD 测试驱动 + 自动 Code Review，全程强制结构化工作流，让 AI 像成熟工程师团队一样输出高质量、可维护代码，一次通过率大幅提升，再也不用反复救火。</p>
+<p>这个项目已经有138k Stars，具体你们去了解一下，我就不赘述了</p>
+<p><img alt="Article image" src="/assets/2026-04-09-10大我希望早点知道的claude-code使用技巧-bfcb79c519/05.jpg"></p>
+<p>当你有一套成熟的编程Skills后，你会发现，他需要你频繁输入信息，这个时候你就发现打字速度成为你效率瓶颈。</p>
+<p>你在想，有没有什么在办公室悄悄说话，就能转文字，中英文识别特别准的软件呢？</p>
+<p>有的，有的，而且有很多，但是我只推荐两个，typeless和豆包输入法</p>
+<p>语音输入软件</p>
+<p>豆包输入法的优点就是，快，然后中英文识别还不错，最重要是免费。有点像安卓系统，我也在用。</p>
+<p>但typeless，除了需要付费外，没有太多缺点了，但能试用了（好像是我的）。</p>
+<p><img alt="Article image" src="/assets/2026-04-09-10大我希望早点知道的claude-code使用技巧-bfcb79c519/06.jpg"></p>
+<p>我下面都放出链接来，你们自己</p>
+<p>typeless以贩养吸我推荐：https://www.typeless.com/?via=lxfater</p>
+<p>豆包输入法还在测试阶段，你们搜索就能找到安装包。</p>
+<p>一旦开始口喷输入后，我们就能提供更多上下文给Claude code，一次通过率将会越来越来高，这一个时候效率的瓶颈就在Claude code的运行时间了。</p>
+<p>我们可以同时运用多个Claude code实例，这个时候，我们的瓶颈就是人类多任务切换丢失上下文的问题。</p>
+<p>解决你的注意力切换问题</p>
+<p>首先我推荐一个软件叫做Cmux：</p>
+<p>它基于 Ghostty 全新打造的 macOS 原生终端，专为同时跑多个 coding agent 而生：垂直标签 + 智能侧边栏、灵活分屏、智能通知高亮、浏览器内置分屏 + Socket API。</p>
+<p>这是个开源项目：https://github.com/manaflow-ai/cmux 大家可以点赞一个</p>
+<p><img alt="Article image" src="/assets/2026-04-09-10大我希望早点知道的claude-code使用技巧-bfcb79c519/07.jpg"></p>
+<p>我最喜欢就是分屏功能，但是一旦分屏后，就会出现不知道是哪个窗口完成任务。</p>
+<p>幸运的是，这个软件会直接高亮某个终端区域，帮助你及时切换到对应窗口。</p>
+<p>官网的图哈</p>
+<p><img alt="Article image" src="/assets/2026-04-09-10大我希望早点知道的claude-code使用技巧-bfcb79c519/08.jpg"></p>
+<p>但是我现在介绍的下个软件会将这种切换变得务必丝滑：</p>
+<p>这个就是最近比较火的产品，叫做Vibe Island，先给大家看看效果：</p>
+<p>UI是不是很好看，但这个产品最牛逼的地方是支持很多不同工具之间的切换</p>
+<p>The media could not be played.
+Reload</p>
+<p>而且每次切换会自动唤起，所在APP的窗口并聚焦，然后直接输入就行。</p>
+<p>理论上只要你切换得够快，窗口开的够多，他就会源源不断将需要处理的窗口推送到你的面前。  你有种在处理流水线的感觉。</p>
+<p>目前有2天试用时间，用这链接有8.5折优惠：https://vibeisland.app/buy/lxfater</p>
+<h2>最后</h2>
+<p>希望这次的内容对你有帮助，本次比较新手向，其实对于程序员来说算是常识。</p>
+<p>不过还是希望能帮助到你，如果你感觉这篇内容对你有帮助</p>
+<p>请点赞，转发一键三连，为了感谢👇</p>
+<p>我有个公众号，分享干货，里面还有社群，欢迎关注</p>
+<p><img alt="Article image" src="/assets/2026-04-09-10大我希望早点知道的claude-code使用技巧-bfcb79c519/09.jpg"></p></div><a class="source" href="https://x.com/lxfater/status/2041448785516343592" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

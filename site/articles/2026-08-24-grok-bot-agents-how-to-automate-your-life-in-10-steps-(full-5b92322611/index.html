@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Grok Bot Agents: how to automate your life in 10 Steps (Full-tutorial)">
+  <title>Grok Bot Agents: how to automate your life in 10 Steps (Full-tutorial) · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Codez @0xCodez · 2026-08-24</div><div class="prose"><h1>Grok Bot Agents: how to automate your life in 10 Steps (Full-tutorial)</h1>
+<p>Every AI tool you have used so far waits for you. You open it, you ask, it answers, you close it. The work still happens in your hands - the model just talks you through it.</p>
+<p>Follow my Substack to get fresh AI alpha: movez.substack.com</p>
+<p>Grok Bot inverts that. Each bot gets its own computer in the cloud. It signs into the tools you already use, clicks through them the way you would, and keeps going after you shut the lid.</p>
+<p>![Article image](/assets/2026-08-24-grok-bot-agents-how-to-automate-your-life-in-10-steps-(full-5b92322611/01.png)</p>
+<p>Which means you stop prompting and start delegating. You stop building workflows and start describing a job in a sentence.</p>
+<p>This is the 10-step tutorial from installing it to running a crew of specialists that hand work to each other -  and pull you in only for the calls that need a human.</p>
+<h2>01. Install it, then meet the Chief</h2>
+<p>Grok Bot is a desktop app, not a browser tab - that is the first signal about what it is.</p>
+<p>You download it for macOS, sign in with your Grok or Cursor account, and land in something that looks much more like a messaging client than a chatbot: a sidebar of named bots on the left, a conversation on the right.</p>
+<p>Your starting point is usually a general-purpose bot - call it the Chief.</p>
+<p>![Article image](/assets/2026-08-24-grok-bot-agents-how-to-automate-your-life-in-10-steps-(full-5b92322611/02.jpg)</p>
+<p>Its job is not to do everything. Its job is to be the one you talk to when you do not yet know which specialist should own a task, and later, to coordinate the others. Think of it as the person you message when you are not sure who to message.</p>
+<p>Say hello and give it something small and real. Not a test question - an actual errand with a checkable result.</p>
+<p>![Article image](/assets/2026-08-24-grok-bot-agents-how-to-automate-your-life-in-10-steps-(full-5b92322611/03.png)</p>
+<p>The first task should be something you can verify in thirty seconds, because the whole point of the next nine steps is learning to trust the thing with progressively bigger jobs.</p>
+<h2>02. Give it a job title, not a prompt</h2>
+<p>This is the step that separates people who get value from Grok Bot from people who bounce off it. A prompt is a request.</p>
+<p>A bot is a role - it persists, accumulates memory, owns a domain, and gets better at that domain specifically because you keep coming back to the same thread.</p>
+<p>The media could not be played.
+Reload</p>
+<p>So name it after a job someone could actually hold.</p>
+<ul>
+<li>Inbox Manager. Expense Manager. Talent Scout.  Sales Outbound.</li>
+</ul>
+<p>Then write its charter the way you would brief a new hire on day one: what it owns, what good looks like, and - the part everyone skips = what it must never do without asking you.</p>
+<p>That last boundary is not paperwork. It is the thing that lets you leave the bot running unattended, because you have defined in advance where its authority stops.</p>
+<p>python
+The charter prompt — adapt and reuse
+You are my Inbox Manager.</p>
+<p>// what you own
+Triage my email every morning. Archive newsletters and receipts.
+Draft replies to anything a client sends. Surface anything
+that mentions a deadline, an invoice, or a legal question.</p>
+<p>// what good looks like
+Inbox at zero by 9am. Drafts sound like me: short, direct,
+no &quot;I hope this finds you well&quot;. Never more than 4 sentences.</p>
+<p>// where you stop
+Never send anything. Draft only.
+Never archive anything from my accountant or my landlord.
+If a message asks for money or credentials, stop and ask me.</p>
+<p>A bot with its own computer and your logins is a bot that can act while you are asleep.</p>
+<p>Defining where it stops is not caution for its own sake - it is what makes the always-on part usable. Bots that have to ask about everything are useless; bots that never ask are dangerous. The charter is where you draw that line once instead of worrying about it daily.</p>
+<h2>03. Connect the tools once</h2>
+<p>Grok Bot ships a plugin panel for the integrations it expects you to lean on:</p>
+<p>![Article image](/assets/2026-08-24-grok-bot-agents-how-to-automate-your-life-in-10-steps-(full-5b92322611/04.jpg)</p>
+<p>Notion, Slack, Google Drive, AWS Agents, AWS SageMaker, Browserbase, Composio, and Context7, plus an option to build a custom one. These are one-click connections.</p>
+<p>The detail worth knowing is that connections are shared across your account. Connect Gmail or GitHub once for one bot, and every other bot you create can use that same connection.</p>
+<p>![Article image](/assets/2026-08-24-grok-bot-agents-how-to-automate-your-life-in-10-steps-(full-5b92322611/05.jpg)</p>
+<p>So do this deliberately and early - it is account-level plumbing, not per-bot setup, and it means the fifth bot you hire is productive in seconds rather than minutes.</p>
+<p>It also means the blast radius of a connection is every bot you will ever create, which is a good reason to connect the accounts you actually need and leave the rest alone during a beta.</p>
+<h2>04. Hand off the login, don’t paste the password</h2>
+<p>Here is the mechanic that makes the whole product work on tools with no API and no MCP server - which is most of the software inside a real company.</p>
+<p>The bot navigates on its own cloud browser until it hits a login wall. Then it hands you the screen.</p>
+<p>![Article image](/assets/2026-08-24-grok-bot-agents-how-to-automate-your-life-in-10-steps-(full-5b92322611/06.png)</p>
+<p>You authenticate, click done, and the bot resumes on that same browser instance from where it left off.</p>
+<p>The same handoff pattern applies whether you are connecting Notion, Gmail, or some internal tool nobody has ever integrated with anything.</p>
+<p>Watch what this does to the trust model. You never type a credential into a chat message. The bot gets a session, not a secret - and you stayed in the loop for exactly the sensitive part.</p>
+<p>![Article image](/assets/2026-08-24-grok-bot-agents-how-to-automate-your-life-in-10-steps-(full-5b92322611/07.png)</p>
+<p>This is the pattern to insist on: if a tool ever asks you to paste a password into a conversation, that is the wrong path.</p>
+<h2>05. Show it once, don’t explain it twice</h2>
+<p>This is the feature that changes how you think about the product.</p>
+<p>You can teach a bot a workflow by doing it once while it watches. It saves the routine and can then run the same steps on its own next time.</p>
+<p>![Article image](/assets/2026-08-24-grok-bot-agents-how-to-automate-your-life-in-10-steps-(full-5b92322611/08.jpg)</p>
+<p>Why this matters more than it sounds: the tasks that eat your week are usually the ones that are tedious to describe and trivial to demonstrate. </p>
+<p>“Take the numbers from this dashboard, cross-reference the ones that dropped, paste them in this doc under the right heading, and Slack the team lead if anything fell more than 15%” is a paragraph to write and forty seconds to show.</p>
+<p>Pick your first recording carefully. The best candidate is something you do at least weekly, that involves two or more tools, and where the steps rarely change.</p>
+<p>![Article image](/assets/2026-08-24-grok-bot-agents-how-to-automate-your-life-in-10-steps-(full-5b92322611/09.png)</p>
+<p>Recurring, multi-tool, stable. Anything that fits all three is a routine waiting to be lifted off your plate.</p>
+<p>And the bots reportedly get sharper the more you work with them - they remember conversations and learn how you like things handled.</p>
+<p>SpaceXAI’s own claim is that bots eventually start working before you ask. Treat that as a direction of travel rather than a promise you should plan around during a beta.</p>
+<h2>06. Turn it into a routine that runs without you</h2>
+<p>A saved routine still needs a reason to fire. Grok Bot gives you two, and you set them conversationally - no workflow builder, no canvas of nodes. In hands-on walkthroughs, setting up a trigger-based routine took roughly two minutes and a single prompt.</p>
+<p>![Article image](/assets/2026-08-24-grok-bot-agents-how-to-automate-your-life-in-10-steps-(full-5b92322611/10.png)</p>
+<p>Schedule is the obvious one: a 7am daily briefing, a Friday pipeline summary, month-end expense filing.</p>
+<p>Trigger is the more interesting one: a new Slack message, an inbound email matching a pattern, a change in a document. Triggers are what make a bot feel present rather than punctual.</p>
+<p>The instruction is just a sentence at the end of a task you already like. That is the whole design philosophy of this product in one gesture - you do not build the automation, you approve the one that just happened and ask for it again.</p>
+<p>python
+// schedule — the morning brief
+Every weekday at 7am, check my calendar, my inbox, and the</p>
+<h1>launches Slack channel. Give me one short brief: what&#x27;s on</h1>
+<p>today, what needs a reply, what changed overnight.</p>
+<p>// trigger — the inbound catcher
+Whenever an email arrives from a domain not in my contacts and
+it mentions pricing, draft a reply from the template and park it.</p>
+<p>// schedule — the weekly close
+Every Friday at 4pm, pull the week&#x27;s receipts from my inbox,
+file them, and tell me anything that has no matching invoice.</p>
+<p>// the shortcut that creates most routines
+Run this every week.
+   ^ said right after a task you liked. That&#x27;s the whole flow.</p>
+<h2>07. Hire specialists, not one generalist</h2>
+<p>You can run multiple bots in parallel, each handling a different area - and this is where the product stops resembling anything you have used before.</p>
+<p>![Article image](/assets/2026-08-24-grok-bot-agents-how-to-automate-your-life-in-10-steps-(full-5b92322611/11.png)</p>
+<p>Separate bots mean separate memory, separate context, and separate accountability.</p>
+<ul>
+<li>
+<p>An Expense Manager that only ever thinks about receipts gets genuinely good at your receipts.</p>
+</li>
+<li>
+<p>A generalist juggling expenses, recruiting, and outbound is worse at all three and gives you no clean thread to look at when something goes wrong.</p>
+</li>
+</ul>
+<p>SpaceXAI says its own teams run bots for sales outreach, marketing, office operations, and bug fixes. A workable starting roster for one person looks like this = and note that the right split is by domain, not by task size.</p>
+<h2>08. Put them in a group chat</h2>
+<p>Bots can message each other and share context in threads. Put several in a group chat and they coordinate on their own - passing work, assigning ownership, and pulling you in only for judgment calls.</p>
+<p>![Article image](/assets/2026-08-24-grok-bot-agents-how-to-automate-your-life-in-10-steps-(full-5b92322611/12.png)</p>
+<p>When projects overlap, they stay aligned on the same account without you copy-pasting notes between conversations.</p>
+<p>SpaceXAI’s own example is an engineering bot that reproduces a bug, files a ticket, and hands the issue to a second bot to debug.</p>
+<p>That handoff - one bot deciding another is better suited and passing ownership - is the thing that does not exist in any tool you have used before.</p>
+<p>![Article image](/assets/2026-08-24-grok-bot-agents-how-to-automate-your-life-in-10-steps-(full-5b92322611/13.png)</p>
+<p>The way to make it work is to give the group an objective, not a task list.</p>
+<p>A task list means you already did the decomposition, and the bots are just executing your plan. An objective lets them split it, which is the entire point of having more than one.</p>
+<h2>09. Draw the approval line</h2>
+<p>Grok Bot’s whole premise is that a bot finishes jobs end to end and comes back only when something needs your approval.</p>
+<p>Which puts the burden on you to define what “needs approval” means - because the default answer the bot picks may not match yours.</p>
+<p>![Article image](/assets/2026-08-24-grok-bot-agents-how-to-automate-your-life-in-10-steps-(full-5b92322611/14.png)</p>
+<p>The line that works is not about task size. It is about reversibility. Anything the bot can undo - drafting, filing, tagging, summarizing, researching, preparing - it should finish alone.</p>
+<p>Anything the outside world sees, or that moves money, or that cannot be taken back, gets parked for you.</p>
+<p>python
+// finish these alone, always
+draft · file · tag · summarize · research · prepare · reconcile
+   everything reversible. don&#x27;t ask, just do it and log it.</p>
+<p>// park these for me, always
+send anything to a person outside the company
+spend or move money, or commit to a price
+publish anything public
+delete anything that isn&#x27;t obvious junk
+sign up for, agree to, or accept any terms</p>
+<p>// when unsure
+If you can&#x27;t undo it in under a minute, park it and ask.</p>
+<p>Notice how that maps onto the Sales Outbound example: 36 drafts queued, 0 sent. The bot did every reversible thing and stopped precisely at the irreversible one. That is the shape to aim for on every bot you run.</p>
+<h2>10. Review weekly, prune ruthlessly</h2>
+<p>Automation rots quietly. A site changes its layout, a routine starts silently producing garbage, and because the bot runs while you sleep, nobody notices for three weeks.</p>
+<p>![Article image](/assets/2026-08-24-grok-bot-agents-how-to-automate-your-life-in-10-steps-(full-5b92322611/15.jpg)</p>
+<p>This is the failure mode of every always-on system ever built, and it will find you here too.</p>
+<p>So put fifteen minutes on the calendar. For each routine, ask three questions: did it run, was the output actually right, and would I miss it if I killed it?</p>
+<p>That third one matters more than it looks - the natural drift of a tool like this is toward a pile of half-useful automations nobody has the nerve to delete.</p>
+<p>python
+List every routine you ran this week. For each one:</p>
+<ul>
+<li>how many times it fired</li>
+<li>what it produced</li>
+<li>anything it skipped, failed, or had to guess at</li>
+<li>anything you parked for me that I never answered</li>
+</ul>
+<p>Then tell me which one you think is least useful, and why.</p>
+<p>The best way to run the review is to ask the bots for it. They keep the threads; they can report on themselves. Then spot-check one output per routine by hand, because a bot reporting on its own work has the same blind spot you do.</p>
+<h2>Conclusion:</h2>
+<p>You stop being the one, who does the clicking.</p>
+<p>Every AI product until now put the model in a window and left the work in your hands. Grok Bot moves the work. The bot has the computer, the logins, the memory, and the time - and you have the decisions.</p>
+<p>That is a smaller change in technology than it sounds and a much bigger change in habit.</p>
+<p>The skill stops being how do I phrase this and becomes what exactly am I delegating, and where does its authority end. Which is a management question, not a prompting</p></div><a class="source" href="https://x.com/0xCodez/status/2089676836619878567" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

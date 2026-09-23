@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Anthropic内部分享：别再造Agent了，造Skills就够了">
+  <title>Anthropic内部分享：别再造Agent了，造Skills就够了 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Jason Zhu @GoSailGlobal · 2026-04-04</div><div class="prose"><h1>Anthropic内部分享：别再造Agent了，造Skills就够了</h1>
+<p>Anthropic 的 Barry 和 Mahesh 3个月前就做了一场内部分享，核心观点只有一句：别再给每个场景造一个新 Agent，给现有 Agent 装上 Skills 就行了</p>
+<p>这个判断背后有一套完整的逻辑链，从 Claude Code 的实战经验到 Skills 生态的 5 周数据，再到他们对 Agent 架构终局的预判。值得拆开看看</p>
+<p><img alt="Article image" src="/assets/2026-04-04-anthropic内部分享：别再造agent了，造skills就够了-d1b831b21c/01.jpg"></p>
+<h2>代码是通用接口，但光有智商不够</h2>
+<p>他们团队之前的假设是：不同领域的 Agent 长得完全不一样，每个都需要独立的工具链和脚手架。做了 Claude Code 之后发现这个假设是错的</p>
+<p>Claude Code 本质上是一个通用 Agent。生成财务报告？调 API 拉数据，用文件系统整理，跑 Python 分析，再输出成文档格式。所有这些操作的底层都是代码。核心脚手架可以薄到只剩 bash 和文件系统</p>
+<p>但问题来了。他们用了一个很精准的类比：你报税的时候，选 300 IQ 的数学天才 Mahesh，还是选经验丰富的税务专家 Barry？答案是 Barry。没人希望 Mahesh 从第一性原理推导 2025 年税法</p>
+<p>现在的 Agent 都像 Mahesh。极其聪明，但缺乏专业经验。给够引导能做出惊艳的事，但前期缺少关键上下文，也不会从历史任务中学习</p>
+<p><img alt="Article image" src="/assets/2026-04-04-anthropic内部分享：别再造agent了，造skills就够了-d1b831b21c/02.jpg"></p>
+<h2>Skills 就是文件夹，这个简单是故意的</h2>
+<p>Agent Skills 的定义：打包了可组合程序性知识的文件集合。说白了就是文件夹</p>
+<p>这个极简设计是刻意的。任何人，不管是人还是 Agent，只要有一台电脑就能创建和使用 Skills。可以用 Git 管版本，丢 Google Drive 共享，打 zip 发给团队</p>
+<p>Skills 里还能放脚本当工具用。传统 MCP 工具有几个硬伤：指令写得模糊的时候模型会犯迷糊，模型没法修改工具本身，而且工具永远占用上下文窗口。脚本解决了这些问题，代码本身就是文档，可以被修改，需要时才从文件系统加载</p>
+<p>他们举了一个实际例子：Claude 反复写同一段给幻灯片加样式的 Python 脚本。干脆让 Claude 把脚本存进 Skill 目录，以后直接调用。一致性和效率立刻上来了</p>
+<p><img alt="Article image" src="/assets/2026-04-04-anthropic内部分享：别再造agent了，造skills就够了-d1b831b21c/03.jpg"></p>
+<h2>渐进式加载：保护上下文窗口</h2>
+<p>一个 Agent 可能装几百个 Skills，全塞进上下文窗口不现实。解决方案是渐进式加载（Progressive Disclosure）</p>
+<p>运行时只给模型看每个 Skill 的元数据（名字和简要描述）。当 Agent 决定要用某个 Skill，再读取完整的 skill.md 指令文件。其他参考资料和脚本按需访问</p>
+<p>这意味着 Skills 的数量可以无限扩展，而不会挤爆上下文</p>
+<p><img alt="Article image" src="/assets/2026-04-04-anthropic内部分享：别再造agent了，造skills就够了-d1b831b21c/04.jpg"></p>
+<h2>5 周长出了一个生态</h2>
+<p>Skills 上线 5 周，生态增长速度超出预期。分成三类：</p>
+<p>基础能力型：给 Agent 新的通用能力。Anthropic 自己做了文档处理 Skills，让 Claude 能创建和编辑专业级 Office 文档。Cadence 做了科研 Skills，让 Claude 能做 EHR 数据分析和生物信息学</p>
+<p>产品集成型：让 Claude 更好地使用第三方产品。BrowserBase 做了 StageHand 技能，让 Claude 能自动化浏览器操作。Notion 做了一组 Skills 帮 Claude 深入理解用户的 Notion 工作区</p>
+<p>企业内部型：这一类增长最快。大企业用 Skills 把组织最佳实践和内部软件的使用方法教给 Agent。有些开发者效率团队服务上万开发者，用 Skills 统一代码风格和工程规范</p>
+<p>最让他们兴奋的趋势：非技术人员也在建 Skills。财务、招聘、法务、会计，这些人不写代码，但能用 Skills 把通用 Agent 变成自己的专属工具</p>
+<p><img alt="Article image" src="/assets/2026-04-04-anthropic内部分享：别再造agent了，造skills就够了-d1b831b21c/05.jpg"></p>
+<h2>Skills + MCP = 专业知识 + 外部连接</h2>
+<p>一个有意思的发现：Skills 生态和 MCP 生态不是竞争关系，而是互补</p>
+<p>开发者在建 Skills 的时候经常编排多个 MCP 工具，把它们串成更复杂的工作流。MCP 提供与外部世界的连接（API、数据库、第三方服务），Skills 提供在这些连接之上的专业知识</p>
+<p>整个架构正在收敛成一个清晰的模式：Agent 循环管理上下文 + 运行时环境提供文件系统和代码执行能力 + MCP 服务器连接外部数据 + Skills 库按需加载专业能力</p>
+<p>给一个 Agent 扩展到新领域，可能只需要配一组 MCP 服务器和一套 Skills。Anthropic 自己在 Skills 上线后立刻推出了金融服务和生命科学两个垂直方案，用的就是这个模式</p>
+<h2>下一步：像对待软件一样对待 Skills</h2>
+<p>随着 Skills 变得越来越复杂（从简单的 markdown 文件到包含可执行文件、脚本、资产的完整包），他们在思考几个方向：</p>
+<p>测试和评估：确保 Agent 在正确的时机加载正确的 Skill，并且输出质量达标</p>
+<p>版本管理：Skill 演变带来的 Agent 行为变化需要清晰追踪</p>
+<p>依赖声明：Skills 之间可以互相引用，也能声明对 MCP 服务器和环境包的依赖。这会让 Agent 在不同运行环境中的行为更可预测</p>
+<p><img alt="Article image" src="/assets/2026-04-04-anthropic内部分享：别再造agent了，造skills就够了-d1b831b21c/06.jpg"></p>
+<h2>处理器、操作系统、应用</h2>
+<p>他们用了一个漂亮的类比收尾</p>
+<p>模型就像处理器。需要巨额投资，蕴含巨大潜力，但单独拿出来用处有限</p>
+<p>Agent Runtime 就像操作系统。它编排处理器周围的进程、资源和数据，让处理器变得更有价值。现在所有人都在尝试构建最高效的抽象层，把正确的 token 送进送出模型</p>
+<p>Skills 就像应用。少数公司造处理器和操作系统，但全世界数百万开发者造软件。软件编码了领域专业知识和独特视角。Skills 要打开的正是这一层</p>
+<p>当 Claude 自己开始创建 Skills 的时候，这个系统会真正转起来。Skills 的标准化格式保证了一个重要特性：Claude 今天写下的任何东西，未来的 Claude 都能高效复用。在持续使用中，Skills 让&quot;记忆&quot;变得具体且可迁移</p>
+<p>他们的目标是，和你一起工作 30 天后的 Claude，要比第一天的 Claude 强得多。这不是靠模型升级，而是靠知识积累</p></div><a class="source" href="https://x.com/GoSailGlobal/status/2039954813795074280" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

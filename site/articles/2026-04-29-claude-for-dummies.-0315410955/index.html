@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Claude For Dummies.">
+  <title>Claude For Dummies. · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Ruben Hassid @rubenhassid · 2026-04-29</div><div class="prose"><h1>Claude For Dummies.</h1>
+<p>98.75% of all humans have never tried Claude.</p>
+<p>Not even once.</p>
+<p>This free guide solves this gap. Claude For Dummies.</p>
+<p>Skip this if you know Claude and have tried it. For the “pros”, I added a very last section “How pros use Claude”, at the end.</p>
+<p>You never tried Claude because you either:</p>
+<ul>
+<li>
+<p>Don’t really use AI.</p>
+</li>
+<li>
+<p>Or you just use ChatGPT.</p>
+</li>
+<li>
+<p>Or worst (!!!), you only use the FREE ChatGPT.</p>
+</li>
+</ul>
+<p>This guide is the easiest way to get started with Claude.</p>
+<p>I will assume you don’t know how to use AI. And by the end of this (very long) guide, you will know more than 98.75% of the world.</p>
+<p>Sounds like a good deal? Cool.</p>
+<p>Two things before we start:</p>
+<ul>
+<li>
+<p>Save this guide. Block 10 min this week &amp; try Claude for the first time.</p>
+</li>
+<li>
+<p>Send it to anyone who has never tried Claude (&amp; still thinks it’s a guy’s name).</p>
+</li>
+</ul>
+<h1>1. What is Claude?</h1>
+<p>Claude is an AI you talk to.</p>
+<p>You type something, it types back. It can write, think, summarize, analyze documents, work with your files, and help you make decisions.</p>
+<p>You type something you need. You select the model at the bottom right. They just announced the new Claude Opus 4.7 by the way.</p>
+<p><img alt="Article image" src="/assets/2026-04-29-claude-for-dummies.-0315410955/01.jpg"></p>
+<p>It created an entire Excel, with 12 (!!!) tabs, real formulas, everything. And you can preview the Excel right inside your Claude chat. So good.</p>
+<p><img alt="Article image" src="/assets/2026-04-29-claude-for-dummies.-0315410955/02.jpg"></p>
+<p>It’s made by a company called Anthropic.</p>
+<p>If you’ve used ChatGPT before, Claude is the same kind of thing. If you’ve never used any AI, Claude is a great place to start.</p>
+<h1>How it actually works (in 30 seconds)</h1>
+<p>You don’t need to understand the engineering.</p>
+<p>But 3 concepts will save you from the most common beginner frustrations.</p>
+<h2>1 - Auto-complete at scale.</h2>
+<p>Claude predicts the next word, billions of times per response.</p>
+<p>That’s how all AI assistants like this work. It’s pattern-matching at a speed that feels like thinking, but it’s not thinking the way you do.</p>
+<p>This is why Claude sounds confident even when it’s wrong.</p>
+<p>Auto-complete is like when Google or your phone predicts the next word.</p>
+<p><img alt="Article image" src="/assets/2026-04-29-claude-for-dummies.-0315410955/03.jpg"></p>
+<h2>2 - Sycophancy.</h2>
+<p>Claude is trained to be helpful and agree with you (= sycophancy).</p>
+<p>Side effect: if you say something false, Claude might nod along instead of correcting you. Don’t trust agreement. You are the one deciding directions.</p>
+<p>Claude repeating “You’re absolutely right” even became a meme.</p>
+<p><img alt="Article image" src="/assets/2026-04-29-claude-for-dummies.-0315410955/04.jpg"></p>
+<h2>3 - Tokens.</h2>
+<p>Claude reads and writes in chunks called tokens.</p>
+<p>A token is roughly a word. Every conversation has a limit on how many tokens fit. This is why long conversations eventually becomes too much: the memory fills up.</p>
+<p>The simplest way to explain a token is that it’s roughly one word.</p>
+<p><img alt="Article image" src="/assets/2026-04-29-claude-for-dummies.-0315410955/05.jpg"></p>
+<p>★ Remember. Claude is an auto-complete machine at superhuman scale. It sounds sure of itself because it’s made to agree with you. It uses tokens to understand you and memorize your conversation (until it can’t anymore).</p>
+<h1>2. Claude vs. ChatGPT</h1>
+<p>Everyone’s heard of ChatGPT, even people who don’t use it.</p>
+<p>So let’s take it as the reference point.</p>
+<p>Claude and ChatGPT are the same species. You talk to both of them the same way. You can ask both of them the same questions. But they have different personalities and strengths (and trainings).</p>
+<p>Here’s what’s actually different:</p>
+<ul>
+<li>
+<p>Writing voice. Claude’s default writing is less AI-flavored than ChatGPT’s. If you’ve ever noticed ChatGPT sounding like a corporate memo nobody asked for, you’ll notice Claude does it better.</p>
+</li>
+<li>
+<p>Long documents. Claude can read a 200-page document in one go without losing track. ChatGPT has been catching up, but Claude still wins here.</p>
+</li>
+<li>
+<p>File work. Claude’s desktop app can see your local folder (from your computer) and work with your files directly. ChatGPT can’t (yet 👀).</p>
+</li>
+<li>
+<p>Multi-step jobs. Claude has a mode called Cowork (we’ll get there in section 8) that runs tasks for minutes to hours. ChatGPT has agents. But they don’t match Cowork’s scope yet, and they are too technical. Cowork is simple.</p>
+</li>
+</ul>
+<p>And here’s where ChatGPT still wins:</p>
+<ul>
+<li>
+<p>Voice mode. ChatGPT’s voice experience is infinitely better right now.</p>
+</li>
+<li>
+<p>Image generation. Use ChatGPT or Gemini. Claude doesn’t generate images.</p>
+</li>
+<li>
+<p>Search. ChatGPT with search feels faster than Claude with search.</p>
+</li>
+<li>
+<p>Research. The extended-thinking version of ChatGPT is better suited for research. Pros search with ChatGPT + Grok → and give the results to Claude.</p>
+</li>
+<li>
+<p>Multilangual. ChatGPT is better than Claude. But Gemini is probably even better. It depends heavily on the needed language. I assume English here.</p>
+</li>
+</ul>
+<p>✓ Tip. You don’t have to pick one. Most people I know use both for different jobs. Claude for writing and long work. ChatGPT for voice, images, and quick search. Grok and ChatGPT for extended research. Gemini for images.</p>
+<p>Bottom line:</p>
+<p>1 - Both AIs are average by default. What you feed them matters more than which one you pick. Your taste, your examples, your context. How to use them.</p>
+<p>2 - Both AIs are infinitely better when you pay for them. And I am (obviously) not paid to say that. Free models are not smart enough &amp; have too many limitations.</p>
+<h1>3. How to get Claude (and what it costs)</h1>
+<p>Go to claude.ai. Sign up with your email.</p>
+<p>Three plans exist:</p>
+<p>Free. Works in the browser. Limited messages per day. No Cowork. Good for 2 weeks of testing to decide if Claude is for you.</p>
+<p>Pro ($20 per month). Best model (called Opus), more usage, Cowork, Claude Code, Projects. Same price as ChatGPT Plus. This is where most people land.</p>
+<p>Max ($100 or $200 per month). Heavy usage of everything. For people who hit Pro’s ceiling week after week. I pay $100 and use it every day without any problem.</p>
+<p>Team and Enterprise plans exist too. If your team has over 500+ employees and needs help to set up Claude for the entire org, send me ‘TEAM’ on Linkedin.</p>
+<p>My rule for picking:</p>
+<ul>
+<li>
+<p>Free if you’re still deciding.</p>
+</li>
+<li>
+<p>Pro if you plan to use Claude more than 3 times a week.</p>
+</li>
+<li>
+<p>Max if Pro keeps running out, or you’re running Cowork on long tasks daily.</p>
+</li>
+</ul>
+<p>✓ Tip. Pay monthly, not annually. Test for 30 days. If you don’t reach for Claude by week 3, cancel. You’ve lost $20, not $240.</p>
+<p>That’s what the pricing table looks like. The link: https://claude.com/pricing.</p>
+<p><img alt="Article image" src="/assets/2026-04-29-claude-for-dummies.-0315410955/06.jpg"></p>
+<p>That’s what the pricing table looks like. The link: https://claude.com/pricing.📷</p>
+<h1>4. The Three Claudes</h1>
+<p>This is where most beginners get lost.</p>
+<p>“Claude” shows up in several places. 3 of them matter.</p>
+<p>The rest you can ignore (for now), but subscribe so you don&#x27;t miss the next guide!</p>
+<h2>#1. Browser Claude (claude.ai)</h2>
+<p>You type, you get an answer.</p>
+<p>Works on the free plan. Best for quick drafts, summaries, thinking out loud. This is the closest experience to ChatGPT. If you’re brand new, start here.</p>
+<p>It’s the classic chatbot experience. Works also in the browser (like Google Chrome). But the best Claude is on their app, not your browser.</p>
+<p><img alt="Article image" src="/assets/2026-04-29-claude-for-dummies.-0315410955/07.jpg"></p>
+<h2>#2. Desktop Claude (Mac or Windows app)</h2>
+<p>Same account as the browser, but installed on your computer. Why it matters: it can see your local files, and you unlock the three modes: Chat, Cowork, and Code.</p>
+<p>We are still in Chat mode, but this time on the Claude app (desktop). Pro trick: you have the menu selection with the top left button.</p>
+<p><img alt="Article image" src="/assets/2026-04-29-claude-for-dummies.-0315410955/08.jpg"></p>
+<h2>#3. Cowork (inside the desktop app)</h2>
+<p>Claude Cowork is the next level of AI.</p>
+<p>It’s the best thing to happen to AI since ChatGPT.</p>
+<p>It does real work for minutes to hours while you do something else. You give it a task, it plans the steps, reads your files, writes outputs, and asks you questions along the way. Paid plans only and desktop only.</p>
+<p>Top left menu → Choose Cowork → Pick a folder so it delivers anything you want inside (presentations, PDF, docx, excels, websites… sky is the limit!).</p>
+<p><img alt="Article image" src="/assets/2026-04-29-claude-for-dummies.-0315410955/09.jpg"></p>
+<p>Top left menu → Choose Cowork → Pick a folder so it delivers anything you want inside (presentations, PDF, docx, excels, websites… sky is the limit!).📷</p>
+<p>★ Remember. Browser = ask. Desktop = ask + access to your files. Cowork = ask + access + do the work while you get coffee. Cowork is the real magic.</p>
+<p>Other surfaces exist too: the mobile app, Claude in Chrome (a browsing agent), Claude in Excel. They are (sometimes) useful once you know the basics. Not where you start.</p>
+<h1>5. How to talk to Claude</h1>
+<p>If you’ve never typed a prompt before, this section is for you. Five rules.</p>
+<p>a prompt is the text query you send to an AI, like:“what’s the capital of France?”, or any text really.</p>
+<h2>Rule 1: be specific</h2>
+<p>“Write me an email” is vague. Claude will give you something generic.</p>
+<p>“Write a follow-up email to a client named Sarah who missed our Tuesday call. Tone: friendly but firm. 4 sentences max.” That gets you something you can actually send.</p>
+<p>The more specific your input, the more specific the output.</p>
+<h2>Rule 2: give examples</h2>
+<p>This is the single best thing you can do. Paste something you wrote that you liked. Tell Claude: “write like this.”</p>
+<p>Claude learns fast from examples. Faster than from instructions.</p>
+<h2>Rule 3: say what you want, not what you don’t want</h2>
+<p>“Don’t make it too formal” is weaker than “write it like a text to a colleague.”</p>
+<p>Tell Claude what TO do. It’s always more effective than telling it what to avoid.</p>
+<p>The pro do both: what we love and what we hate, especially if Claude does it all of the time. For eg, I hate certain writing styles from Claude, so I tell him I hate it.</p>
+<h2>Rule 4: start short, add detail</h2>
+<p>Don’t write a 500-word prompt on your first try.</p>
+<p>Start with 2 sentences. See what comes back. Then add: “make it shorter,” “change the tone,” “add a section about X.”</p>
+<p>Building up is easier than getting it right in one shot.</p>
+<p>That’s why it’s a chatbot - you need to chat with it.</p>
+<h2>Rule 5: if it gets confused, start a new chat</h2>
+<p>Long conversations get messy. Claude’s memory (the context window) fills up.</p>
+<p>When responses start feeling off, open a fresh chat and paste in the key context.</p>
+<p>A fresh start is free.</p>
+<p>⚠ Warning. Claude will always give you an answer. That doesn’t mean the answer is right. Check anything.Treat Claude as a partner, not the single source of truth of the universe.</p>
+<h1>6. What Claude is good at</h1>
+<p>This is a non-exhaustive list for absolute beginners:</p>
+<ul>
+<li>
+<p>Writing. First drafts, rewrites, editing, adapting to your voice if you give it examples of your writing. This is where Claude shines.</p>
+</li>
+<li>
+<p>Summarizing. Drop a 50-page PDF into the chat. Ask for a 1-page summary with page references so you can verify.</p>
+</li>
+<li>
+<p>Thinking with you. Structuring a messy idea. Pressure-testing a decision. Claude is a good thinking partner if you push back on it instead of accepting the first answer. Ask it to zip, and then zap the opposite way.</p>
+</li>
+<li>
+<p>Working with your files. On the desktop app and in Cowork, Claude can read your local folder &amp; create files (PPT, XCL, DOCX) directly on your computer.</p>
+</li>
+<li>
+<p>Long documents. Upload 200-page files, full context, nothing lost. This is Claude’s biggest technical advantage. It can digest massive things.</p>
+</li>
+<li>
+<p>Reasoning step by step. Give it a complex question. Ask it to think step by step. It’s good at breaking down problems you throw at it.</p>
+</li>
+</ul>
+<h1>7. What Claude is bad at</h1>
+<p>It will save you from disappointment.</p>
+<p>Real-time information. Claude doesn’t know what happened today unless it has a search tool connected. It will guess, and it will sound confident doing it.</p>
+<p>When you click on the “+”, you can see the Web search button. Click on it to activate it, and it becomes blue. Now Claude has access to the internet.</p>
+<p><img alt="Article image" src="/assets/2026-04-29-claude-for-dummies.-0315410955/10.jpg"></p>
+<p>I prefer Grok, or ChatGPT (Extended Thinking), to search online.</p>
+<p>Precise math. Don’t use Claude as a calculator for anything that matters, unless it’s running code to compute the answer. It’s not meant to be a math expert.</p>
+<p>Vague prompts. If you say “write something good,” you’ll get something generic. Claude needs specificity. You get what you give.</p>
+<p>This is a good prompt: 1/ an example attached 2/ exactly what is and what I want 3/ the steps to get 4/ pick the latest model (Opus 4.7).</p>
+<p><img alt="Article image" src="/assets/2026-04-29-claude-for-dummies.-0315410955/11.jpg"></p>
+<p>Being a source of truth. Claude sounds authoritative even when it’s wrong. Always verify facts, dates, quotes, and names.</p>
+<p>Pro tip: you can use it to argue against everything. Super useful when done right! Beware, Claude is very convincing (even when it’s wrong).</p>
+<p><img alt="Article image" src="/assets/2026-04-29-claude-for-dummies.-0315410955/12.jpg"></p>
+<p>Image generation. Claude can read and analyze images. It cannot create them. Use ChatGPT or Gemini for that. But professionals still make images 👀</p>
+<p>Technically, you can make images if you ask Claude to code in HTML what you need (like this gastroenterology infographic for my sister).</p>
+<p><img alt="Article image" src="/assets/2026-04-29-claude-for-dummies.-0315410955/13.jpg"></p>
+<p>⚠ Warning. The most common beginner mistake: vague requests by assuming Claude is some otherworld god that will solve everything. No, it’s a very good employee - probably your best - that needs the direction of a boss, you.</p>
+<h1>8. The 3 words that matter</h1>
+<p>Only three.</p>
+<p>If you learn these, you’ll use Claude better than 90% of the people paying for it.</p>
+<h2>Token</h2>
+<p>The unit Claude thinks in. Every word you type, every file you upload, every response Claude gives gets chopped into tokens.</p>
+<p>Why you care:</p>
+<ul>
+<li>
+<p>Your usage limits are counted in tokens.</p>
+</li>
+<li>
+<p>A page of text is roughly 500 tokens. A long chat can hit millions.</p>
+</li>
+<li>
+<p>Long chats hit a ceiling because the context window is finite (in tokens).</p>
+</li>
+</ul>
+<p>★ Remember. A page is about 500 tokens. If Claude starts acting dumb after a long conversation, because context window is full. So start a fresh chat.</p>
+<p>Once you understand tokens, you will cheer up with us “professionals” when a new model drops and they say, “We double the token limit window”.</p>
+<p>Today, you can upload the equivalent of 10 full books and Claude is still capable to process, think and execute after reading it.</p>
+<p><img alt="Article image" src="/assets/2026-04-29-claude-for-dummies.-0315410955/14.jpg"></p>
+<h2>Cowork</h2>
+<p>Cowork is Claude running for minutes to hours on your computer, doing a real task while you do something else.</p>
+<p>A concrete example. You have a folder of 40 messy invoices. Different formats. Different fonts. Some PDFs, some screenshots. You want them cleaned up, grouped by client, with a drafted follow-up email for each overdue one.</p>
+<p>I gave Cowork all of my invoices (that live in my folder called INVOICES, duh). Yes, your prompt can be this long, by the way.</p>
+<p><img alt="Article image" src="/assets/2026-04-29-claude-for-dummies.-0315410955/15.jpg"></p>
+<p>Cowork is connecting to my tools automatically, and even asking me clarifying questions before working. Like… a coworker.</p>
+<p><img alt="Article image" src="/assets/2026-04-29-claude-for-dummies.-0315410955/16.jpg"></p>
+<p>✦ With ChatGPT: copy-paste each invoice, ask, get an answer, copy the next, repeat 40 times. An afternoon.</p>
+<p>✦ With Cowork: open the desktop app, point it at the folder, describe the task in one sentence, walk away. Come back 15 minutes later. The folder has cleaned files, a summary spreadsheet, and 40 drafted emails. All on your computer.</p>
+<p>The entire Excel file has been generated. Every tab. Every formula. Every-freaking-thing.</p>
+<p><img alt="Article image" src="/assets/2026-04-29-claude-for-dummies.-0315410955/17.jpg"></p>
+<p>Cowork gets sharper when you point it at a folder that includes your context.</p>
+<p>context is information before completeling a task</p>
+<p>My folder has 3 subfolders:</p>
+<ul>
+<li>
+<p>about-me: who you are, how you work, what you write.</p>
+</li>
+<li>
+<p>outputs: so that I can easily find again what Claude did in the past.</p>
+</li>
+<li>
+<p>templates: my favorite work with Claude, so it can do it again easily.</p>
+</li>
+</ul>
+<p>Once that folder exists, your prompts get short. Your outputs get sharper. The prompting treadmill goes away. But this newsletter is “Claude For Dummies”, so I won’t give you all of the details here.</p>
+<h2>Claude Code</h2>
+<p>Claude running inside your terminal. Built for developers.</p>
+<p>If you don’t code, you don’t need it. But you’ll see “Claude Code” mentioned everywhere, so now you know what it is. Cowork does 80% of what Claude Code does for non-developers, with a visual interface.</p>
+<p>Quick summary:</p>
+<ul>
+<li>
+<p>Token = what you’re paying for.</p>
+</li>
+<li>
+<p>Cowork = Claude working for you.</p>
+</li>
+<li>
+<p>Claude Code = Claude for devs.</p>
+</li>
+</ul>
+<p>✓ Next level.You want the full set up for Cowork? It’s here.</p>
+<p>You want to master Claude Code still? Go here.I usually don’t like pointing to another newsletter. Because it feels like an endless series of articles to read one after the other. But these two are of my best newsletters. So worth reading :) only when have the time!</p>
+<h1>9. The words you can ignore (for now)</h1>
+<p>You’ll see these words thrown around a lot.</p>
+<p>They don’t matter until you’re using Claude daily.</p>
+<p>But here’s what they mean in plain English, so you can stop wondering:</p>
+<ul>
+<li>
+<p>Projects. A folder inside Claude that remembers context across chats. Nice once you’re repeating the same kind of work.</p>
+</li>
+<li>
+<p>Artifacts. The side pane where Claude opens documents, code, or mini-apps it creates for you. You’ll recognize it when you see it.</p>
+</li>
+<li>
+<p>Skills. Reusable prompts (instructions) you trigger by name inside Cowork or Chat. Think of them as saved workflows. For example: /negotiation.</p>
+</li>
+<li>
+<p>Connectors. How Claude talks to Slack, Gmail, Google Drive, Granola, Notion. Set them up when you need them. It pulls info from your apps.</p>
+</li>
+<li>
+<p>MCP. It’s very technical, but basically, to connect stuff to Claude (Connectors are MCPs, for example). But you’ll never have to do anything yourself.</p>
+</li>
+<li>
+<p>Plugins. Bundles of Skills and Connectors for Cowork. Like a small app store.</p>
+</li>
+</ul>
+<p>If you skipped this section, you skipped the right section.</p>
+<p>Come back when you need it.</p>
+<p>I made a Claude Dictionary for those in need of visualization.</p>
+<p><img alt="Article image" src="/assets/2026-04-29-claude-for-dummies.-0315410955/18.jpg"></p>
+<h1>10. 10 things to try in Claude your first week</h1>
+<p>You have the map. Now here are 10 concrete things to actually do.</p>
+<p>Pick 3 this week. Each one teaches you something the last one didn’t.</p>
+<ul>
+<li>
+<p>Copy-paste 3 of your LinkedIn posts. Then ask Claude to write 3 new ones in the same voice. Then ask it to search for new topics on the web.</p>
+</li>
+<li>
+<p>Upload a 50-page PDF. Ask for a 1-page summary with page references so you can verify.</p>
+</li>
+<li>
+<p>Upload your last 5 meeting notes. Ask for a decisions log: what got decided, who owns each action, what’s still open.</p>
+</li>
+<li>
+<p>Point Cowork at your Downloads folder. Ask what’s in there and what you could safely delete.</p>
+</li>
+<li>
+<p>Paste a messy email thread. Ask for the 3 next actions and who owes what.</p>
+</li>
+<li>
+<p>Connect your Gmail to Claude. Now the same task for the messy email thread, but no need to paste anything. Claude reads your Gmail automatically.</p>
+</li>
+<li>
+<p>Give it a Google Doc you’ve been meaning to edit. Ask for a sharper rewrite with a diff of what changed and why. Be precise.</p>
+</li>
+<li>
+<p>Feed it a spreadsheet. Ask what patterns it notices that you might have missed. Heck, ask for a completely new spreadsheet with [what’s missing].</p>
+</li>
+<li>
+<p>Paste a competitor’s pricing page. Ask how yours compares and what’s missing. You can even ask to create an HTML new version to see it live.</p>
+</li>
+<li>
+<p>Give it your calendar for the week. Ask what to decline, and why.</p>
+</li>
+</ul>
+<p>✓ Tip. Keep a note file called prompts-that-worked. Every time a prompt gives you something useful, save it. In 2 weeks you’ll have a personal library worth more than any prompt pack you could buy. Soon, you’ll turn them into Skills.</p>
+<h1>11. Your test drive</h1>
+<p>You don’t have to change anything. You don’t have to cancel ChatGPT.</p>
+<p>Just pick one of these two paths tonight.</p>
+<h2>The free path (no payment, no commitment)</h2>
+<ul>
+<li>
+<p>Go to claude.ai and sign up.</p>
+</li>
+<li>
+<p>Paste something you wrote recently.</p>
+</li>
+<li>
+<p>Ask Claude: “Rewrite this in the same voice but sharper, and tell me what you changed and why.”</p>
+</li>
+<li>
+<p>Run the same prompt in ChatGPT.</p>
+</li>
+<li>
+<p>Compare. Make up your own mind.</p>
+</li>
+</ul>
+<h2>The Cowork path ($20 for 1 month)</h2>
+<ul>
+<li>
+<p>Go to claude.ai and sign up.</p>
+</li>
+<li>
+<p>Upgrade to Pro ($20).</p>
+</li>
+<li>
+<p>Install the desktop app (Mac or Windows).</p>
+</li>
+<li>
+<p>Open Cowork.</p>
+</li>
+<li>
+<p>Point it at a folder you care about. Your Downloads. A stack of PDFs. Your client notes.</p>
+</li>
+<li>
+<p>Ask it: “Look through this folder, tell me what’s in it, and suggest 3 useful things you could do with it.”</p>
+</li>
+<li>
+<p>Watch. Don’t type again. Let it work.</p>
+</li>
+</ul>
+<p>If, after either test, you don’t see why Claude’s the best, cancel Pro, no hard feelings, go back to whatever you were using.</p>
+<p>Because most people reading this guide will feel smarter for 20 minutes and never open Claude. Don’t be that person. Open it tonight.</p>
+<p>Be part of the 1.25% who (actually) tried Claude.</p>
+<h1>How pros use Claude.</h1>
+<p>I did my best to stay as simple as possible.</p>
+<p>For all the new people trying Claude for the first time, you can stop the newsletter here. Thanks for reading! If you enjoyed it, share it with your team, your mom, your butcher, your dog. Anyone who needs to start with Claude.</p>
+<p>…</p>
+<p>And if you are still here, let’s forget “for dummies” for a minute. I wanted to show you what pushing Claude to its limit (without coding) looks like in practice.</p>
+<p>Because this newsletter is called How to AI.</p>
+<h2>It all starts with the simplest prompt</h2>
+<p>The pros don’t write prompts. They have skills.</p>
+<p>I just typed the command /negotiation-prep and a one-liner:</p>
+<p>This is the entire prompt. And you will, it triggers a LOT of stuff.</p>
+<p><img alt="Article image" src="/assets/2026-04-29-claude-for-dummies.-0315410955/19.jpg"></p>
+<p>It went on my Granola (meeting notes), Gmail (emails), Drive (Google docs &amp; contracts), Slack (messages) to get every piece of information needed.</p>
+<p><img alt="Article image" src="/assets/2026-04-29-claude-for-dummies.-0315410955/20.jpg"></p>
+<p>It pulled so much information that it had to stop, and I had to say Continue.</p>
+<p><img alt="Article image" src="/assets/2026-04-29-claude-for-dummies.-0315410955/21.jpg"></p>
+<p>It is still working autonomously. I am writing content as I’m waiting.</p>
+<p><img alt="Article image" src="/assets/2026-04-29-claude-for-dummies.-0315410955/22.jpg"></p>
+<p>I had to blur the image. I clicked on the Q&amp;A generated by Claude.</p>
+<p><img alt="Article image" src="/assets/2026-04-29-claude-for-dummies.-0315410955/23.jpg"></p>
+<p>in total, I only typed 1 prompt and clicked on some Q&amp;A Claude asked me…</p>
+<p>And I now have two drafts ready. If I select one, it will already be in my Gmail, with the right people CC’ed. You don’t believe me?</p>
+<p><img alt="Article image" src="/assets/2026-04-29-claude-for-dummies.-0315410955/24.jpg"></p>
+<p>Claude literally asked me if I wanted to.</p>
+<p><img alt="Article image" src="/assets/2026-04-29-claude-for-dummies.-0315410955/25.jpg"></p>
+<h2>Ok wait. What just happened?</h2>
+<p>In short:</p>
+<ul>
+<li>
+<p>I have a Claude Skills that knows exactly how I negotiate.</p>
+</li>
+<li>
+<p>I then asked Claude to use the skills /negotiation-prep with GPC.</p>
+</li>
+<li>
+<p>Claude went on Granola, my notetakers, to read every single meeting I had with (1) my lawyers (2) my future partners.</p>
+</li>
+<li>
+<p>Claude then went to Gmail to extract all of our discussions AND contract drafts AND partnership agreement AND whatever we sent to each others.</p>
+</li>
+<li>
+<p>Claude then went on Slack to check our latest discussions.</p>
+</li>
+<li>
+<p>Claude then aggregated everything, with its own timeline, to understand what’s at stake, what’s needed, and at which stage I am in the negotiation.</p>
+</li>
+<li>
+<p>Claude then (finally) asked me some questions about the deal itself.</p>
+</li>
+<li>
+<p>Yes, you read that right. Claude asked me to click on a Q&amp;A Claude generated, for me. Basically, Claude is the one prompting me.</p>
+</li>
+<li>
+<p>Claude then created two potential drafts, a soft and an aggressive one, assuming it would create a thread between my partners and my lawyer (it was part of its Q&amp;A, so it just executed what I asked).</p>
+</li>
+<li>
+<p>Claude ends up asking me to pick one, so it can create a Gmail draft inside my own Gmail. Magic.</p>
+</li>
+</ul>
+<p>And it’s executing. Going inside my Gmail and working for me at lightspeed.</p>
+<p>I believe you now understand Claude is much more than what you think.</p>
+<p>And remember. It is the worst it has ever been. Ever.</p>
+<h1>Where to start.</h1>
+<p>You can’t master Claude in one day.</p>
+<p>Instead, book 20 minutes this week &amp; open this newsletter.</p>
+<ul>
+<li>
+<p>Download the Claude app to start.</p>
+</li>
+<li>
+<p>Play with the Chat mode first. Try to copy your voice.</p>
+</li>
+<li>
+<p>Pay for one month of the $20 plan to get Claude Cowork.</p>
+</li>
+<li>
+<p>Ask for a tough deliverable. An Excel, a PDF, an HTML, something.</p>
+</li>
+<li>
+<p>Be amazed. Start your rabbit hole journey on how to master it completely.</p>
+</li>
+</ul>
+<h1>A message from the author, Ruben.</h1>
+<p>This article exists because 70,000+ people decided AI is too important to leave aside. Not only that, but they shared it around them. They understand they are the sum of the 5 people around them. So better have them using AI.</p>
+<p>If this helped you — or if it’ll help someone you know — forward it to them. That’s how this grew. Just readers like you sending it to people like them.</p>
+<p>And if you&#x27;re new here, follow me on X →@rubenhassid (also free!)</p></div><a class="source" href="https://x.com/rubenhassid/status/2045713046065283435" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

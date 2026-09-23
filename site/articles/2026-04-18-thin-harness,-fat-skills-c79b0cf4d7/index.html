@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Thin Harness, Fat Skills">
+  <title>Thin Harness, Fat Skills · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Garry Tan @garrytan · 2026-04-18</div><div class="prose"><h1>Thin Harness, Fat Skills</h1>
+<p>Steve Yegge says people using AI coding agents are &quot;10x to 100x as productive as engineers using Cursor and chat today, and roughly 1000x as productive as Googlers were back in 2005.&quot;</p>
+<p>That&#x27;s a real number. I&#x27;ve seen it. I&#x27;ve lived it. But when people hear it, they reach for the wrong explanation. Better models. Smarter Claude. More parameters. The 2x people and the 100x people are using the same models. The difference isn&#x27;t intelligence. It&#x27;s architecture — and it fits on an index card.</p>
+<h2>The harness is the product</h2>
+<p>On March 31, 2026, Anthropic accidentally shipped the entire source code for Claude Code to the npm registry. 512,000 lines. I read it. It confirmed everything I&#x27;d been teaching at YC: the secret isn&#x27;t the model. It&#x27;s the thing wrapping the model.</p>
+<p>Live repo context. Prompt caching. Purpose-built tools. Context bloat minimization. Structured session memory. Parallel sub-agents. None of that makes the model smarter. All of it gives the model the right context, at the right time, without drowning it in noise.</p>
+<p>That wrapper is called the harness. And the question every AI builder should be asking is: what goes in the harness, and what stays out? The answer has a specific shape. I call it thin harness, fat skills.</p>
+<h2>Five definitions</h2>
+<p>The bottleneck is never the model&#x27;s intelligence. Models already know how to reason, synthesize, and write code. They fail because they don&#x27;t understand your data — your schema, your conventions, the particular shape of your problem. Five definitions fix this.</p>
+<ol>
+<li>Skill files</li>
+</ol>
+<p>A skill file is a reusable markdown document that teaches the model how to do something. Not what to do — the user supplies that. The skill supplies the process.</p>
+<p>Here&#x27;s the key insight most people miss: a skill file works like a method call. It takes parameters. You invoke it with different arguments. The same procedure produces radically different capabilities depending on what you pass in.</p>
+<p>Consider a skill called /investigate. It has seven steps: scope the dataset, build a timeline, diarize every document, synthesize, argue both sides, cite sources. It takes three parameters: TARGET, QUESTION, and DATASET. Point it at a safety scientist and 2.1 million discovery emails, and you get a medical research analyst determining whether a whistleblower was silenced. Point it at a shell company and FEC filings, and you get a forensic investigator tracing coordinated campaign donations.</p>
+<p>Same skill. Same seven steps. Same markdown file. The skill describes a process of judgment. The invocation supplies the world.</p>
+<p>This is not prompt engineering. This is software design, using markdown as the programming language and human judgment as the runtime. Markdown is, in fact, a more perfect encapsulation of capability than rigid source code, because it describes process, judgment, and context in the language the model already thinks in.</p>
+<ol start="2">
+<li>The harness</li>
+</ol>
+<p>The harness is the program that runs the LLM. It does four things: runs the model in a loop, reads and writes your files, manages context, and enforces safety. That&#x27;s it. That&#x27;s the &quot;thin.&quot;</p>
+<p>The anti-pattern is a fat harness with thin skills. You&#x27;ve seen it: 40+ tool definitions eating half the context window. God-tools with 2-to-5-second MCP round-trips. REST API wrappers that turn every endpoint into a separate tool. Three times the tokens, three times the latency, three times the failure rate.</p>
+<p>What you want instead is purpose-built tooling that&#x27;s fast and narrow. A Playwright CLI that does each browser operation in 100 milliseconds, not a Chrome MCP that takes 15 seconds for screenshot-find-click-wait-read. That&#x27;s 75x faster. Software doesn&#x27;t have to be precious anymore. Build exactly what you need, and nothing else.</p>
+<ol start="3">
+<li>Resolvers</li>
+</ol>
+<p>A resolver is a routing table for context. When task type X appears, load document Y first.</p>
+<p>Skills tell the model how. Resolvers tell it what to load and when. A developer changes a prompt. Without the resolver, they ship it. With the resolver, the model reads docs/EVALS.md first — which says: run the eval suite, compare scores, if accuracy drops more than 2%, revert and investigate. The developer didn&#x27;t know the eval suite existed. The resolver loaded the right context at the right moment.</p>
+<p>Claude Code has a built-in resolver. Every skill has a description field, and the model matches user intent to skill descriptions automatically. You never have to remember that /ship exists. The description is the resolver.</p>
+<p>A confession: my CLAUDE.md was 20,000 lines. Every quirk, every pattern, every lesson I&#x27;d ever encountered. Completely ridiculous. The model&#x27;s attention degraded. Claude Code literally told me to cut it back. The fix was about 200 lines — just pointers to documents. The resolver loads the right one when it matters. Twenty thousand lines of knowledge, accessible on demand, without polluting the context window.</p>
+<ol start="4">
+<li>Latent vs. deterministic</li>
+</ol>
+<p>Every step in your system is one or the other, and confusing them is the most common mistake in agent design.</p>
+<p>Latent space is where intelligence lives. The model reads, interprets, decides. Judgment. Synthesis. Pattern recognition.</p>
+<p>Deterministic is where trust lives. Same input, same output. Every time. SQL queries. Compiled code. Arithmetic.</p>
+<p>An LLM can seat 8 people at a dinner table, accounting for personalities and social dynamics. Ask it to seat 800 and it will hallucinate a seating chart that looks plausible but is completely wrong. That&#x27;s a deterministic problem — combinatorial optimization — forced into latent space. The worst systems put the wrong work on the wrong side of this line. The best systems are ruthless about it.</p>
+<ol start="5">
+<li>Diarization</li>
+</ol>
+<p>Diarization is the step that makes AI useful for real knowledge work. The model reads everything about a subject and writes a structured profile — a single page of judgment distilled from dozens or hundreds of documents.</p>
+<p>No SQL query produces this. No RAG pipeline produces this. The model has to actually read, hold contradictions in mind, notice what changed and when, and synthesize structured intelligence. It&#x27;s the difference between a database lookup and an analyst&#x27;s brief.</p>
+<h2>The architecture</h2>
+<p>These five concepts compose into a simple three-layer architecture.</p>
+<p>Fat skills sit on top: markdown procedures that encode judgment, process, and domain knowledge. This is where 90% of the value lives.</p>
+<p>A thin CLI harness sits in the middle: about 200 lines of code. JSON in, text out. Read-only by default.</p>
+<p>Your application sits on the bottom: QueryDB, ReadDoc, Search, Timeline — the deterministic foundation.</p>
+<p>The principle is directional. Push intelligence up into skills. Push execution down into deterministic tooling. Keep the harness thin. When you do this, every improvement to the model automatically improves every skill, while the deterministic layer stays perfectly reliable.</p>
+<h2>The system that learns</h2>
+<p>Let me show you all five definitions working together. Not in theory — in an actual system we&#x27;re building at YC.</p>
+<p>Chase Center. July 2026. Six thousand founders at Startup School. Each one has a structured application, questionnaire answers, transcripts from 1:1 advisor chats, and public signals: posts on X, GitHub commits, Claude Code transcripts showing how fast they ship.</p>
+<p>The traditional approach: a program team of 15 reads applications, makes gut calls, updates a spreadsheet. It works at 200 founders. It breaks at 6,000. No human can hold that many profiles in working memory and notice that the three best candidates for the infrastructure-for-AI-agents cohort are a dev tools founder in Lagos, a compliance founder in Singapore, and a CLI-tooling founder in Brooklyn — all of whom described the same pain point in different words during their 1:1 chats.</p>
+<p>The model can. Here&#x27;s how.</p>
+<p>Enrichment. A skill called /enrich-founder pulls all sources, runs enrichments, diarizes, and highlights the gap between what founders say and what they&#x27;re actually building. The deterministic layer handles SQL lookups, GitHub stats, browser tests on demo URLs, social signal pulls, CrustData queries. A cron runs nightly. Six thousand profiles, always fresh.</p>
+<p>The diarization output catches things no keyword search would find:</p>
+<p>FOUNDER: Maria Santos
+COMPANY: Contrail (contrail.dev)
+SAYS: &quot;Datadog for AI agents&quot;
+ACTUALLY BUILDING: 80% of commits are in billing module.
+  She&#x27;s building a FinOps tool disguised as observability.</p>
+<p>That gap — &quot;says&quot; versus &quot;actually building&quot; — requires reading the GitHub commit history, the application, and the advisor transcript, and holding all three in mind at once. No embedding similarity search finds this. No keyword filter finds it. The model has to read the full profile and make a judgment. (This is the perfect decision to put in latent space!)</p>
+<p>Matching. This is where skill-as-method-call shines. Three invocations of the same matching skill, three completely different strategies:</p>
+<p>/match-breakout takes 1,200 founders, clusters by sector affinity, 30 per room. Embedding plus deterministic assignment. /match-lunch takes 600, does serendipity matching across sectors, 8 per table, no repeats — the LLM invents the themes, then a deterministic algorithm assigns seats. /match-live handles whoever is in the building right now, nearest-neighbor embedding, 200ms, 1:1 pairs, excluding people who&#x27;ve already met.</p>
+<p>And the model makes judgment calls a clustering algorithm never could: &quot;Santos and Oram are both AI infra, but they&#x27;re not competitors — Santos is cost attribution, Oram is orchestration. Put them in the same group.&quot; Or: &quot;Kim applied as &#x27;developer tools&#x27; but his 1:1 transcript reveals he&#x27;s building compliance automation for SOC2. Move him to FinTech/RegTech.&quot;</p>
+<p>No embedding captures the Kim reclassification. The model has to read the entire profile.</p>
+<p>The learning loop. After the event, an /improve skill reads NPS surveys, diarizes the mediocre responses — not the bad ones, the &quot;OK&quot; ones, where the system almost worked but didn&#x27;t — and extracts patterns. Then it proposes new rules and writes them back into the matching skills:</p>
+<p>When attendee says &quot;AI infrastructure&quot;
+    but startup is 80%+ billing code:
+    → Classify as FinTech, not AI Infra.</p>
+<p>When two attendees in same group
+    already know each other:
+    → Penalize proximity.
+       Prioritize novel introductions.</p>
+<p>These rules get written back into the skill file. The next run uses them automatically. The skill rewrites itself.</p>
+<p>July event: 12% &quot;OK&quot; ratings. Next event: 4%. The skill file learned what &quot;OK&quot; actually meant, and the system got better without anyone rewriting code.</p>
+<p>The same pattern transfers everywhere: retrieve, read, diarize, count, synthesize. Then: survey, investigate, diarize, rewrite the skill.</p>
+<p>If you want to know what the most valuable loops are in 2026, it&#x27;s those. We can apply them to every discipline and walk of life of knowledge work in existence.</p>
+<h2>Skills are permanent upgrades</h2>
+<p>I tweeted an instruction I gave to my OpenClaw recently that resonated more than I expected:</p>
+<p>You are not allowed to do one-off work. If I ask you to do something and it&#x27;s the kind of thing that will need to happen again, you must: do it manually the first time on 3 to 10 items. Show me the output. If I approve, codify it into a skill file. If it should run automatically, put it on a cron.The test: if I have to ask you for something twice, you failed.</p>
+<p>A thousand likes and twenty-five hundred bookmarks. People thought it was a prompt engineering trick. It&#x27;s not. It&#x27;s the architecture I&#x27;ve been describing. Every skill you write is a permanent upgrade to your system. It never degrades. It never forgets. It runs at 3 AM while you sleep. And when the next model drops, every skill instantly gets better — the judgment in the latent steps improves while the deterministic steps stay perfectly reliable.</p>
+<p>That&#x27;s how you get Yegge&#x27;s 100x. Not a smarter model. Fat skills, thin harness, and the discipline to codify everything.</p>
+<p>The system compounds. Build it once. It runs forever.</p></div><a class="source" href="https://x.com/garrytan/status/2042925773300908103" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Grok Bot vs Hermes vs OpenClaw vs Buzz + How I fully automated my X content with Grok Bot">
+  <title>Grok Bot vs Hermes vs OpenClaw vs Buzz + How I fully automated my X content with Grok Bot · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">SCOTTY BEAM @ScottyBeamIO · 2026-08-24</div><div class="prose"><h1>Grok Bot vs Hermes vs OpenClaw vs Buzz + How I fully automated my X content with Grok Bot</h1>
+<p>Grok Bot showed up, and most people are going to use maybe 10 percent of what it can actually do. They&#x27;ll type a question into it like it&#x27;s just another chatbot, read the answer, and move on.</p>
+<p>The other 90 percent – the part where it logs into your real accounts, runs on its own computer, and finishes real work while you&#x27;re asleep – is the part almost nobody touches on day one.</p>
+<p>I spent a week pushing past that first 10 percent, using it to run my X account and comparing it head to head with Buzz, OpenClaw, and Hermes. Here&#x27;s what changes once you actually turn the rest of it on.</p>
+<h2>What Grok Bot actually is?</h2>
+<p>Grok Bot
+@bot
+·
+Aug 11
+Introducing Grok Bot, now in early beta.</p>
+<p>Bots are AI teammates that do real work for you. They sign in to your tools, use them just like you do, and come back with finished work.
+The media could not be played.
+Reload
+3.1K
+7.5K
+36K
+56M</p>
+<p>At first glance, Grok Bot looks like nothing special – a messenger-style window with a list of names down one side and a chat thread on the other. So the first day usually plays out the way it does with any chat app: you type something, you read the reply, you type again. Nothing about the interface hints at what&#x27;s actually happening behind it.</p>
+<p><img alt="Article image" src="/assets/2026-08-24-grok-bot-vs-hermes-vs-openclaw-vs-buzz-+-how-i-fully-automat-21ced63210/01.jpg"></p>
+<p>But each of those names isn&#x27;t just a chat thread – it&#x27;s a teammate with an actual job, its own ongoing conversation, and memory that carries over from task to task instead of resetting every time. On top of that, every one of them gets its own computer: a browser, a file system, a terminal – all running in a data center rather than on your desktop. That&#x27;s the part that changes everything. Close your laptop in the middle of a task, and the work simply keeps going, because none of it was ever tied to your machine in the first place.</p>
+<p>One account, one shared computer, and every &quot;employee&quot; on it works from its own screen. Several can be active at the same time, and because the files, browser sessions, and logins all live on that same shared machine, whatever one agent finishes and saves is immediately available for the next one to pick up – no exporting, no handing things off manually.</p>
+<p>That&#x27;s really the shift Grok Bot represents: agents stop being something you babysit line by line in a terminal, and start behaving like a small remote team that happens to run in the cloud instead of showing up to an office.</p>
+<p>Then there is what the week cost. Three plans give you access:</p>
+<ul>
+<li>
+<p>Super Grok Heavy: $300 a month, bought from xAI</p>
+</li>
+<li>
+<p>Cursor Ultra: $200 a month, and the same login opens Grok Bot</p>
+</li>
+<li>
+<p>Cursor Teams Premium: $120 a month per seat, assigned by an admin</p>
+</li>
+</ul>
+<p>Each includes weekly usage, and work past that pool bills from model and token cost.</p>
+<p>I&#x27;ve spent the last couple of weeks knee-deep in this kind of tooling, and I want to share what I&#x27;ve learned – specifically around Grok Bot and how it stacks up against the other agent frameworks people keep talking about: Buzz, OpenClaw, and Hermes.</p>
+<p>Let me be upfront: I&#x27;m not the type of person who calls every new release &quot;insane&quot; or &quot;game-changing&quot; just because it&#x27;s new. I try to stay skeptical. But after actually building with these tools side by side, I have to admit – the barrier to spinning up a working team of agents has basically collapsed. What used to take real setup work now takes minutes.</p>
+<h2>Why I started building agent teams?</h2>
+<p>I decided it was time to get serious about a real system for X – not sporadic posting, but something consistent and structured. So instead of doing everything manually, I built a small team of agents around that one goal. One agent researches topics and trends. Another one handles creative – I fed it a handful of reference infographics in a style I like, so it generates visuals that match that aesthetic. A third one drafts the actual posts. Each of them runs its own independent routine.</p>
+<p><img alt="Article image" src="/assets/2026-08-24-grok-bot-vs-hermes-vs-openclaw-vs-buzz-+-how-i-fully-automat-21ced63210/02.jpg"></p>
+<p>One thing I noticed early on, and it&#x27;s a small but real annoyance: when you group multiple agents into a shared team chat, they lose the ability to save routines together. A routine, by the way, is really just a cron job with a friendlier name. You have to go back into each agent&#x27;s individual session and set up scheduling there instead of doing it once at the team level. It&#x27;s a minor UX gap, and I&#x27;d expect it to get fixed, but right now it&#x27;s worth knowing about if you&#x27;re planning to run a whole team rather than a single bot.</p>
+<h2>Breaking down the four approaches</h2>
+<p><img alt="Article image" src="/assets/2026-08-24-grok-bot-vs-hermes-vs-openclaw-vs-buzz-+-how-i-fully-automat-21ced63210/03.jpg"></p>
+<p>Once you start comparing Grok Bot, Buzz, OpenClaw, and Hermes side by side, a pretty clear picture emerges of what each one actually is and who it&#x27;s for.</p>
+<p><img alt="Article image" src="/assets/2026-08-24-grok-bot-vs-hermes-vs-openclaw-vs-buzz-+-how-i-fully-automat-21ced63210/04.jpg"></p>
+<ul>
+<li>
+<p>Grok Bot positions itself as a teammate, not just a tool. The defining feature, as above, is that each agent runs on its own cloud computer. That means it keeps working even when your laptop is closed – nothing depends on your local machine staying on. It logs into a real UI, agents can talk to each other, and your job basically shrinks down to babysitting an approval queue instead of babysitting infrastructure.</p>
+</li>
+<li>
+<p>Buzz is closer to a shared room – a human-plus-agent workspace with a built-in audit trail. Importantly, Buzz itself is not an agent; it&#x27;s the environment you drop agents into. You either self-host it or connect to a public relay, and from there you can spin up as many agents as you want inside that shared space. I&#x27;ll admit, a week ago I thought Buzz was already about as fast as agent creation could get. Then Grok Bot showed up and made it feel even easier – which says a lot about how quickly this space is moving.</p>
+</li>
+<li>
+<p>OpenClaw is the veteran here – a local-first orchestrator and control plane with its own heartbeat channel and skill system. You either host it yourself or use one-click VPS hosting options, but either way, the infrastructure responsibility sits with you or whoever you&#x27;re paying to manage it.</p>
+</li>
+<li>
+<p>Hermes is more of a &quot;brain&quot; – a self-improving runtime that pulls new skills from its own runs over time. Like OpenClaw, you&#x27;re on the hook for hosting it yourself.</p>
+</li>
+</ul>
+<p>Boiling it down: OpenClaw and Hermes give you the most control, but they come with real configuration overhead – you&#x27;re setting up models, writing SOPs, and maintaining infrastructure. Buzz sits in the middle: seamless once it&#x27;s running, but there&#x27;s an initial hurdle around saving a private key that could genuinely intimidate a non-technical user. Grok Bot, meanwhile, is the &quot;it just works&quot; option – assuming you&#x27;re already paying for the right subscription, there&#x27;s essentially no setup friction at all.</p>
+<h2>The trade-off nobody should skip over</h2>
+<p>Convenience like this always has a cost, and with Grok Bot it shows up in three places:</p>
+<ul>
+<li>
+<p>You don&#x27;t get to choose the underlying model. It&#x27;s Grok, full stop.</p>
+</li>
+<li>
+<p>You don&#x27;t own the harness. It&#x27;s bundled into a subscription – Super Grok Heavy, Cursor Ultra, or Teams Premium (still early beta) – rather than something you control independently.</p>
+</li>
+<li>
+<p>Your data lives on their cloud computer, not yours.</p>
+</li>
+</ul>
+<p>None of that is necessarily a dealbreaker, but it&#x27;s a real trade you&#x27;re making: convenience and speed in exchange for control. If you&#x27;ve been self-hosted-first the way I have, that&#x27;s worth sitting with before you go all-in.</p>
+<p>One small friction point worth mentioning: during setup, Grok Bot asked me for a credit card before I&#x27;d even signed up for Cursor Ultra. It didn&#x27;t just sync automatically with my existing X account, even though I&#x27;m already paying $30/month for Super Grok Premium. I get that under the hood this is technically a Cursor product wearing a Grok label, but from a user experience standpoint, that extra step felt unnecessary. A direct sync with an existing paid X subscription would have been a much smoother onboarding.</p>
+<p>On cost more broadly:</p>
+<ul>
+<li>
+<p>OpenClaw and Hermes are technically free, but that&#x27;s a bit misleading – you either need your own hardware running a local model, or you need to pay for API usage, or you connect an existing subscription (right now OpenAI and xAI are the vocal ones about letting their subscriptions power third-party agent harnesses).</p>
+</li>
+<li>
+<p>Buzz is open source with the same underlying logic – free in theory, but you still need compute from somewhere, whether that&#x27;s your own infrastructure, a shared compute community, or a connected subscription. What&#x27;s genuinely nice about Buzz is how seamlessly it connects to something like a Claude Code subscription compared to the extra hoops OpenClaw and Hermes make you jump through.</p>
+</li>
+<li>
+<p>Grok Bot skips all of that – it&#x27;s simply bundled into the subscription tier you&#x27;re already paying for.</p>
+</li>
+</ul>
+<h2>Grok Bot for building on X</h2>
+<p>This is the part I&#x27;m personally most excited about, so it deserves its own space.</p>
+<p>Because every agent on Grok Bot gets its own persistent computer with a browser and file system, it&#x27;s genuinely good at the kind of X workflow that usually falls apart the moment you try to automate – research, drafting, and creative all happening in parallel, feeding into each other, without you manually copying things between tools.</p>
+<p><img alt="Article image" src="/assets/2026-08-24-grok-bot-vs-hermes-vs-openclaw-vs-buzz-+-how-i-fully-automat-21ced63210/05.jpg"></p>
+<p>Here&#x27;s roughly how I&#x27;ve structured mine:</p>
+<ul>
+<li>
+<p>A research agent that tracks trends, digs into relevant repositories and public discourse, and surfaces what&#x27;s actually worth writing about instead of guessing at a content calendar.</p>
+</li>
+<li>
+<p>A creative agent that I fed a handful of reference infographics in a style I like, so it now generates visuals that already match that aesthetic instead of starting from a blank canvas every time.</p>
+</li>
+<li>
+<p>A drafting agent that turns research and creative direction into actual post copy, ready to review and stage rather than write from scratch.</p>
+</li>
+</ul>
+<p>Because these agents share the same underlying computer and memory setup, a finished piece of research from one is immediately available to the next – the drafting agent doesn&#x27;t need me to manually paste anything over.</p>
+<p>The advice this setup keeps converging on lines up with what most people already know but rarely commit to: post things that are true, useful, or funny – ideally all three. One idea per post. Reply more than you broadcast, instead of falling into the old &quot;reply guy&quot; trap. Video and images tend to outperform plain text, but the real risk isn&#x27;t the algorithm – it&#x27;s being boring. Don&#x27;t try to game the system, because the rules change every month anyway. The one constant is having something real to say and saying it consistently, without sounding like a corporate brand account.</p>
+<p>A few other things worth knowing if you&#x27;re setting this up for X specifically:</p>
+<ul>
+<li>
+<p>You can teach an agent a repetitive task by simply recording yourself doing it once – start the recording, do the task, stop the recording – and it learns the pattern from that. Genuinely useful for the tedious, repeatable parts of a posting workflow that nobody enjoys doing by hand.</p>
+</li>
+<li>
+<p>If you group your X-focused agents into a shared team chat, remember they won&#x27;t save routines at the team level – you&#x27;ll need to set scheduling on each one individually.</p>
+</li>
+<li>
+<p>A general-purpose agent sitting on top of the team, giving you a daily rollup of what each one has been doing, is worth setting up early. It&#x27;s the difference between actually knowing what your agents accomplished and just hoping they did something useful.</p>
+</li>
+</ul>
+<h2>What people are actually building with this</h2>
+<p>What caught my attention wasn&#x27;t the flashy demo features – it was watching how people are treating agent teams less like chatbots and more like tiny companies. The pattern that keeps showing up: name three or four bots, give each one a specific job, and message them the way you&#x27;d message a coworker.</p>
+<p>People are spinning up a working &quot;brand team&quot; – a content bot, an assistant bot, a brand-deals bot – in five to ten minutes, sometimes based on nothing more than an existing Instagram account as reference. And the output already sounds like the person who made it.</p>
+<p>The part I find genuinely interesting isn&#x27;t any single bot – it&#x27;s the handoffs between them. One agent delegating a task to another, like asking an assistant bot to get an NDA signed and having it pass that off to the brand-deals bot without a human stepping in to manage the relay. That bot-to-bot communication is where this whole category is heading, and it&#x27;s the thing I&#x27;m most curious to stress-test next.</p>
+<p>Beyond that, here&#x27;s a snapshot of the range of use cases I&#x27;ve come across in the community:</p>
+<p>Debbie O&#x27;Brien
+@debs_obrien
+·
+Aug 13
+I have a new chief of staff: In 
+@bot
+ I simply put: </p>
+<p>take a look at me and what i do. find all info you can on me. take a look at the bots i have created. these are your team. see if we need to change anything or add more bots. what is best way of managing these bot teams. what
+Show more
+195
+309
+2.7K
+4.1M</p>
+<p><img alt="Article image" src="/assets/2026-08-24-grok-bot-vs-hermes-vs-openclaw-vs-buzz-+-how-i-fully-automat-21ced63210/06.jpg"></p>
+<p>A &quot;chief of staff&quot; style agent that studies your existing public activity and your current bot roster, then suggests how to restructure or expand your team for maximum productivity.</p>
+<p>Shann³
+@shannholmberg
+·
+Aug 14
+how you can automate your marketing with Grok Bot</p>
+<p>one specialist bot per vertical, and every bot reads your company brain, shared notes, offers, and brand rules. the bots run in parallel and keep working 24/7.</p>
+<p>specialist bots, and potentially what each one can own:</p>
+<p>&gt; SEO bot,
+Show more
+Quote
+eric zakariasson
+@ericzakariasson
+·
+Aug 11
+Grok Bot is in beta!</p>
+<p>here are 100 use cases ive seen so far:</p>
+<p>1) book meetings by writing personalized outbound in your own gmail voice, then sending the notes for you</p>
+<p>2) take a sales play that used to take 90 minutes to 2 hours (sql audience → copy → reverse etl) and make it x.com/bot/status/208…
+16
+8
+259
+27K</p>
+<p><img alt="Article image" src="/assets/2026-08-24-grok-bot-vs-hermes-vs-openclaw-vs-buzz-+-how-i-fully-automat-21ced63210/07.png"></p>
+<p>SEO and content bots that handle trend research, content briefs, internal linking, and even AEO – optimizing answers specifically for how LLMs surface information.</p>
+<p>PR bots that track story angles, manage a media database, and monitor where your brand is getting picked up.</p>
+<p>Paid-ads bots that generate creative angles and formats, manage bid changes, and maintain a testing backlog.</p>
+<p>CRO bots that design experiments and write variant copy for landing pages.</p>
+<p>Outbound bots that book prospect meetings – this one in particular feels like it&#x27;s going to become one of the most common Grok Bot use cases across the board.</p>
+<p>Ben Lang
+@benln
+·
+Aug 13
+Collected the most-loved internal Grok Bot use cases:</p>
+<p>• Find / book flights biased towards Starlink access
+• Order Whole Foods delivery from recipe photos
+• Fix date/GPS metadata on hundreds of film scans
+• Negotiate contractor quotes directly
+• Book prospect / customer
+Show more
+65
+81
+1.2K
+306K</p>
+<p><img alt="Article image" src="/assets/2026-08-24-grok-bot-vs-hermes-vs-openclaw-vs-buzz-+-how-i-fully-automat-21ced63210/08.png"></p>
+<p>More consumer-facing use cases too: finding and booking flights based on inflight connectivity, ordering groceries straight from a recipe photo, fixing GPS metadata across hundreds of scanned photos, negotiating contractor quotes directly, converting a sales deck into another language before a call, auto-updating decks from meeting notes, pulling deal context on mobile without logging into a CRM, and running a prospecting plan that updates a live spreadsheet as it goes.</p>
+<p>That last batch might sound like a grab-bag, but it makes the point clearly: this isn&#x27;t a niche tool for developers anymore. It&#x27;s being used for genuinely mundane, high-friction daily tasks that most people just tolerate instead of automating.</p>
+<h2>Where I&#x27;ve landed</h2>
+<p>I&#x27;m still self-hosted-first by default, and I don&#x27;t think that&#x27;s changing anytime soon. But for specific, narrow use cases – especially anything content-related on X – Grok Bot has genuinely earned a place in my workflow. It&#x27;s not a replacement for OpenClaw or Hermes, it&#x27;s a complement. When I need to stand up a focused automation fast without thinking about infrastructure, this is what I reach for now.</p>
+<p>If this was useful – bookmark it. You&#x27;ll want to come back to it.</p>
+<p>For more breakdowns like this follow</p>
+<p>@ScottyBeamIO</p>
+<p>No fluff, just what actually works.</p></div><a class="source" href="https://x.com/ScottyBeamIO/status/2089417013647073753" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

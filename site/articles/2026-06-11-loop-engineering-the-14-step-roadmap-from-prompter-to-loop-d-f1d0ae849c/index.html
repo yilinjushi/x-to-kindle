@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Loop engineering: the 14-step roadmap from prompter to loop designer.">
+  <title>Loop engineering: the 14-step roadmap from prompter to loop designer. · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Codez @0xCodez · 2026-06-11</div><div class="prose"><h1>Loop engineering: the 14-step roadmap from prompter to loop designer.</h1>
+<p>Most developers still prompt their coding agents by hand. They type, they wait, they read the diff, they type again. 9out of 10 builders have never written a single loop that prompts the agent for them.</p>
+<p>No automation, no state file, no verifier, no schedule. The leverage point has moved - from typing prompts to designing systems that prompt. This is the 14-step roadmap from prompter to loop designer.</p>
+<p>Follow my Linkedin to get fresh AI alpha: linkedin.com/in/lev-deviatkin</p>
+<p>This is the 14-step roadmap to make that shift - sourced from Anthropic’s engineering docs, Addy Osmani’s long-form on loop engineering, and recent measurement studies.</p>
+<p>Three tiers: figure out if you actually need a loop, learn the five building blocks, then build the smallest one that works without hurting you.</p>
+<p><img alt="Article image" src="/assets/2026-06-11-loop-engineering-the-14-step-roadmap-from-prompter-to-loop-d-f1d0ae849c/01.png"></p>
+<p>14 steps. 3 tiers. Stop prompting. Start designing.</p>
+<p>PART 1 · The Why &amp; The Test</p>
+<h2>01. Loop engineering is replacing yourself as the prompter.</h2>
+<p>For two years, the way you got something out of a coding agent was: write a prompt, share the context, read what came back, write the next prompt. The agent was a tool and you held it the entire time. That part is ending.</p>
+<p>Loop engineering is building a small system that finds the work, hands it to the agent, checks the result, records what happened, and decides the next move - on its own. You design that system once. The system prompts the agent from then on.</p>
+<p>Addy Osmani breaks it into six parts:</p>
+<p><img alt="Article image" src="/assets/2026-06-11-loop-engineering-the-14-step-roadmap-from-prompter-to-loop-d-f1d0ae849c/02.png"></p>
+<p>Anthropic engineers now merge eight times as much code per day as they did in 2024 - a figure Anthropic itself calls “almost certainly an overstatement of the true productivity gain.”</p>
+<p>The number is debated. The mechanism isn’t: the leverage point moved from typing prompts to designing the loop that prompts.</p>
+<h2>02. Run the 4-condition test before you build anything.</h2>
+<p>Loops earn their cost under four conditions. Miss one and the loop costs more than it returns. The honest take from AlphaSignal’s analysis, and the part most X-threads skip:</p>
+<p><img alt="Article image" src="/assets/2026-06-11-loop-engineering-the-14-step-roadmap-from-prompter-to-loop-d-f1d0ae849c/03.png"></p>
+<p>The four conditions in plain English:</p>
+<ul>
+<li>
+<p>The task repeats. A loop amortizes its setup across many runs. For a one-time job, a good prompt is faster and cheaper. If the work does not recur weekly, you don’t have a loop - you have a script you ran once.</p>
+</li>
+<li>
+<p>Verification is automated. The loop needs something that can fail the work without you in the room. A test suite, a type checker, a linter, a build. No automated check means you’re back in the chair reading every diff - the exact job the loop was supposed to remove.</p>
+</li>
+<li>
+<p>Your token budget can absorb the waste. Loops re-read context, retry, explore. That burns tokens whether or not the run ships anything. The technique scales with budget, which is why it reads as obvious to people with effectively free tokens and reckless to people on a metered plan.</p>
+</li>
+<li>
+<p>The agent has a senior engineer’s tools. Logs, a reproduction environment, the ability to run the code it writes and see what breaks. Without that, the loop iterates blind.</p>
+</li>
+</ul>
+<h2>03. Who wins, who loses. Loops favor whoever can spend.</h2>
+<p>The economics are not universal. The people calling loop engineering obvious tend to have unmetered tokens.</p>
+<p>The people for whom it’s reckless are usually on a $20 consumer plan trying to run heavy verification loops without hitting limits or a surprise invoice.</p>
+<p>Who actually benefits, in practice:</p>
+<ul>
+<li>
+<p>Teams with repetitive, machine-checkable work and the budget to run it - continuous test triage, dependency bumps, lint-and-fix passes, issue-to-PR drafts on a codebase with strong test coverage.</p>
+</li>
+<li>
+<p>Codebases with strong existing test suites. If a junior engineer could do the task from a checklist and a test suite would catch their mistakes, a loop fits.</p>
+</li>
+<li>
+<p>Async-first teams with multi-agent patterns already in use. For these teams, routines are the missing orchestration layer.</p>
+</li>
+</ul>
+<p>Who should skip it, today:</p>
+<ul>
+<li>
+<p>Solo builders on consumer plans - the token bill arrives before the productivity gain does.</p>
+</li>
+<li>
+<p>Anyone working on code with no automated verification. A loop with no real check is the agent agreeing with itself on repeat.</p>
+</li>
+<li>
+<p>Teams whose real constraint is review capacity rather than typing speed. A loop generates more code; if review was already the bottleneck, it just makes the queue longer.</p>
+</li>
+</ul>
+<p>For one-off tasks, exploratory work, or anything where “done” is a judgment call, a single well-aimed prompt still wins. The honest version of this article is: loop engineering is real, and most developers don’t need it yet.</p>
+<h2>04. The 30-second loop check.</h2>
+<p>The 4-condition test from step 2 is the strategic decision. This is the tactical one - the checklist you run on a specific task before you turn it into a loop.</p>
+<p>Miss one box and keep it as a manual prompt.</p>
+<ul>
+<li>
+<ol>
+<li>The task happens at least weekly. Less than weekly → setup cost will never amortize.</li>
+</ol>
+</li>
+<li>
+<ol start="2">
+<li>A test, type check, build, or linter can reject bad output. No automated gate → the agent grades its own homework.</li>
+</ol>
+</li>
+<li>
+<ol start="3">
+<li>The agent can run the code it changes. No reproduction environment → iteration is blind.</li>
+</ol>
+</li>
+<li>
+<ol start="4">
+<li>The loop has a hard stop. Token budget, iteration count, or time limit. Without one, the loop runs until someone notices the bill.</li>
+</ol>
+</li>
+<li>
+<ol start="5">
+<li>A human reviews before merge, deploy, or dependency changes. Anything irreversible needs a human approval gate before action.</li>
+</ol>
+</li>
+</ul>
+<p><img alt="Article image" src="/assets/2026-06-11-loop-engineering-the-14-step-roadmap-from-prompter-to-loop-d-f1d0ae849c/04.png"></p>
+<p>Good first loops:</p>
+<ul>
+<li>
+<p>CI failure triage - nightly, scan failures, classify causes, draft fix PRs for the easy ones.</p>
+</li>
+<li>
+<p>Dependency bump PRs - weekly, scan for updates, test compatibility, open PRs.</p>
+</li>
+<li>
+<p>Lint-and-fix passes - on every PR open event, apply style fixes automatically.</p>
+</li>
+<li>
+<p>Flaky test reproduction - loop until a theory survives the test.</p>
+</li>
+<li>
+<p>Issue-to-PR drafts on code with strong tests, where bad output gets rejected by the suite.</p>
+</li>
+</ul>
+<p>Bad first loops - these need a human in the chair:</p>
+<ul>
+<li>
+<p>Architecture rewrites</p>
+</li>
+<li>
+<p>Auth or payments code</p>
+</li>
+<li>
+<p>Production deploys</p>
+</li>
+<li>
+<p>Vague product work</p>
+</li>
+<li>
+<p>Anything where “done” is a judgment call</p>
+</li>
+</ul>
+<p>PART  2 · The 5 Building Blocks</p>
+<h2>05. Automations: the heartbeat.</h2>
+<p>Automations are what make a loop an actual loop and not just one run you did once. They fire on a schedule, on an event, or on a trigger condition. They’re the heartbeat - everything else in the loop hangs off them.</p>
+<p>What this looks like in the two tools that matter:</p>
+<ul>
+<li>
+<p>Codex. The Automations tab - pick a project, set a prompt, set a cadence, choose local checkout or background worktree. Runs that find something land in a Triage inbox; runs that find nothing archive themselves.</p>
+</li>
+<li>
+<p>Claude Code. Three primitives that compose into the same shape:</p>
+</li>
+</ul>
+<p>/loop for session-scoped cadence, Desktop scheduled tasks for restart-survival, Routines for laptop-off cloud runs. Pair with hooks for lifecycle events.</p>
+<p>Two primitives inside an automation that separate working loops from expensive ones:</p>
+<ul>
+<li>
+<p>/loop re-runs on a cadence. Use it when you want regular checks regardless of state.</p>
+</li>
+<li>
+<p>/goal keeps going until a condition you wrote is actually true. A separate small model checks completion, so the agent that wrote the code isn’t the one grading it.</p>
+</li>
+</ul>
+<p><img alt="Article image" src="/assets/2026-06-11-loop-engineering-the-14-step-roadmap-from-prompter-to-loop-d-f1d0ae849c/05.jpg"></p>
+<p>This is the maker-vs-checker split applied to the stop condition itself.</p>
+<p>python
+&gt; /loop 30m /goal All tests in test/auth pass and lint is clean.
+  Scan src/auth for new failures, propose fixes in claude/auth-fixes,
+  open draft PR when goal condition holds.</p>
+<p>▲ Claude
+  CronCreate(*/30 * * * * : auth quality loop)
+  Stop condition: tests pass + lint clean (verified by checker)
+✓ Scheduled. Will continue past intermediate completions
+  until /goal condition is met by independent checker.</p>
+<h2>06. Worktrees: parallel without chaos.</h2>
+<p>The second you run more than one agent, the files start colliding. Two agents writing the same file is the same headache as two engineers committing to the same lines without talking first.</p>
+<p>A git worktree fixes it - a separate working directory on its own branch sharing the same repo history, so one agent’s edits literally cannot touch the other’s checkout.</p>
+<p>The media could not be played.
+Reload</p>
+<p>How it shows up in both tools:</p>
+<ul>
+<li>
+<p>Codex builds worktree support in - several threads hit the same repo at once without bumping into each other.</p>
+</li>
+<li>
+<p>Claude Code exposes git worktree directly, a --worktree flag to open a session in its own checkout, and an isolation: worktree setting on subagents so each helper gets a fresh checkout that cleans itself up after.</p>
+</li>
+</ul>
+<p>Worktrees take away the mechanical collision, but you are still the ceiling. Your review bandwidth decides how many parallel agents you can actually run - not the tool.</p>
+<h2>07. Skills: write project knowledge once. Read on every run.</h2>
+<p>A Skill is how you stop re-explaining the same project context every session like a goldfish. Both tools use the same format: a folder with a SKILL.md inside, holding instructions and metadata, plus optional scripts, references, and assets.</p>
+<p>Why this matters specifically for loops: a loop without skills re-derives your whole project context from zero every cycle. With skills, intent compounds.</p>
+<p>The conventions, build steps, “we don’t do it like this because of that one incident” - written once on the outside, read by every run.</p>
+<p>python
+name: ci-triage
+description: Classify CI failures by root cause (env, flake, real bug,
+  dependency, infra), draft fixes for the easy ones, escalate the rest.
+  Trigger whenever a workflow run fails or on the morning triage loop.</p>
+<hr>
+<h1>CI triage skill</h1>
+<h2>Classification rules</h2>
+<ul>
+<li>env: missing secret, wrong env var, infra not provisioned. # human</li>
+<li>flake: passes on retry without code change. # retry once, then file</li>
+<li>bug: deterministic failure tied to recent commit. # draft fix</li>
+<li>dependency: failure tied to a version bump. # draft rollback</li>
+<li>infra: timeout, OOM, runner issue. # escalate</li>
+</ul>
+<h2>Fix patterns</h2>
+<ul>
+<li>Auth tests → check src/auth/middleware first</li>
+<li>Database tests → verify migration applied in CI env</li>
+<li>E2E tests → check selectors against the latest UI snapshot</li>
+</ul>
+<h2>Never do</h2>
+<ul>
+<li>Disable failing tests — always file as escalation instead</li>
+<li>Modify CI config without human approval</li>
+<li>Touch src/payments/ or src/billing/ (in claude/permissions.md)</li>
+</ul>
+<h2>State</h2>
+<p>Update STATE.md after each run: file paths checked, classifications,
+PRs opened, items escalated.</p>
+<h2>08. Connectors: the loop touches your real tools. Via MCP.</h2>
+<p>A loop that can only see the filesystem is a tiny loop. Connectors, built on the Model Context Protocol (MCP), let the agent read your issue tracker, query a database, hit a staging API, drop a message in Slack.</p>
+<p><img alt="Article image" src="/assets/2026-06-11-loop-engineering-the-14-step-roadmap-from-prompter-to-loop-d-f1d0ae849c/06.jpg"></p>
+<p>Codex and Claude Code both speak MCP, so the connector you wrote for one usually just works in the other.</p>
+<p>This is the difference between an agent that says “here is the fix” and a loop that opens the PR, links the Linear ticket, and pings the channel once CI is green.</p>
+<p>The connectors are the reason the loop can act inside your actual environment, not just tell you what it would do if it could.</p>
+<p>The connectors that pay back fastest for loop work, in order:</p>
+<ul>
+<li>
+<p>GitHub - read repos, create branches, open PRs, comment on issues, react to webhook events. The single biggest day-one win for any code loop.</p>
+</li>
+<li>
+<p>Linear or Jira - update tickets as the loop progresses, link PRs back to issues, close items automatically when verification passes.</p>
+</li>
+<li>
+<p>Slack - post triage results, ping humans on escalations, summarize overnight runs in the morning.</p>
+</li>
+<li>
+<p>Sentry / your error tracker - let the loop investigate live alerts and draft fixes for the high-frequency ones.</p>
+</li>
+</ul>
+<h2>09. Sub-agents: keep the maker away from the checker.</h2>
+<p>The most useful structural thing in a loop, by far, is splitting the agent that writes from the agent that checks. </p>
+<p>Osmani’s framing is exact: the model that wrote the code is “way too nice grading its own homework.” A second agent with different instructions and sometimes a different model catches the stuff the first one talked itself into.</p>
+<p><img alt="Article image" src="/assets/2026-06-11-loop-engineering-the-14-step-roadmap-from-prompter-to-loop-d-f1d0ae849c/07.png"></p>
+<p>This is the evaluator-optimizer pattern from Anthropic’s December 2024 engineering post under a new name. One model generates, another critiques, repeat. The vocabulary going viral in 2026 was documented eighteen months ago.</p>
+<p>How sub-agents land in both tools:</p>
+<ul>
+<li>Codex only spawns subagents when you ask, runs them at the same time, then folds results back into one answer. You define your own agents as TOML files in .codex/agents/ - name, description, instructions, optional model and reasoning effort. </li>
+</ul>
+<p>Your security reviewer can be a strong model on high effort while your explorer is some fast read-only thing.</p>
+<ul>
+<li>Claude Code does the same with subagents in .claude/agents/ and agent teams that pass work between them. </li>
+</ul>
+<p>The usual split: one agent explores, one implements, one verifies against the spec.</p>
+<p>The reason it matters specifically inside a loop: the loop runs while you are not watching, so a verifier you actually trust is the only reason you can walk away. </p>
+<p>Sub-agents burn more tokens since each one does its own model and tool work  - spend them where a second opinion is worth paying for.</p>
+<p>PART 3 · Build It Right or Don’t Build It</p>
+<h2>10. The state file. The agent forgets. The file does not.</h2>
+<p>This is the piece that sounds too dumb to matter and is actually the spine of every working loop. A markdown file, a Linear board, a JSON state -anything that lives outside the single conversation and holds what’s done and what is next.</p>
+<p>Why this matters: agents have short memory by default. What they learn this session is gone tomorrow unless you write it down.</p>
+<p>Osmani’s rule: the agent forgets, the repo does not. A loop without persistent state restarts every run; a loop with state resumes.</p>
+<p>json</p>
+<h1>Loop state · ci-triage</h1>
+<h2>Last run</h2>
+<p>2026-06-09 03:30 UTC · 7 failures classified, 3 fixes drafted, 4 escalated</p>
+<h2>In progress</h2>
+<ul>
+<li>claude/fix-auth-token-refresh — tests passing locally, awaiting CI</li>
+<li>claude/fix-flaky-payment-webhook — retry pattern applied, monitoring</li>
+</ul>
+<h2>Completed today</h2>
+<ul>
+<li>claude/bump-axios-1.7.4 → merged (CI green, deps loop verified)</li>
+<li>claude/lint-fix-pass-june-9 → merged</li>
+</ul>
+<h2>Escalated to humans</h2>
+<ul>
+<li>src/billing/refund.ts — tests failing in 3 ways, root cause unclear</li>
+<li>ci/staging-runner — infra timeouts, not a code issue</li>
+</ul>
+<h2>Lessons learned (write here, not in chat)</h2>
+<ul>
+<li>2026-06-08: PowerShell hits TLS 1.2 issue on this Windows runner. Use bash.</li>
+<li>2026-06-07: tests/e2e/checkout requires Stripe webhook secret in env. Skip if missing.</li>
+</ul>
+<h2>Stop conditions met since last review</h2>
+<ul>
+<li>/goal “all tests pass + lint clean” achieved on commit 3a7b8c1 at 02:14 UTC</li>
+</ul>
+<p>Two patterns for where the state file lives:</p>
+<ul>
+<li>
+<p>Markdown in the repo - STATE.md at the root or inside .claude/. Version-controlled. Simple. Diff-readable. Best for solo or small team work.</p>
+</li>
+<li>
+<p>External system (Linear, GitHub Issues, a database) - survives across repos, queryable, supports team-wide visibility. Best for production loops where multiple humans need to see what the loop is doing.</p>
+</li>
+</ul>
+<p>For long-running loops that risk drifting off the goal, pair the state file with a standing high-level spec - VISION.md or AGENTS.md - that the agent rereads each run. State tells the agent where it is. The spec tells it where to go.</p>
+<h2>11. The minimum viable loop.</h2>
+<p>If you passed the 4-condition test in step 2, build the smallest loop that works before anything fancy. Four parts, no swarm.</p>
+<p><img alt="Article image" src="/assets/2026-06-11-loop-engineering-the-14-step-roadmap-from-prompter-to-loop-d-f1d0ae849c/08.png"></p>
+<p>The four parts, in plain language:</p>
+<ul>
+<li>
+<p>One automation. A scheduled run that fires on a cadence and stops on a clear condition. Use /loop in Claude Code or an automation in Codex. Pair with /goal when you want it to run until a stated condition holds.</p>
+</li>
+<li>
+<p>One skill. A single SKILL.md that stores the project context the agent would otherwise re-derive from zero every run.</p>
+</li>
+<li>
+<p>One state file. A markdown file or a Linear board that records what is done and what is next. Tomorrow’s run resumes instead of restarting.</p>
+</li>
+<li>
+<p>One gate. The test, type check, or build that fails bad work automatically. This is the part that decides whether the loop helps or just spends.</p>
+</li>
+</ul>
+<p>Order matters: get one manual run reliable first. Turn it into a skill. Wrap it in a loop. Then schedule it. Skipping ahead is how loops fail in production.</p>
+<p>The metric that matters is cost per accepted change - not tokens spent, not tasks attempted, not loops scheduled. If your accepted-change rate is below 50% you’re doing review work the loop saved you from, and the loop is losing.</p>
+<h2>12. The Ralph Wiggum loop. Loops that fail quietly.</h2>
+<p>Engineer Geoffrey Huntley documented this failure mode and named it. An agent meant to emit a completion token only when finished emits it early, and the loop exits on a half-done job. Without a hard gate, loops fail quietly and keep spending.</p>
+<p><img alt="Article image" src="/assets/2026-06-11-loop-engineering-the-14-step-roadmap-from-prompter-to-loop-d-f1d0ae849c/09.jpg"></p>
+<p>The Ralph Wiggum loop is what happens when:</p>
+<ul>
+<li>
+<p>No real verifier. Just a second agent asked to “review,” no objective signal. Two optimists agreeing.</p>
+</li>
+<li>
+<p>Soft completion conditions. “Done” defined by the agent’s judgment, not by a test, build, or type check.</p>
+</li>
+<li>
+<p>No hard stops. Loop continues until something external kills it (rate limit, you noticing) rather than until success is verified.</p>
+</li>
+</ul>
+<p>The fix is the gate from step 11 - something objective that can fail the work. A test that passes or fails. A build that compiles or doesn’t. A linter that returns zero or non-zero. Not a verifier that has an opinion.</p>
+<p>Other measured failure modes worth knowing:</p>
+<ul>
+<li>
+<p>Goal drift over long sessions. Each summarization step is lossy; “don’t do X” constraints disappear at turn 47. Mitigation: a standing VISION.md or AGENTS.md reread each run.</p>
+</li>
+<li>
+<p>Self-preferential bias. The agent that wrote the code is too nice grading its own homework. Mitigation: a separate verifier subagent with no exposure to the maker’s reasoning.</p>
+</li>
+<li>
+<p>Agentic laziness. The loop declares “done enough” at partial completion. Mitigation: /goal with an objective stop condition checked by a fresh model.</p>
+</li>
+</ul>
+<h2>13. Comprehension debt and cognitive surrender.</h2>
+<p>This is the failure mode that gets sharper as the loop gets better, not worse. Two named risks, both from Osmani’s essay:</p>
+<ul>
+<li>
+<p>Comprehension debt. The faster the loop ships code you didn’t write, the larger the distance between what the repository contains and what you understand. The bill that hurts is not the token bill. It is the day you have to debug a system no one on the team has read.</p>
+</li>
+<li>
+<p>Cognitive surrender. The pull to stop forming an opinion and accept whatever the loop returns. Designing the loop is the cure when you do it with judgment and the accelerant when you do it to avoid thinking. Same action, opposite result.</p>
+</li>
+</ul>
+<p>The mitigations are not technical:</p>
+<ul>
+<li>
+<p>Read the diffs. If you don’t read what the loop ships, you’re renting comprehension debt at compound interest.</p>
+</li>
+<li>
+<p>Spot-check the gate. Pick a few PRs the loop opened and verify the test that approved them actually catches the failure mode you care about. Gates rot.</p>
+</li>
+<li>
+<p>Block the loop from architecture work. Keep it on small, machine-checkable changes. The moment you let it touch judgment calls, comprehension debt accelerates.</p>
+</li>
+<li>
+<p>Pair-design loops with a teammate. A second pair of eyes when designing the loop catches blind spots the loop will exploit forever otherwise.</p>
+</li>
+</ul>
+<h2>14. The security tax. An unattended loop is an unattended attack surface.</h2>
+<p>A loop running unattended is also an attack surface running unattended.</p>
+<p>The threat model your loop has to defend against:</p>
+<ul>
+<li>
+<p>Generated code shipping unreviewed. The loop opens PRs faster than a human can read them. Without a gate that includes security checks (SAST, dependency audit, secret scanning), insecure code merges automatically.</p>
+</li>
+<li>
+<p>Skills as injection vectors. A loop that auto-installs skills inherits every prompt injection hiding in their descriptions. Audit skill sources before installing.</p>
+</li>
+<li>
+<p>Credentials in logs. Debug logging during a long-running loop scatters secrets across logs you don’t monitor. Disable verbose logging in production loops; sanitize what does get logged.</p>
+</li>
+<li>
+<p>Permission scope creep. A loop tested with read-only permissions gets “just one” write permission added for convenience, then never re-audited. Re-audit permissions every 30 days.</p>
+</li>
+</ul>
+<h2>§ The mistakes that turn loops into money pits</h2>
+<ul>
+<li>
+<p>Building a loop without running the 4-condition test. Step 2 exists for a reason. Most developers fail at least one condition.</p>
+</li>
+<li>
+<p>No objective gate. A second agent asked to “review” without a test, type check, or build is just a second optimist.</p>
+</li>
+<li>
+<p>One agent doing both writing and verifying. Self-preferential bias. The maker grades its own homework and it’s always “A+.”</p>
+</li>
+<li>
+<p>No state file. Tomorrow’s run restarts from zero instead of resuming.</p>
+</li>
+<li>
+<p>Vague stop conditions. “Done when it looks good” never holds. Use a test, a type pass, or a passing build.</p>
+</li>
+<li>
+<p>No token budget cap. Loops re-read context and retry. Without a cap, ambitious loops burn 5-10× the tokens you expected.</p>
+</li>
+<li>
+<p>Running loops on a consumer plan with heavy verification. Token bill or rate limit, one of them gets you.</p>
+</li>
+<li>
+<p>Auto-installing community skills. 520 of 17,022 audited skills leak credentials. Read the source before installing.</p>
+</li>
+<li>
+<p>Loops on judgment-call work. Architecture, auth, payments, vague product decisions. Keep the loop on lint-and-fix, not strategy.</p>
+</li>
+<li>
+<p>Not reading the diffs. Comprehension debt at compound interest. The day you debug a system no one has read costs more than the tokens ever did.</p>
+</li>
+</ul>
+<h2>Conclusion:</h2>
+<h2>The leverage moved. Your job did too.</h2>
+<p>For two years, the leverage in working with coding agents was at the prompt. Better prompts, better context, better one-shot output.</p>
+<p>That phase is ending. The agents got good enough that the next leverage point is one floor up: the system that decides what they work on, when, with what gate, and what state survives between runs.</p>
+<p>But the honest version of this story is not that everyone should rush to build loops. Most developers don’t need one yet - not until the task repeats, verification is automated, the budget can absorb the waste, and the agent has senior engineer tools.</p>
+<p>Miss one condition and the loop costs more than it returns.</p>
+<p>If you pass the test, build small. One automation. One skill. One state file. One gate. Get a manual run reliable. Turn it into a skill. Wrap it in a loop. Then schedule it. Order matters. Skip ahead and you’re paying for a system no one understands.</p>
+<p>Cherny’s point isn’t that the work got easier. It’s that the leverage point moved. Build the loop. Stay the engineer.</p></div><a class="source" href="https://x.com/0xCodez/status/2064374643729773029" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

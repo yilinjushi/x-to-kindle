@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="一个 skill 成为 TOP 1% Context 管理大师，比官方好用 100x 的 /fork">
+  <title>一个 skill 成为 TOP 1% Context 管理大师，比官方好用 100x 的 /fork · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">实践哥 Li @MinLiBuilds · 2026-06-11</div><div class="prose"><h1>一个 skill 成为 TOP 1% Context 管理大师，比官方好用 100x 的 /fork</h1>
+<p>和 Claude Code 聊了半小时，调教好了上下文。偏偏这时你想试个更狠的改法，或者冒出个岔路问题想顺嘴问一句。非常难堪，当前窗口直接动手，主线被带跑、上下文越搅越乱；新开一个 claude，它干干净净啥都不知道，半小时的铺垫得从头再讲一遍。</p>
+<p>所以我写了一个比官方好用 100 倍的 /branchnew：在当前会话快捷键⌘F ，终端往右一裂，右边那格就是这场对话的一个 fork，往后两条线各跑各的，左边主线你碰都没碰。关键还100% 命中缓存。</p>
+<p>为什么能这么干？因为 Claude 是无状态的，每轮对话都要把整段历史重新发一遍给模型。管理context，本质是管理这块cache：历史前缀被缓存，命中一次省 90% 的钱。</p>
+<p>而大多数人只会一个 /clear，一键清空重来。</p>
+<p>这篇先把 Claude 自带的一整套 context 命令讲透，再讲 branchnew 凭什么比原生 fork 好用 100 倍。看完，你就是 context 管理大师。</p>
+<h2>导读</h2>
+<ul>
+<li>
+<p>只想 ⌘F 一键 fork：跳到第 3 节，一句话让 Claude 帮你装好。</p>
+</li>
+<li>
+<p>想把自带的 context 命令一次补齐：看第 1 节命令手册。</p>
+</li>
+<li>
+<p>想知道 branchnew 凭什么吊打原生 fork：看第 2 节。</p>
+</li>
+</ul>
+<h2>1. context 管理命令手册</h2>
+<p>这一章是 Claude Code 自带的：</p>
+<p>/btw &lt;问题&gt;：临时插个旁路问题，答案照给，不写进对话历史，缓存全命中。注意，这是唯一的命令可以在 prompt 处理过程中发起额外的会话。</p>
+<p>--continue（-c）：接当前目录最近那场对话往下聊，前缀原样复用。趁缓存还热（默认 1h TTL）接上，关机重启第二天也能恢复会话。
+ --resume（-r）：列出目录里所有历史会话挑一个，或会话里打 /resume 选。</p>
+<p>--fork-session、/branch、/fork</p>
+<p>会话里还有三条岔路命令，但都别扭，下一节细说为什么：</p>
+<ul>
+<li>
+<p>/branch [名字]：当场给对话拉个分支，把你切进去，原会话留在 /resume。</p>
+</li>
+<li>
+<p>/fork &lt;一句话&gt;：派个后台分身带全部上下文去办这一件事，干完把结果带回，你不进去。</p>
+</li>
+</ul>
+<p>--fork-session 是关键开关。单用 --continue 或 --resume 是接着原会话往下写。加上它，Claude 把到此为止的历史复制成一场全新会话，原会话一字不动，新支从分支点岔开。最常用的组合：</p>
+<p>claude --continue --fork-session</p>
+<p>/rewind（输入框空着连按两下 Esc 也行）神器，把对话、代码、或两者一起倒回某个时间点。因为 cache 前缀匹配，缓存只要还在 TTL 内就仍是有效的。</p>
+<p>/export 把当前对话下载成纯文本，分享或留档用。</p>
+<p>/clear ：清空对话，旧的存进 /resume。</p>
+<p>/compact ：压缩过大的上下文使用。</p>
+<h2>2. 原生 fork 不够用，所以有了 branchnew</h2>
+<p>回到/branch、/fork，--fork-session , 真用他们各种不爽：</p>
+<ul>
+<li>自己开窗、自己把这串敲全、自己起名，每岔一支都来一遍。</li>
+</ul>
+<p>原生这三样没一个能替你自动开出一场并排的、能多轮聊的新会话。</p>
+<p>用过 Codex 那个 app 的都懂那种顺：点一下，立刻并排多出一场带同样上下文的独立会话，直接进去开干。Claude Code 的终端里偏偏少这一下。</p>
+<p>我就想把它搬进 Claude 终端，写了 branchnew：会话边上敲一下，右边自动裂开一格，就是这场对话的一个 fork。底层是 claude --continue --fork-session，所以分叉那一刻不重放历史，整段上下文 100% 命中缓存，几乎零成本。</p>
+<h2>3. 安装：一个 prompt 搞定</h2>
+<p>最省事：把仓库链接丢给 Claude Code，让它帮你装 branchnew。它照着 README 把 branchnew 命令和 /branchnew 斜杠命令装好，还会问你要不要把后面的 ⌘F 热键一起装上。</p>
+<p>仓库：https://github.com/limin112/branchnew  ， 有用就点个star。</p>
+<p>用 Ghostty、Codex CLI，或者别的终端、别的 agent？目前还没原生适配你们的环境，但脚本很短、没写死任何个人路径，欢迎 fork 过去改成你顺手的样子，改好了顺手提个 PR，我合。</p>
+<p>会话里直接打 /branchnew，终端往右一裂，右边那格自动接上 claude --continue --fork-session，开窗、接上下文、起名全替你干了，左边主线你碰都没碰。</p>
+<p>┌───────────────┬───────────────┐
+│  你正在工作的   │  branchnew 开的 │
+│  Claude 会话   │  fork 分身      │
+│  （原样不动）   │  newBranch[N]  │
+└───────────────┴───────────────┘</p>
+<p>就 2 种形式：</p>
+<p>/branchnew            # 向右分屏 + fork，自动叫 newBranch1、newBranch2……
+/branchnew plan-b     # 同上，这支叫 plan-b（名字可带空格、中文，不用引号）</p>
+<p>它替你干三件事：自动向右分屏、自动接上下文、自动起名。</p>
+<p>几个场景可以使用：</p>
+<ul>
+<li>
+<p>试错不毁主线：想试个更狠的重构，分一支去试，成了搬回结论，砸了直接关窗，左边那条线毫不知情。像官方的 fork，但能多轮对话、你全程在场。</p>
+</li>
+<li>
+<p>岔路顺手问：干到一半冒出个问题，分一支过去问，主线纹丝不动。</p>
+</li>
+<li>
+<p>长任务别干等：主窗口跑着慢活，分一支带同样上下文先开下一块，两边并行。</p>
+</li>
+</ul>
+<p>共同点：缓存完全复用，攒下的上下文一次都不用重讲，不用所谓的 handoff。</p>
+<h2>4. 高阶用法：⌘F 一键 fork</h2>
+<p>前面说过，除了 /btw，其它斜杠命令在 Claude 跑着的时候基本插不上手。于是我借 iTerm2 的能力加了个 ⌘F：一键 fork 当前这格里那条确切的会话，精确到 session id，分出来的支再往下分也不串台。装的时候选上 ⌘F 热键即可（跟着提示开一下 iTerm2 的 Python API）。</p>
+<p>爽。</p>
+<p>把上下文当缓存来管，你和 Claude 的对话就从一条直线，变成一棵能接、能岔、能倒、能存的树。这套用顺，你就是 context 管理大师。</p>
+<p>最后一句私心话：branchnew 这一下，本该是官方的 branch/fork 自己就该做到的。趁它还没内置先装上爽着，等哪天官方把这功能抄进去，你也能淡淡说一句：这玩意我早用上了。深藏功与名。</p>
+<p>聊到一半、正卡着两条路的那场对话，现在就分一支出去。跑顺了回评论区告诉我，你都拿它分叉去干了啥。</p></div><a class="source" href="https://x.com/MinLiBuilds/status/2064326837971595509" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

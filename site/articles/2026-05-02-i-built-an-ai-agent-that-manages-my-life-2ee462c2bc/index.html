@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="I Built an AI Agent That Manages My Life">
+  <title>I Built an AI Agent That Manages My Life · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">self.dll @seelffff · 2026-05-02</div><div class="prose"><h1>I Built an AI Agent That Manages My Life</h1>
+<h2>Full architecture, real code, and a demo you can replicate tonight.</h2>
+<p>10 min read · Beginner-friendly · Claude Pro only - no extra cost</p>
+<p>Let me tell you what my mornings looked like six months ago. I&#x27;d wake up, grab my phone, and spend the first 20 minutes opening five different apps: one for tasks, one for news, one for habits, one for notes, one for market data. By the time I finished checking everything, I was already stressed and behind.</p>
+<p>Now I type two letters - &quot;gm&quot; - and 30 seconds later my phone buzzes. The agent has already browsed real websites, read my task list, pulled today&#x27;s top AI headlines, and texted me everything I need to start the day. I don&#x27;t open a single app. I just read one message.</p>
+<p>This isn&#x27;t a $200/month SaaS product. It&#x27;s not a no-code workflow. It&#x27;s a personal AI agent I built in one afternoon using Claude Desktop, three open-source tools, and a single markdown file that acts as its brain. Here&#x27;s everything - including the exact code.</p>
+<p><img alt="Article image" src="/assets/2026-05-02-i-built-an-ai-agent-that-manages-my-life-2ee462c2bc/01.jpg"></p>
+<h1>The Problem With How We Manage Our Days</h1>
+<p>Most people use 5–8 apps to run their day. Task managers, news aggregators, habit trackers, note apps, dashboards. Each one is optimized for its own little slice of your life and has no idea what the others are doing.</p>
+<p>AI tools promised to fix this. But most AI assistants have a fundamental limitation: they can&#x27;t actually do anything. They answer questions. They summarize text. But they can&#x27;t open your real browser and read a live webpage. They can&#x27;t update a file on your computer. They can&#x27;t send you a push notification at 7am.</p>
+<p>That&#x27;s the gap this system fills. Not another chat interface - an agent that takes real actions on your behalf, reads your real files, browses real websites, and reaches you on your phone.</p>
+<p>The key insight: an AI assistant tells you things. An AI agent does things. That&#x27;s the difference we&#x27;re building toward here.</p>
+<h1>What Makes This Possible: MCP</h1>
+<p>If you haven&#x27;t heard of MCP yet, you will soon. Model Context Protocol is an open standard that lets you connect Claude to external tools — like USB ports for AI. Each connection is called an &quot;MCP server,&quot; and each server gives Claude a new capability.</p>
+<p>The three MCP servers powering this system:</p>
+<p>· Filesystem MCP - reads and writes files on your computer. Your notes, your task lists, your knowledge base. The agent can read them and update them.</p>
+<p>· Playwright MCP - controls a real Chrome browser. Not a scraper, not an API - an actual browser that opens pages the same way you do. If you&#x27;re logged in, the agent is logged in.</p>
+<p>· Telegram MCP - sends messages to your Telegram. This is how the agent reaches your phone. You don&#x27;t pull data from it - it pushes data to you.</p>
+<p>The crucial point: you don&#x27;t need API keys for any of this. You don&#x27;t need a paid OpenAI plan, AWS credits, or a developer account. Everything runs on a standard Claude Pro subscription (~$20/month) that most people reading this already have.</p>
+<p>Total additional cost: $0. The only new piece is a Telegram account, which is free.</p>
+<h1>The Architecture - How It All Connects</h1>
+<p>Here&#x27;s the full map of the system before we start building:</p>
+<p>YOU  →  Claude Desktop (the brain)
+              │
+              ├── Filesystem MCP
+              │       └── ~/agent-system/
+              │               ├── CLAUDE.md    (agent instructions)
+              │               ├── tasks.md     (daily habits)
+              │               ├── context.md   (about you)
+              │               └── notes.md     (research output)
+              │
+              ├── Playwright MCP
+              │       └── Real Chrome browser
+              │               ├── TechCrunch, X.com
+              │               └── Polymarket, any site
+              │
+              └── Telegram MCP
+                      └── Your phone 📱</p>
+<p>You type a command. Claude reads CLAUDE.md (its instruction file), decides what to do, uses the MCP tools, and sends you the result on Telegram. The whole thing runs locally on your Mac or PC. Nothing goes to a third-party server except the Telegram message itself.</p>
+<p><img alt="Article image" src="/assets/2026-05-02-i-built-an-ai-agent-that-manages-my-life-2ee462c2bc/02.jpg"></p>
+<h1>Building It - Step by Step</h1>
+<h2>Step 1: Install Claude Desktop and connect MCP servers</h2>
+<p>Download Claude Desktop from claude.ai/download. Sign in with your Claude Pro account. Then open the config file that controls which MCP servers are active:</p>
+<p>~/Library/Application Support/Claude/claude_desktop_config.json</p>
+<p>Replace its contents with this - substituting your own folder path, Telegram bot token, and chat ID (we&#x27;ll get those in a moment):</p>
+<p>json
+{
+  &quot;mcpServers&quot;: {
+    &quot;playwright&quot;: {
+      &quot;command&quot;: &quot;npx&quot;,
+      &quot;args&quot;: [&quot;@playwright/mcp@latest&quot;]
+    },
+    &quot;filesystem&quot;: {
+      &quot;command&quot;: &quot;npx&quot;,
+      &quot;args&quot;: [
+        &quot;-y&quot;,
+        &quot;@modelcontextprotocol/server-filesystem&quot;,
+        &quot;/Users/yourname/agent-system&quot;
+      ]
+    },
+    &quot;telegram&quot;: {
+      &quot;command&quot;: &quot;node&quot;,
+      &quot;args&quot;: [&quot;/Users/yourname/.mcp-servers/telegram/server.js&quot;],
+      &quot;env&quot;: {
+        &quot;BOT_TOKEN&quot;: &quot;YOUR_BOT_TOKEN&quot;,
+        &quot;CHAT_ID&quot;:   &quot;YOUR_CHAT_ID&quot;
+      }
+    }
+  },
+  &quot;preferences&quot;: {
+    &quot;allowAllBrowserActions&quot;: true
+  }
+}</p>
+<p>Save the file. Don&#x27;t restart Claude Desktop yet - we need to build the Telegram server first.</p>
+<h2>Step 2: Create your Telegram bot</h2>
+<p>Open Telegram and search for @BotFather. Send it the message /newbot, give your bot a name, and copy the token it gives you - it looks like 1234567890:ABCdef...</p>
+<p>Then send any message to your new bot and visit this URL in your browser (replace YOUR_TOKEN with the actual token):</p>
+<p>https://api.telegram.org/botYOUR_TOKEN/getUpdates</p>
+<p>Find the &quot;id&quot; field inside the &quot;chat&quot; object. That number is your CHAT_ID. Both values go into the config file above.</p>
+<p>Security note: treat your bot token like a password. Don&#x27;t share it publicly. If it gets exposed, revoke it immediately with /revoke in BotFather and generate a new one.</p>
+<h2>Step 3: Build the Telegram MCP server</h2>
+<p>This is the only part that involves writing code - and it&#x27;s 25 lines. You need Node.js installed (check with node --version in terminal). Then:</p>
+<p>bash
+mkdir -p ~/.mcp-servers/telegram
+cd ~/.mcp-servers/telegram
+npm init -y
+npm install @modelcontextprotocol/sdk zod</p>
+<p>Open the folder and create a file called server.js with this content:</p>
+<p>javascript
+import { McpServer } from &quot;@modelcontextprotocol/sdk/server/mcp.js&quot;;
+import { StdioServerTransport } from &quot;@modelcontextprotocol/sdk/server/stdio.js&quot;;
+import { z } from &quot;zod&quot;;</p>
+<p>const BOT_TOKEN = process.env.BOT_TOKEN;
+const CHAT_ID   = process.env.CHAT_ID;</p>
+<p>const server = new McpServer({ name: &quot;telegram&quot;, version: &quot;1.0.0&quot; });</p>
+<p>server.tool(
+  &quot;send_telegram_message&quot;,
+  { message: z.string().describe(&quot;Message to send&quot;) },
+  async ({ message }) =&gt; {
+    const url = <code>https://api.telegram.org/bot${BOT_TOKEN}/sendMessage</code>;
+    await fetch(url, {
+      method: &quot;POST&quot;,
+      headers: { &quot;Content-Type&quot;: &quot;application/json&quot; },
+      body: JSON.stringify({
+        chat_id:    CHAT_ID,
+        text:       message,
+        parse_mode: &quot;HTML&quot;
+      })
+    });
+    return { content: [{ type: &quot;text&quot;, text: &quot;Message sent.&quot; }] };
+  }
+);</p>
+<p>const transport = new StdioServerTransport();
+await server.connect(transport);</p>
+<p>Then open package.json and add one line inside the top-level object:</p>
+<p>json
+&quot;type&quot;: &quot;module&quot;</p>
+<p>That&#x27;s the entire server. It receives a text string from Claude and forwards it to your Telegram.</p>
+<h2>Step 4: Create the agent-system folder</h2>
+<p>Create a folder at ~/agent-system with four files. This is where the agent lives - it reads these files every time you give it a command.</p>
+<p>~/agent-system/
+├── CLAUDE.md     ← instructions (we&#x27;ll fill this next)
+├── tasks.md      ← your daily habit list
+├── context.md    ← background info about you
+└── notes.md      ← empty for now, agent writes here</p>
+<p>For tasks.md, create a checklist of your daily habits:</p>
+<h1>Daily Habits EXAMPLE</h1>
+<ul>
+<li>[ ] ML Course (1 lesson)</li>
+<li>[ ] Post on X</li>
+<li>[ ] Gym</li>
+<li>[ ] LeetCode (1 problem)</li>
+<li>[ ] English practice</li>
+<li>[ ] Reading (30 min)</li>
+<li>[ ] Water (2L)</li>
+<li>[ ] Neural Networks study</li>
+</ul>
+<p>For context.md, write a short paragraph about yourself - your goals, interests, what you&#x27;re learning. The agent references this when generating content personalized to you:</p>
+<h1>About Me</h1>
+<p>I&#x27;m a developer and AI enthusiast learning ML and neural networks.
+I&#x27;m building in public on X. I care about AI progress, prediction
+markets, and shipping fast. My main focus: consistency and depth.</p>
+<h1>CLAUDE.md - The Agent&#x27;s Brain</h1>
+<p>This is the most important file in the whole system. CLAUDE.md is the permanent system prompt that Claude Desktop reads at the start of every conversation. It&#x27;s what transforms Claude from a generic chatbot into your personal agent with specific commands and behaviors.</p>
+<p>Think of it like an employee handbook. Every time the agent starts a new session, it reads this file and knows exactly what it&#x27;s supposed to do, how to behave, and which commands it recognizes.</p>
+<p>Here&#x27;s the full CLAUDE.md that powers my system:</p>
+<h1>MY PERSONAL AI AGENT — Operating Instructions</h1>
+<p>You are my personal life agent. You help me stay focused, informed,
+and consistent with my habits.</p>
+<h2>CORE RULES</h2>
+<ol>
+<li>After every command, send the result to Telegram.
+   Never skip this step.</li>
+<li>Use English for all outputs.</li>
+<li>Be direct. No filler words, no unnecessary disclaimers.</li>
+<li>When you need data from a website, use Playwright to browse
+   the actual page — don&#x27;t guess or make things up.</li>
+<li>Read context.md before generating any personalized content.</li>
+</ol>
+<h2>COMMANDS</h2>
+<h3>gm</h3>
+<p>Morning briefing. Do this in order:
+1. Open TechCrunch with Playwright. Find the 3 most important
+   AI or tech stories from the last 24 hours. Get real headlines.
+2. Read tasks.md. List all unchecked items as today&#x27;s habits.
+3. Write one motivational line (personalized to my context).
+4. Format everything clearly and send to Telegram.</p>
+<h3>x post idea</h3>
+<p>Generate 3 viral post ideas for X (Twitter):
+- Read context.md to understand my niche and voice.
+- Browse X or tech news for what&#x27;s trending right now.
+- Write 3 different hooks: one contrarian take, one personal
+  story format, one &#x27;here&#x27;s what I learned&#x27; format.
+- Send all 3 to Telegram.</p>
+<h3>motivate me</h3>
+<p>Write one powerful, specific motivational message based on
+my context and current goals. Not generic. Send to Telegram.</p>
+<h3>fact</h3>
+<p>Find or generate one fascinating, specific fact about AI,
+technology, or science. Surprising and shareable. Send to Telegram.</p>
+<h3>polymarket check</h3>
+<p>Open polymarket.com with Playwright. Find the 3 most interesting
+active prediction markets. Report current odds and volume.
+Add a one-line take on each. Send to Telegram.</p>
+<h3>research [topic]</h3>
+<p>Browse 3 different sources on [topic] using Playwright.
+Synthesize the key insights into a concise summary.
+Save to notes.md and send a summary to Telegram.</p>
+<h3>done: [task]</h3>
+<p>Find [task] in tasks.md and mark it complete (change [ ] to [x]).
+Confirm what was marked and send to Telegram.</p>
+<h3>check progress</h3>
+<p>Read tasks.md. Count completed vs total habits.
+Calculate the % and send a progress report to Telegram.</p>
+<h3>evening review</h3>
+<p>Read tasks.md to see what was completed today.
+Write a short, honest summary: wins, what was missed, and
+one improvement for tomorrow. Send to Telegram.</p>
+<p>This file is the entire intelligence of the agent. No code, no configuration - just plain English instructions. That&#x27;s the beauty of the system: you can edit it anytime to add new commands, change behaviors, or update your context.</p>
+<p>Pro tip: the more specific your CLAUDE.md, the better the agent performs. &quot;Browse TechCrunch&quot; gets better results than &quot;find news.&quot; &quot;Write a contrarian take about AI automation&quot; gets better results than &quot;write a post idea.&quot;</p>
+<p><img alt="Article image" src="/assets/2026-05-02-i-built-an-ai-agent-that-manages-my-life-2ee462c2bc/03.jpg"></p>
+<h1>Restarting and Testing the Agent</h1>
+<p>With all four steps complete, restart Claude Desktop. When it opens, create a new Project (this is important - Projects in Claude Desktop have persistent memory and read your folder). Add the agent-system folder to the Project.</p>
+<p>Now type your first command: gm</p>
+<p>Here&#x27;s what happens: Claude reads CLAUDE.md, sees the instructions for the gm command, opens a real Chrome browser using Playwright, navigates to TechCrunch, reads the actual headlines, goes back to your tasks.md file, reads your habits, formats everything into a clean message, and sends it to Telegram. The whole process takes about 30–60 seconds.</p>
+<p>Here&#x27;s what actually arrived on my phone the first time I ran it:</p>
+<p>🌅 Good morning! Here&#x27;s your briefing:</p>
+<p>AI NEWS TODAY:
+• Anthropic raises at $900B valuation - new frontier model incoming
+• OpenAI files suit against xAI over Grok training data
+• Stripe announces native AI agent payment infrastructure
+• Google Gemini integration coming to 400M cars via Android Auto</p>
+<p>TODAY&#x27;S HABITS:
+☐ ML Course     ☐ X Post     ☐ Gym
+☐ LeetCode      ☐ English    ☐ Reading
+☐ Water (2L)    ☐ Neural Networks</p>
+<p>One thing: ship something small today. Consistency beats intensity.</p>
+<p>Let&#x27;s go. 🔥</p>
+<p>Real headlines. Real tasks from my file. A message that sounded like it was written for me, not a template. That was the moment I knew this system was worth sharing.</p>
+<p><img alt="Article image" src="/assets/2026-05-02-i-built-an-ai-agent-that-manages-my-life-2ee462c2bc/04.jpg"></p>
+<h1>How I Actually Use This Every Day</h1>
+<p>The system has been running for several months now. Here&#x27;s how it fits into an actual day — not an idealized productivity workflow, but what really happens.</p>
+<h2>Morning (7–8am)</h2>
+<p>I type &quot;gm&quot; while still in bed. By the time I&#x27;ve brushed my teeth, the briefing has arrived. I know what&#x27;s happening in AI, I know what I&#x27;ve committed to today, and I have one concrete intention for the morning. No app-switching, no doom-scrolling, no decision fatigue.</p>
+<h2>During the day</h2>
+<p>When I finish something, I type &quot;done: gym&quot; or &quot;done: ml course.&quot; The agent updates the file and confirms. It takes three seconds and it&#x27;s strangely satisfying to watch the agent do the bookkeeping for me.</p>
+<p>When I need a post idea or I&#x27;m stuck on what to write, I type &quot;x post idea.&quot; The agent browses what&#x27;s actually trending — not what was trending three hours ago — and gives me three hooks I can work with. About one in three is good enough to publish with light editing.</p>
+<h2>Evening</h2>
+<p>&quot;Evening review&quot; pulls everything together. The agent reads what was completed, what wasn&#x27;t, and writes an honest summary. It&#x27;s like having a coach who isn&#x27;t afraid to tell you when you skipped the gym.</p>
+<h1>Why This Works (When Other Systems Don&#x27;t)</h1>
+<p>I&#x27;ve tried most of the popular productivity systems. Notion databases, Obsidian vaults, Zapier automations, Todoist integrations. They all have the same problem: they require you to go to them. You have to open the app. You have to check in. When life gets busy, you stop.</p>
+<p>This system inverts the relationship. The agent comes to you. It reaches you on Telegram - the same app you&#x27;re already using - and delivers exactly what you need. The friction is almost zero, which is why it actually sticks.</p>
+<p>The second reason it works is that it&#x27;s connected to your real data. The agent doesn&#x27;t give you generic morning motivation because it doesn&#x27;t know anything about you. It reads context.md. It knows you&#x27;re building in public, learning ML, and care about prediction markets. The output reflects that.</p>
+<p>The third reason: it browses the actual web. Not summaries, not training data from six months ago. When you ask for today&#x27;s AI news, the agent opens TechCrunch and reads today&#x27;s headlines. When you ask for Polymarket data, it opens Polymarket and reads live odds. This is the Playwright MCP doing work that no other AI assistant can do without an expensive API.</p>
+<p>The agent doesn&#x27;t replace your judgment - it removes the friction between your intentions and your actions. You still decide what matters. The agent just makes sure you don&#x27;t forget.</p>
+<h1>How It Compares to Existing Tools</h1>
+<p>+--------------------------+--------------+-------------+---------+-----------------+
+| Capability               | This Agent   | Notion AI   | Zapier  | Generic AI apps |
++--------------------------+--------------+-------------+---------+-----------------+
+| Browses real websites    | Yes          | No          | Partial | No              |
+| Reads your local files   | Yes          | No          | No      | No              |
+| Sends Telegram push      | Yes          | No          | Yes     | No              |
+| Understands your context | Deep         | No          | No      | Shallow         |
+| Customizable commands    | Unlimited    | Limited     | Limited | Limited         |
+| Extra monthly cost       | $0           | $8-16/mo    | $20+/mo | $20+/mo         |
+| No-code setup            | Yes          | Yes         | Yes     | Yes             |
++--------------------------+--------------+-------------+---------+-----------------+</p>
+<h1>Where to Take It Next</h1>
+<p>What&#x27;s described in this guide is a foundation. The real power is that every new MCP server you add gives the agent a new capability. Here&#x27;s what I&#x27;m adding next:</p>
+<p>· Scheduled morning briefing - the agent sends &quot;gm&quot; automatically at 7am. No typing required. Claude Desktop supports scheduled tasks natively.</p>
+<p>· Weekly review - every Sunday, the agent compares this week&#x27;s habit completion against last week and identifies patterns.</p>
+<p>· X post drafting - the agent writes a full post, saves it to a drafts file, and I review before publishing. One step closer to shipping consistently.</p>
+<p>· Learning tracker - as I finish ML lessons, the agent logs progress and gives me a weekly study report.</p>
+<p>· Mood log - I describe how I feel each morning, the agent tracks it over time and surfaces patterns I&#x27;d never notice manually.</p>
+<p>Every one of these is just a new section in CLAUDE.md plus, in some cases, a new MCP server. The architecture scales because it&#x27;s built on plain text and open protocols.</p>
+<h1>How to Build This Yourself — Full Checklist</h1>
+<p>Here is everything you need, in order:</p>
+<p>· Claude Pro subscription (claude.ai)  ~$20/month</p>
+<p>· Node.js installed on your computer - nodejs.org, free</p>
+<p>· Telegram account - telegram.org, free</p>
+<p>· 20–30 minutes of focused setup time</p>
+<p>The steps:</p>
+<ol>
+<li>
+<p>Download Claude Desktop from claude.ai/download</p>
+</li>
+<li>
+<p>Create Telegram bot via @BotFather - get token and chat ID</p>
+</li>
+<li>
+<p>Build Telegram MCP server - 25 lines of code from Section 4, Step 3</p>
+</li>
+<li>
+<p>Create ~/agent-system folder with four markdown files</p>
+</li>
+<li>
+<p>Paste the full CLAUDE.md from Section 5</p>
+</li>
+<li>
+<p>Edit claude_desktop_config.json with your paths and credentials</p>
+</li>
+<li>
+<p>Restart Claude Desktop, create a new Project, add agent-system folder</p>
+</li>
+<li>
+<p>Type &quot;gm&quot; and watch your phone</p>
+</li>
+</ol>
+<p>The first time it works - the browser opens on its own, reads a real page, and a notification arrives on your phone - it feels like a scene from a sci-fi film. Except you built it yourself in an afternoon.</p>
+<h1>Final Thought</h1>
+<p>The AI tools most people use are impressive but passive. You go to them. You ask questions. You get answers. You still have to do everything else yourself.</p>
+<p>An agent is different. It acts on your behalf. It reads your files, browses the web, tracks your habits, and reaches you where you already are. It&#x27;s not a smarter search engine - it&#x27;s a system that works while you&#x27;re busy living your life.</p>
+<p>The stack I&#x27;ve described here isn&#x27;t cutting-edge research. It&#x27;s available to anyone with a Claude subscription and a few hours. What separates people who have this kind of system from people who don&#x27;t isn&#x27;t technical ability - it&#x27;s the decision to build it.</p>
+<p>Now you have the blueprints.</p>
+<p>my tg channel  - https://t.me/+y1dBeWEIm_plMGNi</p>
+<p><img alt="Article image" src="/assets/2026-05-02-i-built-an-ai-agent-that-manages-my-life-2ee462c2bc/05.jpg"></p></div><a class="source" href="https://x.com/seelffff/status/2050007245216256051" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

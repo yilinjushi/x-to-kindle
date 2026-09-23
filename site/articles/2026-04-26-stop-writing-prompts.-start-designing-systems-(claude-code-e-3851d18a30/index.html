@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Stop Writing Prompts. Start Designing Systems (Claude Code Explained)">
+  <title>Stop Writing Prompts. Start Designing Systems (Claude Code Explained) · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Suryansh Tiwari @Suryanshti777 · 2026-04-26</div><div class="prose"><h1>Stop Writing Prompts. Start Designing Systems (Claude Code Explained)</h1>
+<p>The Shift Nobody Understands
+Everyone is using Claude Code.</p>
+<p>But most are just… talking to it.</p>
+<p>They write prompts.
+They tweak wording.
+They retry when it fails.</p>
+<p>And sometimes it works.</p>
+<p>But serious builders don’t rely on luck.</p>
+<p>They build systems.</p>
+<p>&gt; Claude is not a chatbot for developers
+It’s a programmable reasoning engine</p>
+<p>From Prompts → Systems</p>
+<p>Most people operate like this:</p>
+<p>&quot;Build a login system&quot;</p>
+<p>And hope for the best.</p>
+<p>Advanced users operate like this:</p>
+<p>define context</p>
+<p>enforce constraints</p>
+<p>structure reasoning</p>
+<p>create feedback loops</p>
+<p>&gt; Prompts give outputs
+Systems give consistency</p>
+<p>The Real Architecture (With Code)</p>
+<p>A proper Claude workflow looks like:</p>
+<p>Input → Reasoning → Execution → Feedback → Memory</p>
+<p>Let’s break this down with actual implementation.</p>
+<ol>
+<li>Input Layer — Structured Context (Code Template)</li>
+</ol>
+<p>Instead of random prompts, use a prompt builder system.</p>
+<p>python
+def build_prompt(task, context, constraints):
+    return f&quot;&quot;&quot;
+You are a senior software engineer.</p>
+<p task>Task:</p>
+<p context>Context:</p>
+<p constraints>Constraints:</p>
+<p>Instructions:
+1. First, break down the problem
+2. Identify edge cases
+3. Propose approach
+4. Then write clean code</p>
+<p>Output format:
+- Plan
+- Code
+- Edge Cases
+&quot;&quot;&quot;</p>
+<p>Example Usage:</p>
+<p>python
+task = &quot;Build a reusable modal component&quot;</p>
+<p>context = &quot;&quot;&quot;
+Next.js (App Router)
+Tailwind CSS
+No external libraries
+&quot;&quot;&quot;</p>
+<p>constraints = &quot;&quot;&quot;
+- Must follow existing component structure
+- Accessible (ARIA compliant)
+- No new dependencies
+&quot;&quot;&quot;</p>
+<p>prompt = build_prompt(task, context, constraints)
+print(prompt)</p>
+<p>&gt; You’re not writing prompts anymore
+You’re generating them</p>
+<ol start="2">
+<li>Reasoning Layer — Forcing Structured Thinking</li>
+</ol>
+<p>You can force Claude into better reasoning patterns.</p>
+<p>Before writing code:</p>
+<ol>
+<li>Break the problem into smaller parts</li>
+<li>List possible edge cases</li>
+<li>Choose the best approach</li>
+<li>THEN generate code</li>
+</ol>
+<p>Do not skip steps.</p>
+<p>This small addition dramatically improves:</p>
+<p>logic clarity</p>
+<p>completeness</p>
+<p>fewer bugs</p>
+<p>&gt; If you don’t guide the thinking
+you’ll debug the output later</p>
+<ol start="3">
+<li>Execution Layer — Controlled Code Generation</li>
+</ol>
+<p>Now Claude generates code.</p>
+<p>But instead of trusting it blindly, we wrap it.</p>
+<p>Example: Claude API Wrapper (Pseudo Implementation)</p>
+<p>python
+def ask_claude(prompt):
+    # Replace with actual API call
+    response = f&quot;[Claude Output for]: {prompt[:100]}...&quot;
+    return response</p>
+<ol start="4">
+<li>Feedback Loop — Automated Debug Cycle</li>
+</ol>
+<p>This is where real power comes in.</p>
+<p>Instead of fixing manually →
+you create a self-improving loop</p>
+<p>Example: Test → Fix → Repeat System</p>
+<p>python
+import subprocess</p>
+<p>def run_tests():
+    result = subprocess.run(
+        [&quot;npm&quot;, &quot;test&quot;],
+        capture_output=True,
+        text=True
+    )
+    return result.stdout</p>
+<p>def fix_with_claude(error_output):
+    prompt = f&quot;&quot;&quot;
+Tests are failing.</p>
+<p error_output>Error logs:</p>
+<p>Task:
+Fix the issue.</p>
+<p>Constraints:
+- Do not change working logic
+- Only modify necessary parts</p>
+<p>Return only updated code.
+&quot;&quot;&quot;
+    return ask_claude(prompt)</p>
+<p>while True:
+    output = run_tests()</p>
+<pre><code>if &amp;quot;FAIL&amp;quot; in output or &amp;quot;Error&amp;quot; in output:
+    print(&amp;quot;❌ Tests failed. Asking Claude to fix...\n&amp;quot;)
+
+    fix = fix_with_claude(output)
+    print(fix)
+
+    # Here you&amp;#x27;d apply patch (simplified)
+else:
+    print(&amp;quot;✅ All tests passed!&amp;quot;)
+    break
+</code></pre>
+<p>What this does:</p>
+<p>detects failures</p>
+<p>feeds them back to Claude</p>
+<p>iterates automatically</p>
+<p>&gt; This is where Claude stops being a tool
+and becomes a system</p>
+<ol start="5">
+<li>Memory Layer — CLAUDE.md System</li>
+</ol>
+<p>Instead of repeating instructions every time →
+store them once.</p>
+<p>Example: CLAUDE.md</p>
+<p>markdown</p>
+<h1>Project Rules</h1>
+<h2>Architecture</h2>
+<ul>
+<li>Functional components only</li>
+<li>Follow modular folder structure</li>
+</ul>
+<h2>Naming</h2>
+<ul>
+<li>Components: PascalCase</li>
+<li>Hooks: useCamelCase</li>
+</ul>
+<h2>Constraints</h2>
+<ul>
+<li>No new dependencies</li>
+<li>Use existing utilities</li>
+</ul>
+<h2>Patterns</h2>
+<ul>
+<li>Composition over inheritance</li>
+<li>Reusable components first</li>
+</ul>
+<p>Injecting Memory into</p>
+<p>python
+def load_memory():
+    with open(&quot;CLAUDE.md&quot;, &quot;r&quot;) as f:
+        return f.read()</p>
+<p>def build_prompt_with_memory(task):
+    memory = load_memory()</p>
+<pre><code>return f&amp;quot;&amp;quot;&amp;quot;
+</code></pre>
+<p memory>Project Memory:</p>
+<p task>Task:</p>
+<p>Follow all rules strictly.
+&quot;&quot;&quot;</p>
+<p>Memory converts randomness into consistency</p>
+<ol start="6">
+<li>Constraint Layer — Controlling Output</li>
+</ol>
+<p>Without constraints → chaos
+With constraints → precision</p>
+<p>Example:</p>
+<p>Build authentication system</p>
+<p>Constraints:
+- Use JWT only
+- No external auth providers
+- Do not modify database schema
+- Use existing API routes only</p>
+<p>Do NOT:
+- Add dependencies
+- Change architecture</p>
+<p>&gt; Constraints don’t limit AI
+They focus it</p>
+<p>Full Workflow in Action</p>
+<p>Here’s how everything connects:</p>
+<p>python
+task = &quot;Build a user authentication system&quot;</p>
+<p>context = &quot;&quot;&quot;
+Node.js backend
+Express framework
+MongoDB database
+&quot;&quot;&quot;</p>
+<p>constraints = &quot;&quot;&quot;
+- Use JWT
+- No new dependencies
+- Follow existing structure
+&quot;&quot;&quot;</p>
+<p>prompt = build_prompt(task, context, constraints)</p>
+<p>response = ask_claude(prompt)</p>
+<p>print(&quot;🚀 Initial Output:\n&quot;, response)</p>
+<h1>Then run:</h1>
+<h1>→ tests</h1>
+<h1>→ feedback loop</h1>
+<h1>→ refinement cycle</h1>
+<p>Why This Changes Everything</p>
+<p>Because now:</p>
+<p>You’re not:
+writing code
+fixing bugs manually</p>
+<p>You’re:
+designing systems</p>
+<p>orchestrating intelligence</p>
+<p>controlling outputs</p>
+<p>Old Way
+Write → Debug → Rewrite</p>
+<p>New Way
+Design → Generate → Test → Refine</p>
+<p>The Real Edge</p>
+<p>Most people will keep:
+writing prompts</p>
+<p>chasing better wording</p>
+<p>A few will:</p>
+<p>build systems
+create workflows
+scale output massively</p>
+<p>&gt; The future of coding isn’t typing faster
+It’s thinking in systems</p>
+<p>Final Thought</p>
+<p>Claude Code is not magic.
+It’s leverage.</p>
+<p>And leverage only works when applied correctly.</p>
+<p>&gt; Stop asking Claude to write code
+Start designing systems that make code inevitable</p></div><a class="source" href="https://x.com/Suryanshti777/status/2048055574185779638" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

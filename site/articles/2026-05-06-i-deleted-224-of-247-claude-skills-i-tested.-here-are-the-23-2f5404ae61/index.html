@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="I deleted 224 of 247 Claude Skills I tested. Here are the 23 I kept.">
+  <title>I deleted 224 of 247 Claude Skills I tested. Here are the 23 I kept. · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Mnimiy @Mnilax · 2026-05-06</div><div class="prose"><h1>I deleted 224 of 247 Claude Skills I tested. Here are the 23 I kept.</h1>
+<p>The Claude Skills marketplace went from 16 official skills in October 2025 to 900,000+ community skills by May 2026. Most of them are noise. A handful changed how I work permanently. The rest broke my context window, conflicted with each other, or did literally nothing.</p>
+<p>I spent 6 weeks installing skills, running each on real projects, and timing the difference.</p>
+<p>247 in. 23 kept. Everything else uninstalled.</p>
+<p>Each skill: what it does, what surprised me, when to install it, when to skip it.</p>
+<p>Plus the install order, because if you install all 23 at once, you&#x27;ll burn through your context window before Claude generates a single useful token.</p>
+<p><img alt="Article image" src="/assets/2026-05-06-i-deleted-224-of-247-claude-skills-i-tested.-here-are-the-23-2f5404ae61/01.jpg"></p>
+<h1>The methodology (so you can trust the ranking)</h1>
+<p>I didn&#x27;t trust install counts. Half of the high-install skills I tested produced nothing measurable. Here&#x27;s what I actually did:</p>
+<h2>For each skill:</h2>
+<ul>
+<li>
+<p>Installed in isolation on a fresh ~/.claude/ directory</p>
+</li>
+<li>
+<p>Ran 5 representative tasks the skill claims to handle</p>
+</li>
+<li>
+<p>Timed each run against a baseline (no skill)</p>
+</li>
+<li>
+<p>Counted output quality manually on a 1-5 scale</p>
+</li>
+<li>
+<p>Tracked context overhead (tokens injected per session)</p>
+</li>
+</ul>
+<p>Pass criteria:</p>
+<ul>
+<li>
+<p>Quality improvement of at least 1.5 points on the 5-scale</p>
+</li>
+<li>
+<p>Time savings of at least 30% on its core task</p>
+</li>
+<li>
+<p>Made possible something the baseline genuinely could not do</p>
+</li>
+</ul>
+<p>Fail criteria:</p>
+<ul>
+<li>
+<p>No measurable improvement</p>
+</li>
+<li>
+<p>Adds more context than it returns in value</p>
+</li>
+<li>
+<p>Conflicts with another already-installed skill (cascade detected via the lock-file diagnostic)</p>
+</li>
+<li>
+<p>Hasn&#x27;t been updated since February 2026</p>
+</li>
+</ul>
+<p>That&#x27;s how 247 became 23.</p>
+<p><img alt="Article image" src="/assets/2026-05-06-i-deleted-224-of-247-claude-skills-i-tested.-here-are-the-23-2f5404ae61/02.jpg"></p>
+<h1>Tier S: install on every machine, every project (5 skills)</h1>
+<p>These five gave the largest measurable lift. If you install nothing else from this article, install these.</p>
+<h2>1. frontend-design (Anthropic, 277K+ installs, ~66K repo stars)</h2>
+<p>What it does: forces Claude into a real design direction — brutalist, editorial, retro-futurist, whatever, before writing any code. Eliminates the AI-slop look (Inter font, purple gradient on white, grid cards) that signals &quot;this was generated.&quot;</p>
+<p>Install: /plugin marketplace add anthropics/skills &amp;&amp; /plugin install frontend-design</p>
+<p>Surprise: the biggest gain wasn&#x27;t visual. It was that Claude stopped second-guessing aesthetic decisions. Once a direction is committed, every subsequent component matches.</p>
+<p>When to install: any project with a UI surface. Even internal tools.</p>
+<p>When to skip: pure backend / API work.</p>
+<p>Worth knowing: pbakaus/impeccable is now a serious alternative, it&#x27;s 23 commands instead of one auto-trigger, two distinct modes (brand vs product), and a Chrome overlay that highlights anti-patterns directly on the page. Install one or the other, not both. They fight on the same task.</p>
+<h2>2. superpowers (obra, 177K+ stars)</h2>
+<p>What it does: replaces ad-hoc prompting with a 7-phase workflow — brainstorm -&gt; spec -&gt; plan -&gt; TDD -&gt; subagent execution -&gt; review -&gt; finalize.</p>
+<p>The TDD enforcement isn&#x27;t a suggestion: the skill literally refuses to write implementation before a failing test exists.</p>
+<p>Install: /plugin marketplace add obra/superpowers-marketplace &amp;&amp; /plugin install superpowers</p>
+<p>Or, since January 15, 2026, directly from the official Anthropic marketplace: /plugin install superpowers@claude-plugins-official</p>
+<p>Surprise: I expected this to slow me down. It didn&#x27;t. The 20 minutes of upfront brainstorming saved 3 hours of unwinding wrong directions. Simon Willison called the underlying ideas &quot;genuinely fascinating&quot; — and the repo went from 94K stars in early March to 177K by end of April. Fastest growing Claude Code project of 2026 by a margin.</p>
+<p>When to install: any feature that takes more than one session to build.</p>
+<p>When to skip: small fixes, exploratory prototyping, single-file scripts.</p>
+<h2>3. simplify (Anthropic, ~133K weekly installs)</h2>
+<p>What it does: takes recently-modified code and cleans it without changing behavior. Specifically targets nested ternaries, three-jobs-in-one functions, abstractions that &quot;made sense at the time.&quot;</p>
+<p>Install: /plugin marketplace add anthropics/claude-plugins-official &amp;&amp; /plugin install code-simplifier@claude-plugins-official</p>
+<p>Surprise: the rule it enforces — &quot;never change behavior, only how behavior is expressed&quot; — kept me from accidentally refactoring my logic. Most &quot;AI cleanups&quot; silently change semantics. This one doesn&#x27;t.</p>
+<p>When to install: every project. Run after every coding session.</p>
+<p>When to skip: never.</p>
+<h2>4. skill-creator (Anthropic)</h2>
+<p>What it does: walks you through building your own skills properly —describes the workflow, proposes a SKILL.md, runs 3-5 test prompts, refines instructions based on failures. Meta-skill that makes every other skill better.</p>
+<p>Install: enabled by default in Claude Code v2.1+.
+If disabled: /plugin install skill-creator@anthropics/claude-code.</p>
+<p>Surprise: writing your own skill took ~5 minutes once I had this. Without it, I burned an afternoon on my first attempt. The hidden value: most &quot;this skill should exist but doesn&#x27;t&quot; gaps in your workflow are 10-minute fixes once you know how to scaffold a SKILL.md properly.</p>
+<p>When to install: as soon as you find yourself writing the same CLAUDE.md instruction twice.</p>
+<p>When to skip: only if you&#x27;re genuinely a Claude consumer, never a producer.</p>
+<h2>5. web-design-guidelines (vercel-labs/agent-skills, 19.5K stars)</h2>
+<p>What it does: 100+ rules covering accessibility, performance, UX. Reviews UI code against the latest Vercel guidelines and outputs violations in file:line format.</p>
+<p>Install: /plugin marketplace add vercel-labs/agent-skills &amp;&amp; /plugin install web-design-guidelines</p>
+<p>Surprise: caught an accessibility violation (visible focus state) that ESLint&#x27;s a11y plugin missed entirely. Turns out &quot;technically valid HTML&quot; and &quot;actually usable&quot; are different bars.</p>
+<p>When to install: pair with frontend-design, that one creates, this one audits.</p>
+<p>When to skip: not building UIs.</p>
+<p><img alt="Article image" src="/assets/2026-05-06-i-deleted-224-of-247-claude-skills-i-tested.-here-are-the-23-2f5404ae61/03.png"></p>
+<h1>Tier A: install if your work matches the niche (8 skills)</h1>
+<p>Strong, focused. Install if your daily work touches the niche. Skip if not.</p>
+<h2>6. ui-ux-pro-max (nextlevelbuilder, 29.6K stars)</h2>
+<p>50+ UI styles, 97 color palettes, 57 font pairings, 99 UX guidelines, 25 chart types, 9 stacks. Ships with a Python CLI to query the design database. Install when starting from a blank Figma.</p>
+<p>Skip when the design system already exists.</p>
+<h2>7. composition-patterns (vercel-labs)</h2>
+<p>Teaches Claude compound components, context providers, explicit variants. The single rule that justifies install: architecture-avoid-boolean-props. If you&#x27;ve inherited a component with 15 boolean props, install this. If you write modern React from scratch, optional.</p>
+<h2>8. valyu (valyuAI/skills)</h2>
+<p>Connects Claude to web search + 36+ specialized data sources: SEC filings, PubMed, ChEMBL, ClinicalTrials.gov, FRED economic indicators, academic publishers.</p>
+<p>79% on FreshQA benchmark vs Google&#x27;s 39%.</p>
+<p>On finance-specific questions: 73% vs Google&#x27;s 55%. Install if your work touches any of those domains.</p>
+<h2>9. claude-seo (AgriciDaniel/claude-seo)</h2>
+<p>Full-stack SEO audits with live DataForSEO data, schema validation, GEO-first optimization (citability scoring for AI crawlers).</p>
+<p>12 sub-skills. Install if SEO is part of your job.</p>
+<h2>10. agent-browser</h2>
+<p>Lets Claude control any web interface through stable element refs — no clean API required.</p>
+<p>Clicks, fills, screenshots, parallel sessions. The Playwright MCP alternative for when Playwright is overkill.</p>
+<h2>11. excalidraw-diagram</h2>
+<p>Generates Excalidraw-style diagrams from natural language. Install if architecture diagrams are part of your communication.</p>
+<p>Skip if you live in code only.</p>
+<h2>12. notebooklm-integration</h2>
+<p>Bridges Claude with NotebookLM. Upload specs / API references / research papers once, query them from Claude with citations.</p>
+<p>Install for documentation-heavy projects.</p>
+<h2>13. remotion-best-practices (remotion-dev/skills, 117K weekly installs)</h2>
+<p>Programmatic video generation in React. Install if you need product demos / release videos / explainers without a separate video workflow.</p>
+<p>Skip if you don&#x27;t.</p>
+<h1>Tier B: useful but specific (10 skills)</h1>
+<p>Worth installing if the trigger condition matches.</p>
+<ol start="14">
+<li>
+<p>pdf (Anthropic) - forms, invoices, table extraction</p>
+</li>
+<li>
+<p>docx (Anthropic) - word doc generation/editing with tracked changes</p>
+</li>
+<li>
+<p>pptx (Anthropic) - slide decks from natural language</p>
+</li>
+<li>
+<p>xlsx (Anthropic) - spreadsheet generation, formulas, charts</p>
+</li>
+<li>
+<p>marketing-skills (coreyhaines) - CRO, copywriting, email sequences, growth</p>
+</li>
+<li>
+<p>mattpocock/skills - TypeScript daily, type safety, migrations</p>
+</li>
+<li>
+<p>claude-deep-research-skill - 8-phase research with auto-continuation</p>
+</li>
+<li>
+<p>firecrawl - sraping hostile/JS-heavy sites</p>
+</li>
+<li>
+<p>obsidian-skills (kepano, by Obsidian&#x27;s CEO) - auto-tagging, auto-linking, vault-native</p>
+</li>
+<li>
+<p>awesome-claude-skills (travisvn) - meta-catalog 22k stars, browse before building</p>
+</li>
+</ol>
+<h1>The 224 I deleted (and why)</h1>
+<p><img alt="Article image" src="/assets/2026-05-06-i-deleted-224-of-247-claude-skills-i-tested.-here-are-the-23-2f5404ae61/04.jpg"></p>
+<p>I won&#x27;t list them all. Here&#x27;s the pattern of why most failed:</p>
+<p>~80 skills were &quot;Cursor-style&quot; prompt collections.
+A markdown file with 50 generic rules. No SKILL.md schema. Installs as documentation. Provides nothing the model couldn&#x27;t already do with CLAUDE.md.</p>
+<p>~50 skills duplicated functionality of better-maintained skills.
+Two TDD frameworks. Three security scanners. Five &quot;code reviewers.&quot; When I instrumented hooks, they fired in series and produced contradictory output. Pick one per category.</p>
+<p>~40 skills had no commits since February 2026.
+Claude Code&#x27;s hook spec changed in v2.1 (added 21 lifecycle events), and these skills broke silently. The PostToolUseFailure event in particular invalidates a lot of older &quot;auto-fix&quot; skills that assumed the old failure model.</p>
+<p>~25 skills were straight-up malicious or compromised.
+Pattern: high stars (500+), repo created after February 2026, no contributor history, dependency on a sketchy package. ECC&#x27;s AgentShield documented 341 malicious skills out of 2,857 scanned on one major marketplace in January 2026 alone 12% compromised, in a single month.
+Treat new high-star skills like new high-yield wallets — too clean usually means farmed or worse.</p>
+<p>~20 skills did basically nothing.
+They installed cleanly, didn&#x27;t conflict, didn&#x27;t break — but didn&#x27;t measurably improve anything. Net effect zero, with a small context tax.</p>
+<p>~9 skills were excellent but redundant with one of the 23 above.
+Honorable mentions: spartan-ai-toolkit, artifacts-builder, tdd-guard, Plannotator, claude-mem. If you&#x27;re already on the 23 list, these don&#x27;t add. If you want a substitute, fine.</p>
+<h1>The install order (this matters more than the list)</h1>
+<p>Installing all 23 at once will destroy you. Each skill adds context overhead. 23 active skills will hit Claude&#x27;s context window before you finish typing your first prompt. Worse, they conflict (web-design-guidelines and ui-ux-pro-max will fight on the same task).</p>
+<p><img alt="Article image" src="/assets/2026-05-06-i-deleted-224-of-247-claude-skills-i-tested.-here-are-the-23-2f5404ae61/05.jpg"></p>
+<p>The install order I tested:</p>
+<p>Week 1 — Foundation (4 skills, install all):</p>
+<ul>
+<li>
+<p>skill-creator (so you can build your own when gaps appear) already enabled by default in Claude Code v2.1+</p>
+</li>
+<li>
+<p>simplify / code-simplifier (cleans every output)</p>
+</li>
+<li>
+<p>superpowers (the workflow harness)</p>
+</li>
+<li>
+<p>Pick ONE of frontend-design or backend equivalent based on your domain</p>
+</li>
+</ul>
+<p>Week 2 — Add based on the gap (1-2 more):</p>
+<ul>
+<li>
+<p>If UI work -&gt; web-design-guidelines + maybe ui-ux-pro-max</p>
+</li>
+<li>
+<p>If TypeScript work -&gt; mattpocock/skills</p>
+</li>
+<li>
+<p>If research / data work -&gt; valyu</p>
+</li>
+<li>
+<p>If SEO / content -&gt; claude-seo</p>
+</li>
+</ul>
+<p>Week 3+ — Domain-specific (1-2 more):</p>
+<ul>
+<li>
+<p>Document-heavy -&gt; pdf, docx, pptx, xlsx (one of, rarely all four)</p>
+</li>
+<li>
+<p>Diagrams -&gt; excalidraw-diagram</p>
+</li>
+<li>
+<p>Video -&gt; remotion-best-practices</p>
+</li>
+</ul>
+<p>Stop at 5-7 active skills. That&#x27;s the sweet spot. Beyond that, context overhead exceeds value. Disable inactive skills with /plugin disable &lt;name&gt;.</p>
+<p>There&#x27;s a deeper reason for this cap. Each skill loads its SKILL.md into context whenever Claude detects relevance.</p>
+<p>With 9+ active skills running on conservative &quot;load when in doubt&quot; detection, you&#x27;re paying ~13,500 tokens of skill overhead per task that needs none of them, before Claude reads your actual prompt. The same logic that caps your CLAUDE.md to 1,200 words caps your active skills to 5-7. Both are baseline tax. Both compound.</p>
+<p>If you want a moving target: every two weeks, run an audit. Which skills did Claude actually invoke? The ones that didn&#x27;t fire — disable. The gap that opened, install one new skill to fill it.</p>
+<h1>What didn&#x27;t work</h1>
+<p>Installing skills via npx skills add blindly.
+Half didn&#x27;t have proper SKILL.md frontmatter. They installed but Claude never invoked them. Always verify with /plugin list after install, if it shows up but isn&#x27;t activating on the tasks you expect, the skill is broken.</p>
+<p>Trusting install counts as quality signals.
+Two of the top-30 by install count produced literally no measurable improvement on my benchmark tasks. Install counts measure marketing reach, not skill quality.</p>
+<p>Mass-installing from &quot;awesome-claude-skills&quot; lists.
+Same problem as above × 50. The curated lists optimize for breadth. You want depth in the skills you actually use.</p>
+<p>Skipping the audit step.
+I gave myself 6 weeks. The first 2 weeks I was installing without measuring. I had no idea what was helping until I started timing tasks. Without a baseline, you can&#x27;t tell if Claude got better or worse.</p>
+<p>Installing both web-design-guidelines and ui-ux-pro-max at the same time. Conflict. They both want to drive the design phase.
+Pick one based on whether you need creation help (ui-ux-pro-max) or audit help (web-design-guidelines).</p>
+<p>Installing both frontend-design and impeccable at the same time.
+Same problem, different layer. Both encode aesthetic taste. Pick one.</p>
+<p>Installing skills that haven&#x27;t been updated in 2+ months.
+Hook spec changed. PostToolUseFailure event was added. Skills that weren&#x27;t updated for it produce silent failures. Check last commit before install.</p>
+<p>Using Search and Tools feature alongside skills like valyu.
+Both invoke web search. They overlap, both consume tokens, neither gets a clean signal. Disable Anthropic&#x27;s built-in Search when using a search-specialist skill like valyu.</p>
+<h2>How to maintain your stack</h2>
+<p>The marketplace ships ~50-100 new skills per week now. Your stack will go stale.</p>
+<p>A 10-minute weekly ritual:</p>
+<h1>1. Which skills did Claude actually use this week?</h1>
+<p>grep -h &quot;skill_invoked&quot; ~/.claude/logs/*.log | sort | uniq -c | sort -rn</p>
+<h1>2. Which skills haven&#x27;t fired in 14 days?</h1>
+<h1>(anything in your ~/.claude/skills that&#x27;s not in the output above)</h1>
+<p>ls ~/.claude/skills/ &gt; /tmp/installed.txt</p>
+<h1>manually compare — disable anything not invoked</h1>
+<h1>3. Run an audit on remaining skills</h1>
+<p>npx ecc-agentshield scan  # if you have ECC installed</p>
+<h1>4. Check the official marketplace for new skills in your domain</h1>
+<h1>claude.com/plugins</h1>
+<p>Disable, don&#x27;t uninstall. Easier to re-enable later if you find a use.</p>
+<p>If a skill hasn&#x27;t fired in 30 days, uninstall. Context tax doesn&#x27;t justify keeping it on shelf.</p>
+<h1>The mental model</h1>
+<p>There are two types of skills, and you need both:</p>
+<p>Capability skills — give Claude new abilities it didn&#x27;t have.</p>
+<p>firecrawl (scraping hostile sites), valyu (paywalled data), pdf (form extraction), agent-browser (UI automation). Without these, Claude literally can&#x27;t do the task.</p>
+<p>Discipline skills — make Claude execute the way you want, in your style, with your conventions.</p>
+<p><img alt="Article image" src="/assets/2026-05-06-i-deleted-224-of-247-claude-skills-i-tested.-here-are-the-23-2f5404ae61/06.jpg"></p>
+<p>frontend-design (aesthetic taste), simplify (code style), superpowers (process), web-design-guidelines (audit). Without these, you get generic AI output.</p>
+<p>Most people install only capability skills and wonder why their output looks like everyone else&#x27;s. Most quality improvement comes from discipline skills. That&#x27;s why 4 of the Tier S 5 are discipline skills, not capability skills.</p>
+<p>If you have time for one more thought exercise for each of the next 5 tasks you do with Claude, ask: &quot;Did the output look generic, or did it look like me?&quot;
+If generic, you&#x27;re missing discipline skills. Install one, retry the same task, compare.</p>
+<h1>T H E _ E N D</h1>
+<p>The skills marketplace is the most undervalued part of the Claude ecosystem. Most people are still using vanilla Claude Code in May 2026. They feel like the model got &quot;smarter slower&quot; than the headlines suggested. It didn&#x27;t. They didn&#x27;t install the skills.</p>
+<p>23 of the right skills, installed in the right order, is more important than which Claude version you&#x27;re on.</p>
+<p>If this saved you a weekend of marketplace browsing, repost.</p>
+<p>If this saves you a weekend of marketplace browsing, bookmark and pass it on. Part 3 next days.</p>
+<p>Telegram for weekly skill audits and new releases worth knowing: https://t.me/+_ZWrQN7GuDA3ZDEy</p></div><a class="source" href="https://x.com/Mnilax/status/2051701429987897712" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

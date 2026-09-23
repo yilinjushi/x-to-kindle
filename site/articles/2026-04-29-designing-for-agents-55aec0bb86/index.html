@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Designing for Agents">
+  <title>Designing for Agents · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Teddy Riker @teddy_riker · 2026-04-29</div><div class="prose"><h1>Designing for Agents</h1>
+<p>If you spend time in the same corner of X as I do, scrolling past the &quot;How I built a second brain with Obsidian&quot; and &quot;Anthropic just KILLED [insert industry] FOREVER&quot; posts, you&#x27;ve probably also seen the take that UI is dead. And unless a product can be used by agents via an MCP, API, CLI, or something in between, it won&#x27;t survive.</p>
+<p>The trend is real at Ramp. Over the past three months, weekly active users on our MCP have grown 10x as more customers reach into the product through Claude, ChatGPT, and other agents.</p>
+<p>Last week, Salesforce became one of the first incumbents to lean into this thesis.</p>
+<p>From VentureBeat:</p>
+<p>Salesforce on Wednesday unveiled the most ambitious architectural transformation in its 27-year history, introducing &quot;Headless 360&quot; — a sweeping initiative that exposes every capability in its platform as an API, MCP tool, or CLI command so AI agents can operate the entire system without ever opening a browser.</p>
+<p>The announcement, made at the company&#x27;s annual TDX developer conference in San Francisco, ships more than 100 new tools and skills immediately available to developers. It marks a decisive response to the existential question hanging over enterprise software: In a world where AI agents can reason, plan, and execute, does a company still need a CRM with a graphical interface?</p>
+<p>Salesforce&#x27;s answer: No — and that&#x27;s exactly the point.</p>
+<p>This is a smart move by Salesforce, and one that I can&#x27;t imagine was easy to make. Ask most salespeople, and they&#x27;ll tell you how much they dislike using Salesforce. But the product is pervasive because of the familiarity of its UX. Sales leaders aren&#x27;t interested in ramping up their teams on new technology, and consistency frequently trumps functionality.</p>
+<p>Benioff and team are accepting that this moat is eroding and leaning into the reality that a majority of usage will be driven through agents like Claude, ChatGPT, and other background processes that users never see.</p>
+<p>I don&#x27;t think UI is dying. Humans still want to point and click, see their configurations, and verify completed work. But the 80/20 has flipped: the new 80% of interaction with software will be through agents. That changes not only what you need to build, but how you build it.</p>
+<h2>The new interaction pattern</h2>
+<p>For the past twenty years, the primary way people have interacted with software has been:</p>
+<p>User → Interface → Database</p>
+<p>You open a product, click around, get things done. The interface is how you experience the software. For most people, the interface is the product.</p>
+<p>As agents take on more of the work, a new layer has emerged:</p>
+<p>User → User&#x27;s Agent (e.g. Claude) → Database</p>
+<p>The agent acts on the user&#x27;s behalf. It reads, writes, and navigates the product so they don&#x27;t have to. And suddenly the interface is gone. The agent is talking directly to the system underneath.</p>
+<p>But even this is rapidly changing. Software companies are (and should be) designing their own agents and capabilities. So the new pattern looks more like this:</p>
+<p>User → User&#x27;s Agent → Software&#x27;s Agent → Database</p>
+<p>In this model, the software&#x27;s agent handles complexity on behalf of the user&#x27;s agent: applying business logic, enforcing rules, pulling in context the latter doesn&#x27;t have. Two LLMs working together to drive toward an outcome.</p>
+<h2>Teach agents how to succeed</h2>
+<p>I do a majority of my brainstorming, writing, and ideating with LLMs. When a draft is ready to share, I push it to Notion through their MCP server. I was a Google Docs loyalist for years; Notion&#x27;s MCP flipped me.</p>
+<p>One thing I appreciate as a Notion MCP user is how every time I ask an agent to write something, it nails it. Tables, bullets, italics, lists, you name it — the agent never fails.</p>
+<p>This is by design.</p>
+<p>The notion-create-pages tool&#x27;s description opens with: &quot;For the complete Markdown specification, always first fetch the MCP resource at notion://docs/enhanced-markdown-spec. Do NOT guess or hallucinate Markdown syntax.&quot; When I ask my agent to write to a page, that&#x27;s the first thing it does. It fetches the spec, then writes. Every Notion-specific assumption gets explicitly called out against the general model&#x27;s defaults.</p>
+<p>In an old world, that spec would&#x27;ve lived in API docs, and a developer integrating with Notion would read it, internalize it, and write a transformation layer. Now Notion hands the spec directly to the agent, at the moment it&#x27;s needed.</p>
+<p>If you&#x27;ve ever used the Slack MCP, you&#x27;ve probably experienced the inverse of this. Your agent assumes standard markdown and doesn&#x27;t adhere to Slack&#x27;s specific formatting. You end up spending more time editing the formatting than you would have writing the message:</p>
+<p><img alt="Article image" src="/assets/2026-04-29-designing-for-agents-55aec0bb86/01.png"></p>
+<p>Sure, the formatting guidelines are online and you could save them somewhere and teach your agent how to use them. But that&#x27;s annoying, and it shouldn&#x27;t be necessary.</p>
+<p>Think about what your agent&#x27;s callers need to know to succeed, and give it to them proactively. Don&#x27;t make them figure it out.</p>
+<h2>Build feedback loops</h2>
+<p>When we first launched our MCP at Ramp, observability was our largest problem. We could see tool call volume, but we couldn&#x27;t see the surrounding chat context that produced those calls. Volume alone didn&#x27;t tell us what was working, what was breaking, or what people were actually trying to accomplish.</p>
+<p>We&#x27;ve addressed this in a few ways:</p>
+<ul>
+<li>
+<p>Require a &#x27;rationale&#x27; on every tool call. Every MCP or CLI tool call requires the agent to include a rationale parameter explaining why it&#x27;s making the request. We can&#x27;t see the chat, but the rationale reconstructs intent. Patterns in the rationales tell us what people are actually trying to do.</p>
+</li>
+<li>
+<p>A feedback tool. We shipped a standalone tool the agent can call when it gets blocked or runs into a pattern that isn&#x27;t working. The agent submits what it was trying to do, what it tried, and where it got stuck.</p>
+</li>
+<li>
+<p>Tool-specific seeds. We add purpose-built parameters to individual tools to capture context we&#x27;d want later: things the agent has access to that we&#x27;d otherwise have to infer.</p>
+</li>
+</ul>
+<p>Imagine you&#x27;re building a customer support platform, and you offer tools for customers to fetch tickets. Over time, you start noticing the same phrase in rationale logs: &quot;building an incident report,&quot; &quot;drafting incident summary,&quot; &quot;gathering tickets for an outage postmortem.&quot;</p>
+<p>That&#x27;s a new product feature! A build-incident-report tool could identify related tickets, score severity, pull the affected customer segment, and draft a summary in a strongly opinionated format.</p>
+<p>Once that&#x27;s live, you might start receiving feedback on the tool: &quot;the report pulled in tickets from three days ago that weren&#x27;t part of this incident&quot; or &quot;it keeps including tickets from free-tier users who don&#x27;t belong in postmortems.&quot; All of a sudden you&#x27;ve got agents telling your agents exactly what to build. Agents hallucinate, sure. But they&#x27;re also more specific and more consistent in their feedback than most humans you&#x27;d ever ship to.</p>
+<p>If the report pulls irrelevant tickets, you add a date range parameter. If it shouldn&#x27;t include free-tier customers, you add a segment filter. Each feedback loop becomes a new way for the product to improve.</p>
+<h2>Mind the context gap</h2>
+<p>In any agent interaction, your system has context the calling agent doesn&#x27;t have, and the calling agent has context your system doesn&#x27;t have. When designing these interactions, you should have an opinion about where each has a leg up.</p>
+<p>Let&#x27;s say Diego goes on a business trip. Diego&#x27;s AI chief of staff picks up a Slack nudge from the expense management system&#x27;s agent: he has incomplete expenses from his recent trip. Two agents are now pointed at the same outcome: submit these expenses correctly.</p>
+<p>These two agents bring their own context.</p>
+<p>What Diego&#x27;s chief of staff brings:</p>
+<ul>
+<li>
+<p>Diego&#x27;s calendar: knows which meetings happened, when, and with whom</p>
+</li>
+<li>
+<p>Diego&#x27;s email: has the hotel and flight confirmation as attachments</p>
+</li>
+<li>
+<p>Diego&#x27;s Slack: can correlate the Kokkari dinner to a thread where he invited the Acme team</p>
+</li>
+<li>
+<p>Diego&#x27;s receipts (pulled from email attachments and photo library)</p>
+</li>
+</ul>
+<p>What the expense management system brings:</p>
+<ul>
+<li>
+<p>The raw transaction data (e.g., merchant, time of transaction)</p>
+</li>
+<li>
+<p>The company&#x27;s policies around submission</p>
+</li>
+<li>
+<p>The company&#x27;s GL accounts</p>
+</li>
+<li>
+<p>The company&#x27;s historical coding patterns</p>
+</li>
+</ul>
+<p>A traditional API would dump the problem back on the user. &quot;Here is a transaction that needs a GL code. Use this endpoint to fetch the 150 GL code options, and pick one.&quot;</p>
+<p>A well-designed agent interaction flips this — it doesn&#x27;t ask for a GL code. It asks for context: was this a client meal, a team meal, or personal travel? The chief of staff agent pulls the answer from a calendar entry or a Slack thread. The EM system applies the correct code based on the context it was missing.</p>
+<p>Diego and his agent never need to know what the GL codes are, and the finance team gets accurate categorization. Each side contributes what it knows, and delivers an outcome that is better for Diego — and his accountant.</p>
+<p>As you design these agent-to-agent interactions, be mindful of the context gap. It&#x27;s ok to admit where your agent falls short — you&#x27;re both serving the same user.</p>
+<p>The interface used to sit between Diego and his expense system. Now it sits between his agent and yours.</p>
+<p>That shift reframes the product team&#x27;s job. You used to design for a human who wanted to move fast, avoid mistakes, and see their work. Now you&#x27;re designing for that same person through an intermediary whose instincts, context, and limitations are different from theirs. Teaching agents how to succeed, building feedback loops, and minding the context gap all ask the same underlying question: what does your agent&#x27;s caller need to do its job well, and are you giving it to them?</p>
+<p>Most companies will ship an MCP, check the box, and move on. Their usage will grow for a few quarters, then stall. Over time, customers will route toward products that sweated the details and around the ones that didn&#x27;t.</p>
+<p>Build for the agent with the same care you spent on the human. Before you know it, it&#x27;ll be the one writing the check.</p></div><a class="source" href="https://x.com/teddy_riker/status/2047312986696454584" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

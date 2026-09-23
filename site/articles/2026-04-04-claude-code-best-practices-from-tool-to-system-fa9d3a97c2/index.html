@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Claude Code Best Practices: From Tool to System">
+  <title>Claude Code Best Practices: From Tool to System · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Vox @Voxyz_ai · 2026-04-04</div><div class="prose"><h1>Claude Code Best Practices: From Tool to System</h1>
+<p>I&#x27;ve been using Claude Code for over a year. I&#x27;ve made enough mistakes to fill a book.</p>
+<p>When I first started, the term &quot;vibe coding&quot; didn&#x27;t even exist yet. I thought it was just a chatbot in a terminal - type a few lines, get some code, done. Then I realized: the same tool, configured right versus not configured at all, behaves like two completely different things.</p>
+<p>This article is what came out of combing through a year of experience. By the end, you&#x27;ll walk away with: a 4-line global config template, a permissions whitelist strategy, a workflow that makes AI think before it acts, and a method for turning soft rules into hard constraints with Hooks.</p>
+<p>Some of this came from painful mistakes. Some from reading the docs more carefully than I probably should have.</p>
+<h2>1. Shorter CLAUDE.md is Better</h2>
+<p><img alt="Article image" src="/assets/2026-04-04-claude-code-best-practices-from-tool-to-system-fa9d3a97c2/01.jpg"></p>
+<p>use it today</p>
+<p>I&#x27;ve seen an 800-line CLAUDE.md that listed every folder&#x27;s purpose, every API&#x27;s parameters, every edge case&#x27;s handling. The author put in real effort, but it was doing more harm than good.</p>
+<p>Claude&#x27;s attention is limited. Earlier parts of the context carry more weight than later parts. My rule of thumb is to keep a single CLAUDE.md short, usually under about 200 lines. The official docs say CLAUDE.md files load in full, but shorter files produce better adherence. Anything longer eats context and reduces compliance. Overflow should go into .claude/rules/ or use @imports.</p>
+<p>The longer your CLAUDE.md, the worse Claude tends to follow it. I use 200 lines as a personal ceiling, not as a documented hard limit.</p>
+<p>What belongs there: the &quot;why&quot; that Claude can&#x27;t read from code. Architecture decisions, historical lessons, business constraints, style preferences. What doesn&#x27;t: API docs, file-by-file descriptions. Claude reads code on its own.</p>
+<p>My global CLAUDE.md is just 4 lines:</p>
+<p>markdown
+- commit messages use conventional commits
+- explain your plan before making changes, wait for my confirmation
+- prefer simple solutions, no over-engineering
+- don&#x27;t refactor files I didn&#x27;t mention</p>
+<p>Just these 4 lines saved me hundreds of &quot;no, that&#x27;s not what I meant.&quot;</p>
+<p>At the project level, I put project facts:</p>
+<p>markdown</p>
+<h1>Ship Faster</h1>
+<h2>Architecture</h2>
+<ul>
+<li>Next.js 16 App Router + Supabase + Stripe + Vercel</li>
+</ul>
+<h2>Off-limits</h2>
+<ul>
+<li>Don&#x27;t modify existing files in supabase/migrations/</li>
+<li>Don&#x27;t delete .env.local</li>
+<li>Run stripe listen before changing payment webhooks</li>
+</ul>
+<h2>Current focus</h2>
+<ul>
+<li>Refactoring onboarding flow, goal: fewer steps from signup to first payment</li>
+</ul>
+<p>Going further, I split rules into .claude/rules/ with YAML frontmatter for path matching:</p>
+<h2>yaml</h2>
+<h2>paths: [&quot;src/api/<strong>/*.ts&quot;, &quot;src/routes/</strong>/*.ts&quot;]</h2>
+<ul>
+<li>All API handlers must include input validation</li>
+<li>Error responses use { error: string, code: number } format</li>
+<li>Every new endpoint needs an integration test in tests/api/</li>
+</ul>
+<p>This rule only activates when Claude touches the API directory. Doesn&#x27;t interfere with other files, saves context space.</p>
+<p>The hierarchy: Claude Code loads instructions from multiple levels, roughly in this priority order: managed instructions (enterprise), project instructions (./CLAUDE.md or ./.claude/CLAUDE.md), user instructions (~/.claude/CLAUDE.md), .claude/rules/ and ~/.claude/rules/. There&#x27;s also recursive directory loading, so it&#x27;s not a simple four-layer stack.</p>
+<p>My actual approach is simple: global for behavior preferences, project for project facts, rules split by path into .claude/rules/. Three layers, each doing its own thing, no mixing.</p>
+<h2>2. Subagents Are a Necessity</h2>
+<p><img alt="Article image" src="/assets/2026-04-04-claude-code-best-practices-from-tool-to-system-fa9d3a97c2/02.jpg"></p>
+<p>try it this week</p>
+<p>Without subagents, your context window fills up fast on complex projects. Running tests, analyzing logs, searching large codebases, these operations produce massive output. Dump all of it into your main session and context quality drops hard.</p>
+<p>The core value of subagents is context isolation. Each subagent has its own context window. Output stays in the subagent, only a summary comes back to you. Claude Code supports custom subagents with configurable tool permissions and role descriptions. Claude automatically delegates tasks to subagents when the description matches, and each runs in its own isolated context.</p>
+<p>I use three agent templates: explorer (read-only, fast codebase search), planner (read-only, research and analysis), executor (full capabilities, complex tasks).</p>
+<p>Custom agents go in .claude/agents/:</p>
+<h2>yaml</h2>
+<p>name: code-reviewer
+description: Code review agent, read-only
+tools: Read, Grep, Glob, Bash
+model: sonnet</p>
+<hr>
+<p>You are a code reviewer. Check for: security vulnerabilities, performance issues, maintainability.
+Only report problems. Don&#x27;t modify code, don&#x27;t suggest refactors.</p>
+<p>Note: subagents inherit the parent session&#x27;s tools by default. If you want a truly read-only agent, you need to explicitly set the tools allowlist. Just writing &quot;read-only&quot; in the description won&#x27;t restrict tool access.</p>
+<p>The most counterintuitive way I use subagents: not to write code, but to simulate users.</p>
+<p>I set up 6 AI personas playing different types of fault-finders, each delegated as a subagent task. 15 minutes later, they found 5 problems I hadn&#x27;t caught in two weeks of using the system myself.</p>
+<p>I had built an AI configuration system and used it for two weeks. It felt solid. But I wasn&#x27;t sure how others would experience it. So I created 6 subagents, each playing a completely different user role:</p>
+<ul>
+<li>
+<p>Skeptical Staff Engineer: 10 years experience, distrusts new tools by default. Focused on security, side effects, hidden dependencies.</p>
+</li>
+<li>
+<p>Security Reviewer: Security audit background. Focused on secret leaks, permission boundaries, remote execution risks.</p>
+</li>
+<li>
+<p>New Maintainer: Just inherited the project, zero background knowledge. Focused on documentation clarity, onboarding path.</p>
+</li>
+<li>
+<p>Heavy CLI User: Power command-line user. Focused on command consistency, composability, idempotency.</p>
+</li>
+<li>
+<p>Operator / SRE: Responsible for production operations. Focused on observability, failure recovery, notification pipelines.</p>
+</li>
+<li>
+<p>Docs-First Newcomer: Follows documentation step by step, doesn&#x27;t read source code. Focused on README completeness, example accuracy.</p>
+</li>
+</ul>
+<p>I delegated all 6 persona tasks to subagents. 15 minutes later, the aggregated results revealed 5 trust breakpoints:</p>
+<ul>
+<li>
+<p>A command failed silently. New Maintainer had no idea what went wrong.</p>
+</li>
+<li>
+<p>README was missing a &quot;what should I do first&quot; 30-second quick start.</p>
+</li>
+<li>
+<p>One feature&#x27;s description didn&#x27;t match its actual behavior. Heavy CLI User immediately lost trust.</p>
+</li>
+<li>
+<p>The status command wasn&#x27;t truly read-only. Security Reviewer caught it first.</p>
+</li>
+<li>
+<p>The notification pipeline had no liveness probe. Operator refused to treat it as a health check.</p>
+</li>
+</ul>
+<p>After fixing each one, the same 6 agents ran a second round. All high-priority trust breakpoints cleared. Remaining issues dropped to wording and observability tweaks.</p>
+<p>This kind of testing takes a week by hand. AI ran two full rounds in 15 minutes.</p>
+<p>This isn&#x27;t just a testing technique. It&#x27;s a new approach to quality assurance: let AI play your users and find problems before you ship.</p>
+<h2>3. Good Instructions Are Precise</h2>
+<p><img alt="Article image" src="/assets/2026-04-04-claude-code-best-practices-from-tool-to-system-fa9d3a97c2/03.jpg"></p>
+<p>use it today</p>
+<p>I once gave this instruction: &quot;help me optimize this function.&quot;</p>
+<p>Claude Code split the function into three files, added a factory class, and changed the import paths. I spent twenty minutes reviewing, only to realize none of it was what I wanted.</p>
+<p>The problem was a vague instruction. Good instructions need just three elements: goal, constraints, context.</p>
+<p>plaintext
+Goal: Reduce getUserData() response time from 800ms to under 200ms
+Constraints: Don&#x27;t change the interface signature, don&#x27;t add new dependencies, only touch this one function
+Context: @src/services/user.ts#L45-L89
+Verification: user.test.ts must all pass
+Don&#x27;t: Don&#x27;t change the database schema, don&#x27;t add a caching layer</p>
+<p>@ references with line numbers keep Claude precisely focused. For UI issues, I Ctrl+V paste screenshots directly, ten times more accurate than describing layouts in words.</p>
+<p>&quot;Don&#x27;t&quot; is more important than &quot;do.&quot;</p>
+<p>&quot;Don&#x27;t add new dependencies&quot; is more effective than listing 10 allowed libraries. Claude sometimes gets overeager. You ask it to fix a bug, it refactors the surrounding code too. Saying &quot;only change this function&quot; saves a lot of trouble.</p>
+<p>Exploration actually benefits from vague instructions. &quot;Look at this module for potential issues&quot; catches things &quot;check these 5 specific aspects&quot; would miss. Switch back to precise mode when implementing.</p>
+<h2>4. Plan Mode is the Most Underrated Feature</h2>
+<p><img alt="Article image" src="/assets/2026-04-04-claude-code-best-practices-from-tool-to-system-fa9d3a97c2/04.jpg"></p>
+<p>use it today</p>
+<p>I once told Claude Code to directly refactor a 600-line routing file. It got halfway through, introduced circular dependencies, tried to fix the circular dependencies, and made everything worse. I hit Ctrl+C and lost half an hour of context.</p>
+<p>After that, I always use Plan Mode for complex tasks.</p>
+<p>Three ways to enter:</p>
+<p>bash</p>
+<h1>At startup</h1>
+<p>claude --permission-mode plan</p>
+<h1>During a session (press Shift+Tab until Plan Mode appears)</h1>
+<p>Shift+Tab  # repeat until Plan Mode appears</p>
+<h1>Natural language</h1>
+<p>&quot;Don&#x27;t change any code yet, give me an implementation plan&quot;</p>
+<p>In Plan Mode, Claude only outputs the plan without executing anything. The key move: press Ctrl+G to open and edit the plan text in your editor. Delete unnecessary steps, add constraints, confirm, and Claude executes the updated plan.</p>
+<p>Changing a plan takes one sentence. Changing code that&#x27;s already written takes ten times longer.</p>
+<p>Standard four-step workflow:</p>
+<p>plaintext
+Explore (Claude reads code) → Plan (output plan) → Implement (execute step by step) → Verify (run tests)</p>
+<p>When you don&#x27;t need Plan Mode: tasks with only one possible implementation. Renaming a variable, fixing a typo, adding a log line. No detours needed. Plan Mode is for tasks where there are multiple choices.</p>
+<h2>5. Context Management is the Real Bottleneck</h2>
+<p><img alt="Article image" src="/assets/2026-04-04-claude-code-best-practices-from-tool-to-system-fa9d3a97c2/05.jpg"></p>
+<p>set it up this week</p>
+<p>I was halfway through a task once, ran /context and saw 78% usage. Then Claude suddenly started repeating approaches we had already rejected, like it had amnesia. That&#x27;s when I made /compact a regular habit.</p>
+<p>Claude Code supports very large context windows, but a stuffed context means quality drops hard.</p>
+<p>A stuffed context doesn&#x27;t fail because it exceeds the limit. It fails because attention gets scattered.</p>
+<p>Five management strategies:</p>
+<ul>
+<li>
+<p>/clear: Wipe everything, use when switching tasks completely.</p>
+</li>
+<li>
+<p>/compact [focus]: Compress history while keeping key points. Use when continuing the same task.</p>
+</li>
+</ul>
+<p>plaintext
+/compact keep: current task goal, completed steps, pending issues</p>
+<ul>
+<li>
+<p>/context: Check current context usage. Know where you stand.</p>
+</li>
+<li>
+<p>Subagents: Separate modules get separate agents. Don&#x27;t pollute the main session.</p>
+</li>
+<li>
+<p>Compression retention instructions: Tell Claude in CLAUDE.md what to keep when compressing.</p>
+</li>
+</ul>
+<p>markdown</p>
+<h1>Compression instructions</h1>
+<p>When compressing context, always keep:
+- Complete list of modified files
+- Test commands and results
+- Key architecture decisions</p>
+<p>Claude Code really has two mechanisms here: CLAUDE.md files and auto memory. Within CLAUDE.md, I treat project instructions as shared project facts and team standards, and user instructions (~/.claude/CLAUDE.md) as personal preferences that follow me across projects. Auto memory lives in ~/.claude/projects/&lt;project&gt;/memory/, with the first 200 lines of MEMORY.md loaded at session start. Type /memory to view loaded CLAUDE.md files, manage auto memory, and edit memory entries. In some clients I also see # open a quick editor, but I treat that as version-specific rather than a documented default.</p>
+<h2>6. Tighten Your Permissions</h2>
+<p><img alt="Article image" src="/assets/2026-04-04-claude-code-best-practices-from-tool-to-system-fa9d3a97c2/06.jpg"></p>
+<p>use it today</p>
+<p>One day, Claude was fixing a bug and casually deleted a config file that &quot;looked unused.&quot; That file was the secret key reference entry for the production environment.</p>
+<p>I spent half an hour configuring .claude/settings.json after that:</p>
+<p>json
+{
+  &quot;permissions&quot;: {
+    &quot;deny&quot;: [
+      &quot;Bash(rm -rf<em>)&quot;,
+      &quot;Bash(</em>--force<em>)&quot;,
+      &quot;Edit(.env</em>)&quot;,
+      &quot;Edit(<em>.pem)&quot;
+    ],
+    &quot;ask&quot;: [
+      &quot;Bash(git push</em>)&quot;,
+      &quot;Bash(npm publish<em>)&quot;,
+      &quot;Edit(src/config/</em>)&quot;
+    ],
+    &quot;allow&quot;: [
+      &quot;Bash(npm run<em>)&quot;,
+      &quot;Bash(git commit</em>)&quot;,
+      &quot;Bash(git add<em>)&quot;,
+      &quot;Read(</em>*)&quot;
+    ]
+  }
+}</p>
+<p>Priority: deny &gt; ask &gt; allow. Deny is highest. If a command matches deny, it won&#x27;t execute even if allow also matches.</p>
+<p>Settings files have their own hierarchy: managed (organization policy), CLI arguments, local (.claude/settings.local.json, not committed), project (.claude/settings.json, shared), user (~/.claude/settings.json), defaults. One important nuance: array-valued settings like permission lists merge across scopes rather than replacing each other. So a deny rule at the user level and another at the project level both apply.</p>
+<p>I deny business risks at the project level, like deleting migrations. I deny safety baselines at the global level, like executing rm -rf. Two layers, maintained independently.</p>
+<p>Read-only means read-only. No &quot;while we&#x27;re at it.&quot; My first version of a status command secretly called sync, reasoning &quot;might as well sync while checking.&quot; After running the 6 persona test, Security Reviewer caught it immediately: &quot;Your read-only script has side effects. I can&#x27;t trust its output.&quot; Side effects destroy credibility.</p>
+<h2>7. Hooks: Turn Rules Into Law</h2>
+<p><img alt="Article image" src="/assets/2026-04-04-claude-code-best-practices-from-tool-to-system-fa9d3a97c2/07.jpg"></p>
+<p>set it up this week</p>
+<p>I wrote &quot;run lint before committing&quot; in CLAUDE.md. Claude sometimes skips it. Rules in a file are suggestions. AI sometimes decides &quot;this situation is special&quot; and ignores them.</p>
+<p>Rules in CLAUDE.md are suggestions. Hooks are code-level enforcement that never forgets.</p>
+<p>Four hook types:</p>
+<p>plaintext
+command                Execute a shell command and read JSON from stdin.
+http                   Send a POST request to a URL.
+prompt                 Make a single LLM call for a yes/no judgment.
+agent                  Spawn a subagent for verification.</p>
+<p>Three practical scenarios:</p>
+<p>Auto-format: Run Prettier after every edit.</p>
+<p>json
+{
+  &quot;hooks&quot;: {
+    &quot;PostToolUse&quot;: [{
+      &quot;matcher&quot;: &quot;Edit|Write&quot;,
+      &quot;hooks&quot;: [{&quot;type&quot;: &quot;command&quot;, &quot;command&quot;: &quot;jq -r &#x27;.tool_input.file_path&#x27; | xargs npx prettier --write&quot;}]
+    }]
+  }
+}</p>
+<p>Protect critical files: Block modifications to production config.</p>
+<p>json
+{
+  &quot;hooks&quot;: {
+    &quot;PreToolUse&quot;: [{
+      &quot;matcher&quot;: &quot;Edit|Write&quot;,
+      &quot;hooks&quot;: [{&quot;type&quot;: &quot;command&quot;, &quot;command&quot;: &quot;.claude/hooks/protect-files.sh&quot;}]
+    }]
+  }
+}</p>
+<p>Exit code 0 means allow, exit code 2 means block. But only events with decision control can actually stop an action. PreToolUse can block a tool call before it runs. PostToolUse cannot, because the tool has already executed. Keep this in mind when choosing which hook event to use.</p>
+<p>Re-inject after compression: When a long conversation gets compressed, important instructions can get lost. A hook automatically re-injects them:</p>
+<p>json
+{
+  &quot;hooks&quot;: {
+    &quot;SessionStart&quot;: [{
+      &quot;matcher&quot;: &quot;compact&quot;,
+      &quot;hooks&quot;: [{&quot;type&quot;: &quot;command&quot;, &quot;command&quot;: &quot;echo &#x27;Use Bun, not npm. Run bun test before committing.&#x27;&quot;}]
+    }]
+  }
+}</p>
+<p>The real value of hooks is turning engineering standards into system constraints. Auto-formatting is just a bonus. Humans forget rules. Code doesn&#x27;t.</p>
+<h2>8. Let AI Learn From Your Behavior (Optional)</h2>
+<p><img alt="Article image" src="/assets/2026-04-04-claude-code-best-practices-from-tool-to-system-fa9d3a97c2/08.jpg"></p>
+<p>advanced experiment, safe to skip</p>
+<p>This is an advanced experiment, not required. If you just want to use hooks well, the previous chapter is enough.</p>
+<p>The reverse approach: let AI extract rules from my behavior. The flow:</p>
+<p>plaintext
+AI writes draft → I edit until satisfied → observe.py records original/final
+→ improve.py diffs both versions → extracts &quot;what I changed&quot;
+→ Rules ranked by confidence P0/P1/P2
+→ After human review, P0 rules get written back to SKILL.md</p>
+<p>python</p>
+<h1>observe.py: record AI draft and my final version</h1>
+<p>python3 observe.py record-original draft.md</p>
+<h1>...I make my edits...</h1>
+<p>python3 observe.py record-final final.md</p>
+<p>python</p>
+<h1>improve.py: extract rules from diff</h1>
+<p>python3 improve.py auto --skill .</p>
+<h1>Auto-compare, extract change patterns, generate rule candidates</h1>
+<h1>P0 (appeared 5+ times) pushed for human confirmation before writing</h1>
+<h1>P1 low-frequency, archived</h1>
+<h1>P2 logged only</h1>
+<p>Result: 48 rules, 740 lines. The more cycles, the more AI writes like me.</p>
+<p>I also set up a cron job to run extraction automatically every night, no manual trigger needed:</p>
+<p>python
+0 23 * * * python3 ~/.ai-core/skills/scripts/improve.py auto --skill .</p>
+<p>Limitations: Auto-learning isn&#x27;t magic</p>
+<p>Core safety rules, like permission boundaries, secret protection, destructive command blocking, must be handwritten. Can&#x27;t delegate those to automation.</p>
+<p>Incidental edits can get falsely extracted as rules. I once temporarily changed file indentation because that particular file had inconsistent style. improve.py extracted it as &quot;always use 2-space indentation.&quot; That rule was wrong because the project standard was 4 spaces.</p>
+<p>All P0 rules must go through human review before being written in. Confirm they reflect real preferences, not one-off edits. Auto-learning handles style preferences only. Core safety rules must be handwritten.</p>
+<h2>9. Git Worktree: Zero-Risk Experiments</h2>
+<p><img alt="Article image" src="/assets/2026-04-04-claude-code-best-practices-from-tool-to-system-fa9d3a97c2/09.jpg"></p>
+<p>use it today</p>
+<p>I used to hesitate before refactoring. What if it breaks things? Git branches share the working directory. Switching branches affects the current state.</p>
+<p>Worktrees are different. Each branch gets its own independent working directory:</p>
+<p>bash</p>
+<h1>Create an experiment worktree</h1>
+<p>claude --worktree experiment/refactor-auth</p>
+<h1>Or manually</h1>
+<p>git worktree add ../project-experiment feature/new-auth</p>
+<p>Claude can do whatever it wants in the experiment directory. Main directory stays untouched. If it doesn&#x27;t work out, git worktree remove, zero cost.</p>
+<p>A worktree costs seconds. A failed experiment costs hours.</p>
+<p>Git rules:</p>
+<ul>
+<li>
+<p>Don&#x27;t let Claude auto-push. It can commit, but push requires my confirmation. Once pushed to remote, rollback gets expensive.</p>
+</li>
+<li>
+<p>Commit frequently. Commit after every atomic step. /rewind can roll back to any checkpoint.</p>
+</li>
+<li>
+<p>Watch for destructive operations. git reset --hard, git push --force, rm -rf. Think through the consequences before approving. These operations have no undo.</p>
+</li>
+<li>
+<p>Restore context from PRs. claude --from-pr 123 automatically loads a PR&#x27;s changes and discussion.</p>
+</li>
+</ul>
+<p>All exploratory tasks, architecture refactors, and uncertain large changes go through worktrees.</p>
+<h2>10. Extended Thinking: Adjust as Needed</h2>
+<p><img alt="Article image" src="/assets/2026-04-04-claude-code-best-practices-from-tool-to-system-fa9d3a97c2/10.jpg"></p>
+<p>use it today</p>
+<p>Thinking is on by default. Claude Code always does some degree of reasoning. But effort level shouldn&#x27;t always be maxed out. Running high on simple tasks is pure token waste, and the reasoning process eats context, affecting subsequent conversations.</p>
+<p>High effort on simple tasks is pure token waste. The reasoning process also eats context, affecting later conversation quality.</p>
+<p>I was once designing a complex permission system involving multiple roles, inheritance, and dynamic rules. Default effort produced a plan with obvious gaps. After switching to /effort high, it thought for nearly a minute and came back with a completely different architecture that covered edge cases I hadn&#x27;t considered.</p>
+<p>bash</p>
+<h1>Adjust reasoning depth</h1>
+<p>/effort high    # deeper reasoning
+/effort low     # simple tasks, save tokens</p>
+<p>As of this writing, the documented way to control reasoning depth is /effort. In practice, typing ultrathink can sometimes nudge Claude toward deeper reasoning for the current turn, but I treat it as an informal prompt hint rather than a guaranteed rule.</p>
+<p>My rule: only raise effort when changes touch more than 3 files. Single-file edits, default is fine. Architecture design, complex bug diagnosis, tasks requiring multi-constraint reasoning, those are worth the tokens.</p>
+<h2>11. Don&#x27;t Overload on MCP</h2>
+<p><img alt="Article image" src="/assets/2026-04-04-claude-code-best-practices-from-tool-to-system-fa9d3a97c2/11.jpg"></p>
+<p>set it up this week</p>
+<p>MCP (Model Context Protocol) lets Claude Code connect to external services like databases, payment platforms, and GitHub. Install an MCP server and Claude can operate that service directly from a conversation.</p>
+<p>Every MCP server adds tool definitions to your context, and the overhead adds up. In my experience, each server eats roughly 100 to 500+ tokens, though the exact number varies. I tried running 8 at once. Effective context dropped noticeably, and code generation quality got worse.</p>
+<p>Every additional MCP server means less effective context. Add per project as needed, remove when done.</p>
+<p>I keep just 2 to 3:</p>
+<p>bash
+claude mcp add supabase -- npx @supabase/mcp-server-supabase --project-ref $REF
+claude mcp add stripe -- node /tools/stripe-mcp/index.js</p>
+<p>.mcp.json config:</p>
+<p>json
+{
+  &quot;mcpServers&quot;: {
+    &quot;supabase&quot;: {
+      &quot;command&quot;: &quot;npx&quot;,
+      &quot;args&quot;: [&quot;@supabase/mcp-server-supabase&quot;, &quot;--project-ref&quot;, &quot;xxxxx&quot;]
+    },
+    &quot;stripe&quot;: {
+      &quot;command&quot;: &quot;node&quot;,
+      &quot;args&quot;: [&quot;/tools/stripe-mcp/index.js&quot;]
+    }
+  }
+}</p>
+<p>After connecting Supabase and Stripe, I just say &quot;check the last 7 days of failed payments&quot; in conversation. Claude queries Stripe directly, returns results, and analyzes them. Used to require writing throwaway scripts. Now it&#x27;s just a conversation.</p>
+<p>Use /mcp to manage server connections and disable ones you don&#x27;t need. I treat per-server context overhead as a practical heuristic, not as a documented /mcp readout that every client exposes.</p>
+<h2>12. Don&#x27;t Blindly Trust Claude&#x27;s Code</h2>
+<p><img alt="Article image" src="/assets/2026-04-04-claude-code-best-practices-from-tool-to-system-fa9d3a97c2/12.jpg"></p>
+<p>use it today</p>
+<p>Three common problems:</p>
+<ul>
+<li>
+<p>Over-engineering: Ask it to write a simple utility function, it builds a full abstraction layer with generics, interfaces, and factory patterns. Fix: write &quot;prefer simple solutions&quot; in CLAUDE.md.</p>
+</li>
+<li>
+<p>Hallucinated APIs: Uses SDK methods that don&#x27;t exist. Names look reasonable, docs say otherwise. Fix: run tests.</p>
+</li>
+<li>
+<p>Scope creep: Change one function, it touches five files. Fix: explicitly say &quot;only change X, don&#x27;t touch anything else.&quot;</p>
+</li>
+</ul>
+<p>Writer/Reviewer dual-session mode: one session writes, one session reviews. Roles separated, no interference.</p>
+<p>One session writes code, another reviews. The reviewer doesn&#x27;t know how the code was generated. It only sees results and asks questions. Two sessions, role separation, no cross-contamination.</p>
+<p>plaintext</p>
+<h1>Reviewer session instructions</h1>
+<p>You are a code reviewer. Does this code have:
+1. Hallucinated APIs (methods that don&#x27;t exist)
+2. Race conditions
+3. Changes outside the task scope
+Only report problems. Don&#x27;t suggest fixes.
+@src/auth/service.ts</p>
+<p>Problems found by the reviewer go back to the writer for fixes. Usually 2 to 3 rounds, much better quality than a single session.</p>
+<h2>13. Claude Code is Not Omnipotent</h2>
+<p><img alt="Article image" src="/assets/2026-04-04-claude-code-best-practices-from-tool-to-system-fa9d3a97c2/13.jpg"></p>
+<p>use it today</p>
+<p>I once had Claude Code configure a Kubernetes cluster I knew nothing about. It worked. It ran. I couldn&#x27;t understand any of it. Two weeks later something broke and I had no idea where to start. One of the most expensive mistakes I&#x27;ve made.</p>
+<p>Claude can generate any code, but if you can&#x27;t understand it, you can&#x27;t take over.</p>
+<p>Four red lines:</p>
+<ul>
+<li>
+<p>Don&#x27;t do what you don&#x27;t understand. Claude can generate anything, but if you can&#x27;t read it, you can&#x27;t maintain it. Code you don&#x27;t understand in production is both tech debt and a security risk.</p>
+</li>
+<li>
+<p>Don&#x27;t use it without version control. No Git means no rollback. Claude&#x27;s changes might overwrite your files. Without version control, you&#x27;re flying blind.</p>
+</li>
+<li>
+<p>Don&#x27;t throw massive tasks at it. &quot;Refactor the entire auth system&quot; is a disaster prompt. &quot;Extract the JWT parsing from validateToken into its own function&quot; is the right approach. Smaller tasks are more accurate and the scope stays controllable.</p>
+</li>
+<li>
+<p>Don&#x27;t expect perfection on the first try. First drafts are always drafts. /rewind to roll back, give precise feedback about what&#x27;s wrong. Iteration is the correct approach.</p>
+</li>
+</ul>
+<p>These four red lines aren&#x27;t about limiting AI. They&#x27;re about protecting your judgment. Every decision you hand off without understanding costs you control over your system.</p>
+<h2>14. Advanced: Multi-System Collaboration</h2>
+<p><img alt="Article image" src="/assets/2026-04-04-claude-code-best-practices-from-tool-to-system-fa9d3a97c2/14.jpg"></p>
+<p>power user only, safe to skip</p>
+<p>If you only use one AI tool and don&#x27;t run automated server tasks, this chapter has near-zero value for you. Skip straight to the conclusion. This covers what I did after putting Claude Code into a larger workflow. Not a general practice.</p>
+<p>The problem I hit was specific: Claude Code and Codex each maintained their own rules. I updated prompts on one side, forgot to sync the other, and three weeks later the two systems were producing code with different styles and decision logic. What I learned: the only thing that needs a single source of truth is the knowledge layer. I made ~/.ai-core the sole source, containing only shared behavior rules, shared commands, and shared skills. Each system generates its own config from there.</p>
+<p>My current three-system split:</p>
+<p>plaintext
+OpenClaw: scheduling, notifications, Telegram interaction
+Codex: heavy re-coding, cross-file refactors
+Claude Code: quick edits, exploration, interactive debugging</p>
+<p>The key is clear boundaries. Share the knowledge layer, don&#x27;t share the runtime layer. Permission settings, auth credentials, MCP tokens, local client state, each system manages its own. Get this boundary right and multi-system collaboration becomes stable. Get it wrong and it just amplifies complexity.</p>
+<h2>Conclusion</h2>
+<p>Start here:</p>
+<ul>
+<li>
+<p>Set up a 4-line CLAUDE.md. Write in the behaviors you most often correct Claude on. Commit format, plan before changing, no over-engineering. Write once, works forever.</p>
+</li>
+<li>
+<p>Set up a permissions whitelist. Deny dangerous operations first. At minimum add three: rm -rf<em>, Edit(.env</em>), git push --force. You&#x27;re not defending against malice, you&#x27;re defending against Claude&#x27;s helpfulness.</p>
+</li>
+<li>
+<p>Try Plan Mode once. Next time you face a task touching more than 3 files, enter Plan Mode first. Look at the plan, then confirm execution.</p>
+</li>
+</ul>
+<p>The endgame for AI coding tools isn&#x27;t about humans not writing code. It&#x27;s about humans only making decisions worth making. Configuration, permissions, rules, boundaries, these aren&#x27;t overhead. They&#x27;re how you keep control.</p>
+<p>The real barrier isn&#x27;t whether you can use Claude Code. It&#x27;s whether you can keep it in check.</p>
+<h2>Appendix: Shortcut Reference</h2>
+<p>Core shortcuts and commands as of March 2026. Availability may vary by client version and interface (terminal vs IDE).</p>
+<p>plaintext
+Keyboard Shortcuts</p>
+<p>Ctrl+C                 Cancel current input or generation
+Ctrl+G                 Open in default text editor
+Ctrl+V                 Paste image from clipboard
+Esc + Esc              Rewind or summarize
+Option+T / Alt+T       Toggle extended thinking
+Shift+Tab              Cycle permission modes</p>
+<p>Slash Commands</p>
+<p>/compact [focus]       Compact conversation with optional focus instructions
+/clear                 Clear conversation history and free up context
+/context               Visualize current context usage
+/memory                Edit CLAUDE.md memory files and manage auto memory
+/rewind                Rewind to a previous checkpoint or summarize from a selected message
+/resume                Resume a previous conversation
+/effort [level]        Set the model effort level
+/init                  Initialize the project with a CLAUDE.md guide
+/mcp                   Manage MCP server connections and OAuth authentication
+/cost                  Show token usage statistics</p>
+<p>Notes</p>
+<p>/rewind has saved me multiple times. If you make a mistake, roll back one step and re-issue the instruction.
+/init is great for new projects. It analyzes your codebase and generates a draft CLAUDE.md.</p>
+<p>Most tutorials focus on writing better prompts. I think the real leverage is in the files nobody reads - CLAUDE.md, settings.json, hooks. What&#x27;s one config change that made the biggest difference for you?</p></div><a class="source" href="https://x.com/Voxyz_ai/status/2036863425905586265" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Claude Code 的 99 种开通和 100 种封号方式">
+  <title>Claude Code 的 99 种开通和 100 种封号方式 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Go学长 @arkuy99 · 2026-04-17</div><div class="prose"><h1>Claude Code 的 99 种开通和 100 种封号方式</h1>
+<p>众所周知， Claude Code 对国内用户极其不友好，本文从注册 付款  使用各个阶段讲讲如何尽量规避触发风控，注意是尽量避免触发风控，很重要。</p>
+<h2>分流</h2>
+<ul>
+<li>
+<p>这个挺重要的，不管是注册还是平时使用的时候都要分流，但是很多人分流都是瞎分的</p>
+</li>
+<li>
+<p>最佳实践是你的 某软件 开启 Tun ，接管 两个进程 。</p>
+</li>
+</ul>
+<p>yaml
+    - RULE-SET,claude,Claude # claude
+    - PROCESS-NAME,Claude Helper,Claude # claude
+    - PROCESS-NAME,claude,Claude # claude</p>
+<p>这样Claude 的遥测都会走指定代理出去，不管Claude 如何更新遥测域名和规则。</p>
+<h2>注册</h2>
+<ul>
+<li>
+<p>有老账号的可以跳过， 不要去买号，自己注册，被封过号的必须开指纹浏览器 ，以后也不要在原来的浏览器玩了</p>
+</li>
+<li>
+<p>不要用Outlook 这种垃圾邮箱  还有一些什么临时邮箱</p>
+</li>
+<li>
+<p>强烈推荐使用 Gmail ，有些用户可能会说没有那么多Gmail， 我只能说Gmail 的风控你都过不去 就别玩CC 了。</p>
+</li>
+<li>
+<p>比较纯净的 IP 和指纹 不会触发手机验证，如果需要验证码可以考虑tello。</p>
+</li>
+<li>
+<p>一般注册新号建议多使用几天 Free 养一下。</p>
+</li>
+</ul>
+<h2>支付</h2>
+<p>支付这个应该是大家最关心的，基本上看这个帖子的都没有比较好的支付渠道</p>
+<ul>
+<li>正规银行发行的美国卡 ⭐⭐⭐⭐⭐</li>
+</ul>
+<p>封号退款。</p>
+<p>但是这个绝大部分人都没有 就不讲了</p>
+<ul>
+<li>虚拟信用卡 （不太推荐）</li>
+</ul>
+<p>封号退款。</p>
+<p>其实以前还可以，由于由于很多人滥用，包括故意触发风控退款，现在虚拟卡段现在会随时被大规模封号。</p>
+<ul>
+<li>Claude Code 官网 Gift （不推荐 封号不退款）</li>
+</ul>
+<p><img alt="Article image" src="/assets/2026-04-17-claude-code-的-99-种开通和-100-种封号方式-32e7ecb3e2/01.jpg"></p>
+<p>需要由别人购买然后赠送给你，而且也不要去闲鱼买低价的卡，这个没有低价来源。</p>
+<ul>
+<li>Goolge Pay ⭐⭐</li>
+</ul>
+<p>在 Google Pay 上套一层虚拟卡 或者国内实体卡Visa，看起来可以隐藏实体卡号，其实 anthropic 可以拿到首几位得到你在哪个地区</p>
+<ul>
+<li>Apple Store （五星推荐⭐⭐⭐⭐⭐）</li>
+</ul>
+<p>第一次封号退款，后面基本上不退。这个退款是苹果决定的 和 A社没关系。</p>
+<p>自己去买正价礼品卡 不要上闲鱼，不要贪便宜买低价卡，来路不明。</p>
+<p>由于你是买的礼品卡兑换的，A社拿不到你的任何支付卡信息。无法鉴定你来自哪个国家。不建议去尼日尼亚购买，风控极其严格。</p>
+<ul>
+<li>Google Play 和 Apple Store 同理 （⭐⭐⭐⭐⭐）</li>
+</ul>
+<h2>IP</h2>
+<p>IP 要尽量保持稳定，尤其是你要同时用网页 手机 和 CC Cli， 一定不要乱漂，今天在日本明天在美国。。所以我还是推荐 tun 接管进程。 然后 iP 欺诈分数不能太高，推荐上 ipdata 去查看。</p>
+<p><img alt="Article image" src="/assets/2026-04-17-claude-code-的-99-种开通和-100-种封号方式-32e7ecb3e2/02.jpg"></p>
+<p>Claude 其实官网也很清晰的写了你的每个设备的 Location</p>
+<p><img alt="Article image" src="/assets/2026-04-17-claude-code-的-99-种开通和-100-种封号方式-32e7ecb3e2/03.jpg"></p>
+<h2>使用用量（非常重要）</h2>
+<p>这个非常重要 尤其是有些合租的 猛瞪，众所周知</p>
+<ul>
+<li>
+<p>一个5x 的账号 月上限额度大概是 1300 usd，</p>
+</li>
+<li>
+<p>一个20x 的账号 月上限额度大概是 2700 usd</p>
+</li>
+</ul>
+<p>A社经常说他们在亏本 ：）， 所以我们尽量要规避不要猛瞪，我个人建议不要超过百分之70.</p>
+<p>也就是说他不是有个周限量吗？7天百分之100. 我们每天用百分之10就行，这样7天就是百分之70.</p>
+<h2>第三方软件</h2>
+<p>订阅账户 一定不要用  sub2api ， 不太建议使用 crs。</p>
+<p>还有很多第三方软件用的 Claude Code SDK 调用的 cli.js  ，要么是逆向的Auth， 说实话得罪人，但是确实不推荐使用。</p>
+<p>使用一个软件之前，如果是开源的，直接让 CC 分析源码，是不是SDK 或者ACP 调用， 如果是不推荐使用。</p>
+<p>目前比较稳妥的就是 Claude -p 以及 Spawn 子进程或者开一个 tty 终端 或者 tmux 的方式, 都是调用的原生 Claude Code 子进程， 比较稳。</p>
+<p>如果是闭源的 直接问作者是怎么调用CC 的，通过SDK 和 ACP 调用实现的和 Claude Code Cli 行为都不太一样，不建议使用。</p>
+<h2>总结</h2>
+<p>目前就这么多把 ，后面想起来再补充，总的来说就是从 ip 流量 支付 使用额度 等各个层面尽量避免去暴露自己，尽量像个正常人，而不是24h 都在工作的号池。</p></div><a class="source" href="https://x.com/arkuy99/status/2044287695145611360" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

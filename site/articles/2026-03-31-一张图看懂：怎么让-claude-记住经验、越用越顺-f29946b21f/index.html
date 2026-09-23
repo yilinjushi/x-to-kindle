@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="一张图看懂：怎么让 Claude 记住经验、越用越顺">
+  <title>一张图看懂：怎么让 Claude 记住经验、越用越顺 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">梭哈.AI @SUOHA_AI · 2026-03-31</div><div class="prose"><h1>一张图看懂：怎么让 Claude 记住经验、越用越顺</h1>
+<p>很多人用 Claude，一上来就是直接提需求、直接开干，结果短期还行，任务一多就开始乱：</p>
+<p>同样的规则反复说，同样的经验留不下来，前面刚总结的方法，后面又得重新喂一遍</p>
+<p>问题不在提示词，更大的问题，是你没有给 Claude 一个可以复用经验的外置记忆系统。</p>
+<p>这位AI大佬 
+@PawelHuryn
+ 教你怎么解决：</p>
+<p>把一套工作规则写进 CLAUDE.md，再配合 knowledge/ 文件夹，让 Claude 在每次任务前先回顾规则，在任务后沉淀经验</p>
+<p>先准备一个 CLAUDE.md，并按领域建立对应的知识文件夹，例如：</p>
+<p>/knowledge/pricing/
+  knowledge.md
+  hypotheses.md
+  rules.md</p>
+<p>维护一个 /knowledge/INDEX.md，用来指向各个领域文件夹</p>
+<p>然后把这段内容复制到 CLAUDE.md 里：</p>
+<p>开始新任务前：</p>
+<ul>
+<li>回顾该领域已有的 rules 和 hypotheses</li>
+<li>默认优先应用已确认的 rules</li>
+<li>检查本次任务是否可以验证某个 hypothesis</li>
+</ul>
+<p>每个任务结束后：</p>
+<ul>
+<li>提炼本次任务中的新洞见</li>
+<li>将洞见存入对应的领域文件夹，例如：
+  /knowledge/pricing/
+    knowledge.md    （事实与模式）
+    hypotheses.md   （仍需更多数据验证）
+    rules.md        （已确认，默认应用）</li>
+</ul>
+<p>知识库维护规则：</p>
+<ul>
+<li>维护 /knowledge/INDEX.md，作为各领域文件夹的总索引</li>
+<li>当一个 hypothesis 被确认 5 次以上时，将其升级为 rule</li>
+<li>当一个 rule 被新数据推翻时，将其降级回 hypothesis</li>
+<li>保持规则简洁、明确、可执行</li>
+</ul>
+<p>这样做的作用是：</p>
+<p>第一，减少重复沟通不用每次都从零解释背景和要求</p>
+<p>第二，让经验能积累。做完一次任务，不是聊完就没了，而是能沉淀进知识库里，后面继续复用</p>
+<p>第三，让 Claude 越用越顺。它不是单次对话工具，而是开始基于你过去整理过的结构做事</p>
+<p>以上的所有内容都可以让claude code 帮你完成！</p>
+<p><img alt="Article image" src="/assets/2026-03-31-一张图看懂：怎么让-claude-记住经验、越用越顺-f29946b21f/01.jpg"></p>
+<p>Most people&#x27;s CLAUDE.md is static instructions.
+Mine compounds.</p>
+<p>One block makes Claude review what it learned before each task and extract new insights after. Hypotheses get tested. Confirmed ones become rules. Rules that break get demoted.</p>
+<p>It builds its own knowledge system —</p>
+<p><img alt="Article image" src="/assets/2026-03-31-一张图看懂：怎么让-claude-记住经验、越用越顺-f29946b21f/02.jpg"></p></div><a class="source" href="https://x.com/WEB3_furture/status/2037820090884755482" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

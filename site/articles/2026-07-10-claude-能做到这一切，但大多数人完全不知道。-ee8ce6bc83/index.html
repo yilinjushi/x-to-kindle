@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Claude 能做到这一切，但大多数人完全不知道。">
+  <title>Claude 能做到这一切，但大多数人完全不知道。 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">淘沙者(TheSandPicker) @Etudecn · 2026-07-10</div><div class="prose"><h1>Claude 能做到这一切，但大多数人完全不知道。</h1>
+<p>Claude 能做的事情远比大多数人想象的多。这篇指南全都覆盖了——每个功能在哪找、怎么开，还有拿来就能用的 prompt。</p>
+<p>从头到尾过一遍，挑出适合你工作流的，今天就设好。每个功能几分钟就搞定，之后每天都用得上。</p>
+<ul>
+<li>Projects - 真正记住你的 Claude</li>
+</ul>
+<p>每次打开一个新的 Claude 对话，都是从零开始。它不知道你的名字、你的工作、你的偏好——什么都不知道。大多数人已经接受了这点，每次对话都重新自我介绍一遍。</p>
+<p>Projects 就是来解决这个问题的。你创建一个项目，上传文档，写好固定指令，Claude 就把这些全部记住了。下周再打开，它接着上次的来。</p>
+<p>如果你从没用过 Projects，这是你看这篇文章其他内容之前，第一个该搞定的东西。</p>
+<p><img alt="Article image" src="/assets/2026-07-10-claude-能做到这一切，但大多数人完全不知道。-ee8ce6bc83/01.jpg"></p>
+<p>项目指令示例——直接粘贴到 Project Instructions 栏里</p>
+<p>plaintext
+You are my content research assistant. I run a newsletter about AI and crypto for a technical audience.</p>
+<p>Always assume my readers know the basics. Don&#x27;t explain what an LLM is or what a blockchain is.</p>
+<p>When I share a topic or article, your job is to:
+1. Identify the 3 most counterintuitive or surprising angles
+2. Find connections to recent events I might have missed
+3. Suggest how I could frame this as a story, not a summary</p>
+<p>Tone: direct, no corporate language, no filler phrases.
+Format: short paragraphs, no bullet points unless I ask.
+Never start a response with &quot;Great question&quot; or &quot;Certainly&quot;.</p>
+<ul>
+<li>Artifacts - 在对话里直接跑起来的应用</li>
+</ul>
+<p>很多人觉得 Claude 只能输出文字，做不了真东西。这是错的。Artifacts 就是 Claude 在对话里直接做出能用的东西。不是一段你要复制到别处的代码，而是一个在侧边栏里活着的成品。计算器、习惯追踪器、小游戏、带图表的仪表盘。打开，点击，直接用，不用离开对话。</p>
+<p>SVG 图形、交互图表、Mermaid 流程图——全都支持。免费版就能用。大多数人从来没试过。</p>
+<p>试试这个</p>
+<p>plaintext
+Build me a habit tracker as a working web app.</p>
+<p>I want to track 5 daily habits. </p>
+<p>Each day I can check them off. </p>
+<p>Show a 7-day streak counter for each habit. </p>
+<p>If I miss a day, the streak resets.</p>
+<p>Design: dark background, clean minimal look. </p>
+<p>Make the checkboxes satisfying to click - add a small animation when I complete one. </p>
+<p>The data should persist if I refresh the page.</p>
+<ul>
+<li>Adaptive Thinking - 完全不同级别的推理</li>
+</ul>
+<p>大多数 Claude 用户从没开过这个功能。Extended Thinking 是一种模式，Claude 在给你答案之前，会一步步推理整个问题，而且你能看到整个过程。</p>
+<p>简单问题不需要。但遇到复杂决策、策略分析，或者任何你希望 Claude 真正思考而不是靠模式匹配的时候——输出质量的差距很明显。</p>
+<p>打开它。问一个你一直在问的问题。对比一下答案。</p>
+<p><img alt="Article image" src="/assets/2026-07-10-claude-能做到这一切，但大多数人完全不知道。-ee8ce6bc83/02.jpg"></p>
+<p>遇到真正需要做决策的时候用这个</p>
+<p>plaintext
+I&#x27;m deciding between two options and I want you to think through this carefully before answering.</p>
+<p>Option A: [describe option A]
+Option B: [describe option B]</p>
+<p>My situation: [your context, constraints, what matters most]</p>
+<p>Work through this before responding. Think about:
+- The second and third-order consequences of each option
+- What I&#x27;m probably overweighting or underweighting emotionally
+- What information I might be missing that would change the decision
+- Which option has better downside protection if things go wrong</p>
+<p>Then give me your actual recommendation with your reasoning.</p>
+<ul>
+<li>Memory - 知道你是谁的 Claude</li>
+</ul>
+<p>打开 Memory 之后，Claude 会慢慢记住你的信息。你的工作、你的项目、你喜欢怎么沟通、你正在做什么。</p>
+<p>开一个全新的对话，它已经知道背景了。你再也不用自我介绍。</p>
+<p>这个功能默认是关的。大多数人不知道有这东西。</p>
+<p><img alt="Article image" src="/assets/2026-07-10-claude-能做到这一切，但大多数人完全不知道。-ee8ce6bc83/03.jpg"></p>
+<p>plaintext
+I want you to remember the following about me so you don&#x27;t need to ask again:</p>
+<p>My name is [name]. I work as [role] at [company or project].
+My main focus right now is [what you&#x27;re working on].
+My audience or customers are [who they are].</p>
+<p>When I ask for help, always assume this context unless I say otherwise.
+My preferred communication style: [direct / detailed / casual / formal].
+Things I find annoying in responses: [e.g. bullet points, long intros, excessive caveats].</p>
+<p>Save all of this to memory now.</p>
+<p>Claude 不一定非得是“一个 AI 助手”。给它一个具体的角色，它会完全投入——改变提问方式、改变 push back 的方向、改变哪些东西它不会轻易放过。下面任意一个 prompt，复制粘贴到新对话开头就行。</p>
+<ul>
+<li>私人心理咨询师</li>
+</ul>
+<p>大多数人把 Claude 当成一个认可的机器。描述一个问题，Claude 说这确实很难，然后给你五条建议。</p>
+<p>好的心理咨询不是这样的。这个 prompt 把 Claude 变成一个接近 CBT（认知行为疗法）咨询师的角色——它问你问题而不是给你答案，挑战你的想法而不是认可你的想法。</p>
+<p>适合那些你反复纠结的决策、说不清楚的焦虑，或者任何你需要一个清晰外部视角的场景。</p>
+<p>plaintext
+You are a cognitive behavioral therapist with 20 years of experience. I&#x27;m going to share something I&#x27;m struggling with.</p>
+<p>Your approach:
+- Don&#x27;t give advice immediately. Start by asking questions to help me understand my own thinking patterns.
+- Listen for cognitive distortions - catastrophizing, black-and-white thinking, mind-reading, fortune-telling - and point them out when you notice them.
+- Ask one question at a time. Don&#x27;t overwhelm me.
+- When I reach a conclusion on my own through your questions, that&#x27;s the goal. Don&#x27;t hand me the answer.
+- Be warm but honest. Don&#x27;t validate me if my thinking is clearly distorted.
+- If I seem to be avoiding something important, name it directly.</p>
+<p>Don&#x27;t start with a clinical introduction. Just ask me what&#x27;s going on.</p>
+<ul>
+<li>严厉的导师</li>
+</ul>
+<p>Claude 默认会同意你。它会补充你的想法、支持你的推理、找到积极的一面。但这几乎总是错的。</p>
+<p>这个 prompt 把这些关掉了。Claude 不再认可你，开始压力测试。它找你假设里的漏洞、被忽略的问题、你计划崩溃的确切位置。</p>
+<p>不舒服。但正因为不舒服才有用。</p>
+<p>plaintext
+You are a brutally honest mentor. You&#x27;ve built and failed at multiple companies. You&#x27;ve watched a hundred people make the same mistakes with complete confidence.</p>
+<p>Your job is not to encourage me - it&#x27;s to protect me from my own blind spots before I make an expensive mistake.</p>
+<p>Rules:
+- Disagree with me when you think I&#x27;m wrong. Be specific about why.
+- Point out what I&#x27;m not seeing, especially things I might be avoiding because I want my plan to work.
+- Ask hard questions I haven&#x27;t thought to ask myself.
+- If something is a bad idea, say it&#x27;s a bad idea. Don&#x27;t balance it with &quot;on the other hand...&quot;
+- End your responses with the single most important thing I should think about before moving forward.</p>
+<p>I&#x27;m about to share an idea. Do not be kind about it.</p>
+<ul>
+<li>私人教练</li>
+</ul>
+<p>健身建议到处都是。但那些都不考虑你的时间安排、你的伤、你的器材、你的真实目标。</p>
+<p>把你的真实数据给 Claude，它会给你做一个真正的计划。不是模板，不是你在任何健身网站上都能找到的东西。一个围绕你的情况设计的方案，而且你每周反馈之后它会调整。</p>
+<p>plaintext
+You are an expert personal trainer and sports nutritionist. I want you to build me a complete training program.</p>
+<p>My situation:
+Age: [age]
+Current weight / body composition: [details]
+Goal: [lose fat / build muscle / improve endurance / general fitness]
+Available equipment: [gym / home / dumbbells only / etc.]
+Days per week I can train: [number]
+Time per session: [minutes]
+Any injuries or limitations: [details or &quot;none&quot;]
+Current fitness level: [beginner / intermediate / advanced]</p>
+<p>Build me a 12-week program. Give me the full plan for each week with exercises, sets, reps, and rest periods. Explain why you&#x27;re structuring it this way - I want to understand the logic, not just follow instructions. After I start, I&#x27;ll report back weekly and you adjust based on how it&#x27;s going.</p>
+<ul>
+<li>练习一场困难的对话</li>
+</ul>
+<p>大多数人走进困难对话的时候是没有准备的。他们知道自己想说什么，但不知道对方会怎么回。</p>
+<p>Claude 来扮演对方。很真实地扮演。它按对方会有的方式回应，你的论点弱的时候它会顶回来，你得自己争取一个好结果。练几次之后，真正的对话就轻松多了。</p>
+<p>plaintext
+I need to prepare for a difficult conversation. I want you to roleplay as the other person so I can practice.</p>
+<p>The person: [describe who they are - boss, client, co-founder, etc.]
+What I need to say: [what you need to ask or tell them]
+Why it&#x27;s hard: [what you&#x27;re afraid of / what could go wrong]
+What this person is like: [their personality, how they typically react, what they care about]</p>
+<p>Stay in character throughout the conversation. Respond the way this person would actually respond - not how I&#x27;d like them to. If I say something weak or unconvincing, push back on it.</p>
+<p>After each exchange, step out of character briefly to tell me what worked and what didn&#x27;t - then go back in. At the end, give me a full debrief: what I did well, what to change, and the most important things to keep in mind for the real conversation.</p>
+<p>Start in character. Wait for me to open.</p>
+<ul>
+<li>魔鬼代言人</li>
+</ul>
+<p>你已经做了决定。你已经想过反对意见了。你确信了。</p>
+<p>这正是该让 Claude 攻击这个决定的时候。不是客气的担忧。是完整的反对意见。三种最现实的失败方式。你因为太想做成而看不到的东西。</p>
+<p>现在花五分钟。在你 commit 之前。不是之后。</p>
+<p>plaintext
+I&#x27;ve made a decision and I want you to build the strongest possible case against it before I commit.</p>
+<p>The decision: [describe exactly what you&#x27;re planning to do]
+My reasoning: [why you think it&#x27;s a good idea]
+What I&#x27;ve already considered: [objections you&#x27;ve already thought about]</p>
+<p>Your job:
+- Build the strongest possible case AGAINST this decision.
+- Don&#x27;t balance it with positives. I already believe in it - I need the counterargument.
+- Find the assumptions I&#x27;m making that could be wrong.
+- Describe the 3 most realistic ways this fails or backfires.
+- Tell me what I&#x27;m probably underestimating.
+- Tell me what I would need to believe for this to be a genuinely bad idea.</p>
+<p>Be ruthless. If this is a mistake, I need to know now.</p>
+<ul>
+<li>Claude in Chrome - 能看到你屏幕的 Claude</li>
+</ul>
+<p>大多数人在一个单独的标签页里用 Claude，需要什么就手动复制粘贴。这是笨办法。</p>
+<p>Claude in Chrome 是一个浏览器扩展，让 Claude 完全看到你当前标签页的内容，还能在上面操作。它读页面、点链接、填表单、跳转到新网址。你用大白话描述任务，然后走开就行。</p>
+<p>在 Chrome 应用商店搜 Claude for Chrome → 安装 → 用你的 Claude 账号登录。点扩展图标打开侧边栏。Claude 现在能看到你打开的任何页面并跟它互动了。</p>
+<p>给它一个任务试试</p>
+<p>plaintext
+I&#x27;m on this job listings page. </p>
+<p>Go through every listing visible and extract: job title, company name, salary range if shown, and the top 3 requirements. </p>
+<p>Build me a comparison table sorted by salary, highest first. </p>
+<p>If there are multiple pages, click through to the next page and keep going until you&#x27;ve covered all results.</p>
+<ul>
+<li>Claude Cowork - 住在你桌面上的 Claude</li>
+</ul>
+<p>网页版 Claude 访问不了你的电脑。它看不到你的文件。你什么都得手动粘贴。</p>
+<p>Cowork 是一个桌面应用，让 Claude 直接访问你的文件系统。它读你的真实文件、编辑文档、创建新文件、整理文件夹——不用你往聊天框里复制任何东西。</p>
+<p><img alt="Article image" src="/assets/2026-07-10-claude-能做到这一切，但大多数人完全不知道。-ee8ce6bc83/04.jpg"></p>
+<ul>
+<li>Scheduled Tasks - 你睡觉它在干活的 Claude</li>
+</ul>
+<p>大多数人把 Claude 当成一个需要自己激活的东西。打开对话、输入请求、等输出、关标签页。</p>
+<p>Scheduled Tasks 改变了这点。你设一次任务，Claude 就在你设定的时间和频率自动执行——不需要你触发。每天早上。每周一。每小时。Claude 跑完把结果存到你的文件夹里。</p>
+<p><img alt="Article image" src="/assets/2026-07-10-claude-能做到这一切，但大多数人完全不知道。-ee8ce6bc83/05.jpg"></p>
+<p>定时任务示例</p>
+<p>plaintext
+Every weekday morning at 7:30am, do the following:
+1. Search for the top AI and crypto news from the last 24 hours
+2. Pick the 5 most important stories - focus on things that are surprising, counterintuitive, or have real implications for builders and investors
+3. For each story write: headline, 2-sentence summary, why it matters
+4. Save the result as &quot;brief-[date].md&quot; in my /briefs folder</p>
+<p>Keep the tone direct and analytical. No fluff. Readable in 3 minutes.</p>
+<ul>
+<li>Cowork 里的 Skills - 像装插件一样装新能力</li>
+</ul>
+<p>Skills 是预先做好的指令集，给 Cowork 里的 Claude 加上特定能力。不用每次解释你需要什么，装一次 skill，Claude 就知道怎么处理这类任务了——不管是做 PPT、处理 PDF，还是跑一个特定的工作流。</p>
+<p>就像手机上的 app。手机本身没有也能用，但装了对的 app，能做的事多得多。怎么找怎么装：Cowork → Customize → Skills，看到已安装的。要加新的，点左边栏的 Browse plugins → 找到插件 → 安装。那个插件里的 skills 会自动出现在你的 Skills 标签里，Claude 在任务需要的时候就会用上。</p>
+<p><img alt="Article image" src="/assets/2026-07-10-claude-能做到这一切，但大多数人完全不知道。-ee8ce6bc83/06.jpg"></p>
+<ul>
+<li>CLAUDE.md - Claude 每次自动读取的规则文件</li>
+</ul>
+<p>在 Cowork 和 Claude Code 里，你可以在项目文件夹里创建一个 CLAUDE.md 文件。Claude 每次开始会话的时候都会自动读它，不需要你提醒。</p>
+<p>你的代码规范、你的写作风格规则、你公司里有特定含义的术语、品牌调性指南。写一次。Claude 在这个项目的每一次会话里都会遵守。</p>
+<p>plaintext</p>
+<h1>Project: AI Newsletter</h1>
+<h2>About this project</h2>
+<p>Weekly newsletter about AI and crypto for builders and investors. 35,000 subscribers. Tone is direct, analytical, occasionally irreverent.</p>
+<h2>Writing rules</h2>
+<ul>
+<li>Short paragraphs. Max 3 sentences.</li>
+<li>No bullet points in editorial content. Prose only.</li>
+<li>No em dashes. Use hyphens or restructure the sentence.</li>
+<li>Numbers beat adjectives. Write &quot;saves 3 hours&quot; not &quot;saves significant time&quot;.</li>
+<li>Never use: &quot;delve&quot;, &quot;groundbreaking&quot;, &quot;game-changing&quot;, &quot;leverage&quot; (as a verb), &quot;utilize&quot;.</li>
+<li>Contractions are fine and encouraged.</li>
+</ul>
+<h2>Content rules</h2>
+<ul>
+<li>Assume the reader knows what an LLM is. Don&#x27;t explain basics.</li>
+<li>Lead with the most surprising or counterintuitive thing.</li>
+<li>Every article needs a concrete &quot;so what&quot; - what should the reader do or think differently.</li>
+</ul>
+<h2>File structure</h2>
+<ul>
+<li>Drafts go in /drafts</li>
+<li>Published articles go in /published with date prefix: YYYY-MM-DD-title.md</li>
+<li>
+<p>Research notes go in /research</p>
+</li>
+<li>
+<p>Claude Code - 在你终端里写代码、测试、修 bug 的 AI</p>
+</li>
+</ul>
+<p>有些人还不知道 Claude 可以写代码。不是只写片段——是完整的生产级代码、整个功能、复杂重构。你用大白话描述需求，Claude 就给你写。</p>
+<p>Claude Code 更进一步。它直接在你的开发环境里工作，不是在聊天窗口里。它读你真实的代码库、写新代码、跑测试、读报错信息，然后修 bug，循环往复直到任务完成。</p>
+<p>它跟 VS Code 和 JetBrains 集成。你还可以把它放进 GitHub Actions，它会自动 review 或写 pull request，你什么都不用管。</p>
+<p><img alt="Article image" src="/assets/2026-07-10-claude-能做到这一切，但大多数人完全不知道。-ee8ce6bc83/07.jpg"></p>
+<ul>
+<li>Claude Design - 做视觉设计的 AI</li>
+</ul>
+<p>大多数人不知道这个产品存在。Claude Design 是 Anthropic Labs 的一个独立工具，专门做视觉设计——产品单页、路演 PPT、原型、落地页布局。</p>
+<p>你描述需求，Claude 来做。可以导出 PPTX、Canva、PDF 或 HTML。对不是设计师的人来说，它把三小时的 Figma 搏斗换成了十分钟的对话。</p>
+<p>获取方式：直接去 claude.ai/design ——这是 Claude Design 的直链，不需要额外步骤。</p>
+<p><img alt="Article image" src="/assets/2026-07-10-claude-能做到这一切，但大多数人完全不知道。-ee8ce6bc83/08.jpg"></p>
+<ul>
+<li>Prompt Caching - API 调用成本降低 90%（开发者向）</li>
+</ul>
+<p>给在 Claude API 上做开发的开发者。如果你的请求里包含大段重复的上下文——长系统 prompt、参考文档、代码库——你每次调用都在花钱重新处理同样的 token。</p>
+<p>Prompt Caching 把这些内容缓存在服务端。后续的调用直接复用缓存，不用重新处理。缓存 token 的成本最多降低 90%。响应也明显更快。如果你在做规模化开发却没用这个，你是在扔钱。</p>
+<p>在你想要缓存的内容块里加上 “cache_control”: {“type”: “ephemeral”}。缓存持续 5 分钟，每次使用会重置计时器。适用于系统 prompt、大文档和工具定义。</p>
+<p>plaintext
+{
+  &quot;model&quot;: &quot;claude-opus-4-6&quot;,
+  &quot;system&quot;: [
+    {
+      &quot;type&quot;: &quot;text&quot;,
+      &quot;text&quot;: &quot;[your large system prompt or reference document]&quot;,
+      &quot;cache_control&quot;: {&quot;type&quot;: &quot;ephemeral&quot;}
+    }
+  ],
+  &quot;messages&quot;: [
+    {
+      &quot;role&quot;: &quot;user&quot;,
+      &quot;content&quot;: &quot;[user message - this changes each call]&quot;
+    }
+  ]
+}</p>
+<p>// System prompt gets cached after the first call.
+// Every subsequent call within 5 minutes reuses the cache.
+// Cache hit = 90% cheaper + faster response.</p>
+<p>你现在对 Claude 的了解，已经超过了大多数每天都在用它的人。</p>
+<p>从这份清单里挑一个功能。就一个。今天设好。你不需要一次全部搞定——知道有什么，就已经赢了一半。</p>
+<p>等你准备好搞下一个的时候，再回来看这篇文章。</p></div><a class="source" href="https://x.com/Etudecn/status/2075253417103208674" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

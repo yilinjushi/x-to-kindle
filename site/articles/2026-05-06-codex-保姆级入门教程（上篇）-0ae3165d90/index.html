@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Codex 保姆级入门教程（上篇）">
+  <title>Codex 保姆级入门教程（上篇） · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">程序员小灰 @XiaohuiAI666 · 2026-05-06</div><div class="prose"><h1>Codex 保姆级入门教程（上篇）</h1>
+<p>大家好，我是程序员小灰。</p>
+<p>如今的AI编程领域可谓是百家争鸣，Cursor、Trae、ClaudeCode、Codex......全球各大AI巨头都在AI编程这个赛道展开激烈的竞争。</p>
+<p>前几天小灰发布了一篇 Claude Code 的入门教程，反响还不错，也有许多朋友在后台留言，询问我们能不能发布一篇关于 Codex 的教程。</p>
+<p>没问题，安排上！</p>
+<p>今天小灰就来给大家系统性讲解 Codex 这款AI编程工具，聊一聊 Codex 到底能不能打，普通人怎么安装、怎么上手、怎么少踩坑。</p>
+<p>文章较长，建议大家先收藏、不迷路。</p>
+<h1>一、为什么 Codex 值得考虑 ？</h1>
+<p>Claude Code 好用吗？当然很好用。</p>
+<p>然而用过 Claude Code 的朋友都知道，它有两个让人尴尬的特点：</p>
+<ol>
+<li>
+<p>免费额度较少：用着用着就要你充钱，而且还死贵。</p>
+</li>
+<li>
+<p>封号风险：Anthropic 官方频繁封号，这一点最为致命。</p>
+</li>
+</ol>
+<p>因为以上的这些问题，小灰的粉丝群里经常有人问：”OpenAI 有没有类似的AI编程工具呢？”</p>
+<p>答案是“有”，而且稳定性比 Claude Code 要好得多，不但编码能力强，而且还能接入 GitHub，这款产品就是 Codex。</p>
+<p><img alt="Article image" src="/assets/2026-05-06-codex-保姆级入门教程（上篇）-0ae3165d90/01.jpg"></p>
+<h1>二、什么是 Codex ？</h1>
+<p>Codex 是 OpenAI 官方出品的 AI 编码工具，能理解你的需求，帮你写代码、跑命令、调 Bug。</p>
+<p><img alt="Article image" src="/assets/2026-05-06-codex-保姆级入门教程（上篇）-0ae3165d90/02.jpg"></p>
+<p>Codex 具有四种运行模式，覆盖你能想到的大部分使用场景：</p>
+<ul>
+<li>
+<p>• CLI（命令行），在终端里跑，适合命令行党，主打一个黑框里掌控全局。</p>
+</li>
+<li>
+<p>• App（桌面应用），有图形界面，支持 macOS 和 Windows，适合不想跟终端互相折磨的人。</p>
+</li>
+<li>
+<p>• Web（网页版），打开浏览器就能用，不用装任何东西。出差用别人电脑、临时改个代码，随开随用。</p>
+</li>
+<li>
+<p>• IDE 插件，支持 VS Code、Cursor、Windsurf。写代码的时候直接在编辑器里调用，不用切窗口，不用复制粘贴，代码上下文自动带过去。</p>
+</li>
+</ul>
+<p>四种运行模式怎么选？</p>
+<p>终端党用 CLI，鼠标党用 App，临时救火用 Web，天天写代码用 IDE 插件。</p>
+<p>这四种模式没有优劣之分，大家哪种模式用着顺手，就可以优先选用哪种模式。</p>
+<h1>三、Codex 的最新版本</h1>
+<p>如果你只是把 Codex 理解成&quot;OpenAI 版 Claude Code&quot;，那现在这个理解有点窄了。</p>
+<p>2026年以来，Codex 已经不只是一个命令行编码助手，而是逐步构建为一套&quot;AI 干活系统&quot;。</p>
+<p>按官方 Changelog 看，2026 年 4 月 Codex 最核心的变化就三个：</p>
+<ol>
+<li>Codex App 26.415（2026-04-16 更新）</li>
+</ol>
+<p>桌面端从“聊天式编码工具”升级成更完整的 AI 工作台，开始支持内置浏览器、任务侧边栏、GitHub PR 处理、artifact viewer、Memories、多终端、多窗口，以及 Windows 托盘的适配。</p>
+<ol start="2">
+<li>模型版本 GPT-5.5（2026-04-23 更新）</li>
+</ol>
+<p>GPT-5.5 开始进入 Codex，重点提升复杂实现、重构、调试、测试和验证这类重任务的能力。也就是说，Codex 不只是能写小脚本，而是更适合接真实项目里的复杂任务。</p>
+<ol start="3">
+<li>Codex CLI 0.128.0（2026-04-30 更新）</li>
+</ol>
+<p>CLI 加入可持久化的 /goal 工作流，可以把一个长期目标创建、暂停、恢复和清理；同时新增 codex update，权限、沙箱和插件能力也更细。</p>
+<p>从上面的迭代可以看出，对于现在的 Codex，不要只问&quot;它会不会写代码&quot;，更准确的问题是，它能不能接住你工作流里那些重复、复杂、跨文件、需要验证的任务。</p>
+<p>不过这篇是入门教程，不会把每个高级功能都展开，你先知道它们存在就行，真用到的时候再按场景深入。</p>
+<h1>四、Codex 适合什么样的场景？</h1>
+<p>下面的五种情况，最适合选用Codex：</p>
+<ol>
+<li>
+<p>你已经有 ChatGPT Plus/Pro 订阅，那就优先试 Codex。你每个月交的那 20 刀，终于不只是用来写周报了。</p>
+</li>
+<li>
+<p>你想要 GUI，不想在终端里和 AI 大眼瞪小眼，想点点鼠标就把活干了。</p>
+</li>
+<li>
+<p>你被账号稳定性折腾怕了，多一个官方工具，就多一条备用工作流。</p>
+</li>
+<li>
+<p>你想先低成本试试，Codex 是否包含在你的套餐里，以官方页面和客户端显示为准。能用就先用，别先付费上头。</p>
+</li>
+<li>
+<p>你喜欢 OpenAI 的模型能力，觉得 GPT 系列写代码、解释代码、改代码都比较顺手。</p>
+</li>
+</ol>
+<p>如果你没有 ChatGPT 订阅，也不想充钱，那也没关系，后面会讲怎么给它接入国内大模型。</p>
+<h1>五、如何安装 Codex ？</h1>
+<p>Codex的安装过程并不复杂，一共就几步，只要你的电脑配置不是太差，基本都能跑起来。</p>
+<ol>
+<li>环境要求</li>
+</ol>
+<p>需要安装Node.js和git。</p>
+<p>在本地终端检查一下环境：</p>
+<p>node --version
+npm --version
+git --version</p>
+<p>如果没有安装，先补上。这个环节没什么玄学，少一个后面都容易报错。</p>
+<p>Node.js 下载地址：
+https://nodejs.org/zh-cn/download</p>
+<p>Git 下载地址：
+https://git-scm.com/install/windows</p>
+<p>这里提醒一下，如果你是 Windows 用户，最省心的方式是优先装 App。CLI 也能用，但如果遇到环境问题，可以考虑用 WSL，或者先跳到 App 部分。</p>
+<ol start="2">
+<li>安装 CLI</li>
+</ol>
+<p>CLI 适合已经习惯终端的人。两种方式，选一个：</p>
+<h1>npm 安装</h1>
+<p>npm install -g @openai/codex</p>
+<h1>Homebrew 安装（macOS）</h1>
+<p>brew install --cask codex</p>
+<p>验证安装：</p>
+<p>codex --version</p>
+<p>看到版本号就说明成功了。</p>
+<p>如果这里没看到版本号，优先检查 Node.js、npm 全局路径和网络。</p>
+<ol start="3">
+<li>App 安装</li>
+</ol>
+<p>Windows 下载地址：</p>
+<p>https://get.microsoft.com/installer/download/9PLM9XGG6VKS?cid=website_cta_psi</p>
+<p><img alt="Article image" src="/assets/2026-05-06-codex-保姆级入门教程（上篇）-0ae3165d90/03.png"></p>
+<p><img alt="Article image" src="/assets/2026-05-06-codex-保姆级入门教程（上篇）-0ae3165d90/04.png"></p>
+<ol start="4">
+<li>云端版</li>
+</ol>
+<p>直接访问：
+https://chatgpt.com/codex/cloud</p>
+<p><img alt="Article image" src="/assets/2026-05-06-codex-保姆级入门教程（上篇）-0ae3165d90/05.jpg"></p>
+<ol start="5">
+<li>IDE 插件</li>
+</ol>
+<p>如果你用 VS Code、Cursor 或 Windsurf，可以装插件：</p>
+<p>安装地址：
+https://developers.openai.com/codex/ide</p>
+<p>装完之后在编辑器里就能直接调用 Codex。</p>
+<p><img alt="Article image" src="/assets/2026-05-06-codex-保姆级入门教程（上篇）-0ae3165d90/06.png"></p>
+<p>到这里你已经有四条路了。新手建议从 App 开始，开发者建议从 CLI 开始，已经有 GitHub 仓库的人可以直接试云端版。</p>
+<p>别纠结入口，工具不是对象，不需要从一而终。</p>
+<h1>六、在 CLI 端使用 Codex</h1>
+<p>CLI 是 Codex 最像“开发者工具”的形态。你在终端里说需求，它在项目里改文件、跑命令、修问题。</p>
+<ol>
+<li>启动</li>
+</ol>
+<p>codex</p>
+<p>首次启动会让你选择登录方式。</p>
+<p>还有可能会报错：Error: account/read failed during TUI bootstrap</p>
+<p>这个错误在官方 issue 里已经有人复现，重新登录就恢复了。</p>
+<p>这种问题就别硬刚了，先登出再登录，很多时候比你研究半小时日志更有效。</p>
+<p>直接执行：</p>
+<p>codex logout</p>
+<p>或者一步到位：</p>
+<p>codex login</p>
+<p>浏览器登录一遍基本就好了，很多人都是这样修复的。</p>
+<ol start="2">
+<li>登录方式</li>
+</ol>
+<p><img alt="Article image" src="/assets/2026-05-06-codex-保姆级入门教程（上篇）-0ae3165d90/07.png"></p>
+<p>方案一：Sign in with ChatGPT（推荐）</p>
+<p>会打开浏览器，用你的 ChatGPT 账号授权。</p>
+<p><img alt="Article image" src="/assets/2026-05-06-codex-保姆级入门教程（上篇）-0ae3165d90/08.png"></p>
+<p>方案二：Enter API Key</p>
+<p>去 https://platform.openai.com/ 生成一个 API Key，粘贴进去。这种方式按 token 计费，适合已经习惯 OpenAI API 的用户。</p>
+<p><img alt="Article image" src="/assets/2026-05-06-codex-保姆级入门教程（上篇）-0ae3165d90/09.jpg"></p>
+<ol start="3">
+<li>模型选择</li>
+</ol>
+<p>模型以你当前客户端显示为准。</p>
+<p>这里别死记型号，AI 工具更新很快，今天看到的默认模型，过段时间可能就变了。</p>
+<p><img alt="Article image" src="/assets/2026-05-06-codex-保姆级入门教程（上篇）-0ae3165d90/10.jpg"></p>
+<p>如果想切换模型，用 /model 命令。</p>
+<ol start="4">
+<li>30 秒上手</li>
+</ol>
+<p>装好了，先跑一个试试。别上来就让它重构祖传系统，先拿小游戏练手，心态比较健康。</p>
+<p>在 D 盘新建一个test文件夹，然后打开终端输入命令：</p>
+<p>cd d:\test\</p>
+<p>然后输入下面命令：</p>
+<p>codex &quot;用 Python 写一个贪吃蛇的游戏&quot;</p>
+<p>就这么简单。Codex 会理解你的需求，生成代码，创建文件，甚至帮你运行。</p>
+<p><img alt="Article image" src="/assets/2026-05-06-codex-保姆级入门教程（上篇）-0ae3165d90/11.jpg"></p>
+<p>你不需要一开始就告诉它用什么框架、怎么组织代码，它会先根据需求做判断。这就是 AI 编码工具的核心价值：你负责描述目标，它负责拆任务、改文件、跑命令。</p>
+<p>试完这一个，你就知道 Codex 大概是什么感觉了。后面再把它放进真实项目里，价值会更明显。</p>
+<p>当然，AI 写代码和人写代码一样，都需要你 review。不要把它当成完全不用检查的自动交付机器。</p>
+<p><img alt="Article image" src="/assets/2026-05-06-codex-保姆级入门教程（上篇）-0ae3165d90/12.png"></p>
+<ol start="5">
+<li>常用命令</li>
+</ol>
+<p>Codex的常用命令，我罗列在了下面的表格当中，大家可以尝试使用。</p>
+<p><img alt="Article image" src="/assets/2026-05-06-codex-保姆级入门教程（上篇）-0ae3165d90/13.jpg"></p>
+<h2>七、在 App 端使用 Codex</h2>
+<ol>
+<li>启动</li>
+</ol>
+<p>App 适合两类人：一类是不想一直待在终端里，另一类是希望同时看项目文件、对话记录和修改内容。</p>
+<p>打开方式有两种，一种是直接双击桌面Codex的图标，一种是执行命令codex app。</p>
+<p><img alt="Article image" src="/assets/2026-05-06-codex-保姆级入门教程（上篇）-0ae3165d90/14.png"></p>
+<p><img alt="Article image" src="/assets/2026-05-06-codex-保姆级入门教程（上篇）-0ae3165d90/15.png"></p>
+<p>选择你的偏好后，点击继续，也可以点击跳过，后面再配置。</p>
+<p><img alt="Article image" src="/assets/2026-05-06-codex-保姆级入门教程（上篇）-0ae3165d90/16.png"></p>
+<p>由于我之前登录过Codex CLI，所以 App 这边不用登录就可以直接使用了。后面的IDE 插件也是一样的道理，同一套登录状态可以复用。</p>
+<p><img alt="Article image" src="/assets/2026-05-06-codex-保姆级入门教程（上篇）-0ae3165d90/17.jpg"></p>
+<ol start="2">
+<li>基础使用</li>
+</ol>
+<p>点击项目，然后选择使用现有文件夹，找到刚刚上面制作贪吃蛇的那个文件夹test。</p>
+<p><img alt="Article image" src="/assets/2026-05-06-codex-保姆级入门教程（上篇）-0ae3165d90/18.jpg"></p>
+<p>可以看到刚刚的对话都已经加载进来了。这一点很关键：Codex 不是只能单次问答，它会围绕一个项目持续工作。</p>
+<p><img alt="Article image" src="/assets/2026-05-06-codex-保姆级入门教程（上篇）-0ae3165d90/19.jpg"></p>
+<p>点击右上角的切换文件树，可以看到当前目录下的文件。点击具体文件后，左侧可以预览内容，也可以直接在文件里做注释，让 Codex 按你的反馈继续修改。</p>
+<p>这时候它就不只是“问答机器人”了，而是能围绕项目上下文继续修改。</p>
+<p><img alt="Article image" src="/assets/2026-05-06-codex-保姆级入门教程（上篇）-0ae3165d90/20.jpg"></p>
+<p>右下角的设置里面还可以查看剩余额度。轻度使用一般够用，但额度策略会变化，最终以客户端显示为准。</p>
+<p><img alt="Article image" src="/assets/2026-05-06-codex-保姆级入门教程（上篇）-0ae3165d90/21.png"></p>
+<p>由于X的篇幅所限，关于Codex在云端和IDE端的使用、进阶应用技巧、接入国内模型的方法、常见使用问题，我们将在教程的下篇为大家详细讲解，敬请期待~~</p>
+<p>也欢迎大家关注我 @XiaohuiAI666 ，学习更多有用的AI和副业经验。</p></div><a class="source" href="https://x.com/XiaohuiAI666/status/2050514779878674501" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

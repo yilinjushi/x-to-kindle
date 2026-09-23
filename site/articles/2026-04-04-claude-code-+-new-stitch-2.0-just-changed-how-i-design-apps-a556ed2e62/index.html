@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Claude Code + NEW Stitch 2.0 just changed how I design apps">
+  <title>Claude Code + NEW Stitch 2.0 just changed how I design apps · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Prajwal Tomar @PrajwalTomar_ · 2026-04-04</div><div class="prose"><h1>Claude Code + NEW Stitch 2.0 just changed how I design apps</h1>
+<p>Google Stitch 2.0 + Claude Code via MCP is the workflow I’ve been testing… and the results are genuinely insane.</p>
+<p>I&#x27;ve been saying this for a while now. If your app looks like AI slop, that&#x27;s not an AI problem. That&#x27;s a workflow problem.</p>
+<p>Most builders are stuck in the same cycle. You build something functional with AI. The features work. The logic is solid. But the UI looks generic and you know it. Your users know it too. And the moment someone lands on your product, they make a judgment in about two seconds.</p>
+<p>The old fix was to hire a designer. Spend $3,000 to $10,000. Wait weeks for Figma files. Then spend even more time getting someone to actually implement those designs into your codebase. By the time the design was live, you&#x27;d already lost momentum and burned through cash you didn&#x27;t need to spend.</p>
+<p>That entire process is now optional.</p>
+<p>I was able to take a client project that looked like every other vibe coded app and completely redesign it in under an hour. Professional typography. Consistent color system. A design language that actually holds together across every screen.</p>
+<p>This is the workflow I&#x27;m running now. And I think every builder shipping with AI needs to understand how it works.</p>
+<h2>Why Stitch 2.0 Is Actually Different</h2>
+<p>I&#x27;ve tested a lot of AI design tools over the past year. Most of them generate something that looks decent on the first screen and then falls apart the moment you try to build a second page. Consistency is the problem. It always has been.</p>
+<p>Stitch 2.0 solves this in a way nothing else has.</p>
+<p>It&#x27;s an AI native canvas. You can feed it screenshots of your existing app, drop in inspiration images from places like Dribbble or 21st.dev, or even paste a URL and let it reverse engineer the design of any website you like. It takes those creative seeds and generates full UI designs with multiple variants you can pick from.</p>
+<p>But the real unlock is not the designs themselves. It&#x27;s what Stitch builds in the background while it&#x27;s designing.</p>
+<p>A complete design system.</p>
+<p>Typography scales covering display, headline, label, title, and body fonts. A primary, secondary, and tertiary color palette that&#x27;s auto generated to be complementary. Color scales for every shade. Component rules and patterns. Elevation and depth specs. Even dos and don&#x27;ts for your design language.</p>
+<p>All of this gets documented automatically in a file called design.md. This is a plain markdown file that captures every single design rule in one place. And this is the file that changes everything when you bring Claude Code into the picture.</p>
+<h2>How I Actually Use This on Real Projects</h2>
+<p>Let me walk you through exactly what I do. No theory. Just the workflow.</p>
+<p>I start by taking screenshots of whatever I&#x27;m redesigning. If it&#x27;s a client project or something I&#x27;ve been building myself, I screenshot the main screens and drop them directly onto the Stitch canvas. If I&#x27;m starting fresh, I&#x27;ll grab two or three inspiration images from Dribbble instead. You don&#x27;t need more than that. You&#x27;re not looking for something to copy. You&#x27;re looking for a direction.</p>
+<p>Then I write one focused prompt. I tell Stitch what the app does, which screens I want redesigned, and the design direction I&#x27;m going for. Dark mode, minimal, editorial, whatever fits the product. I also specify font preferences because fonts are honestly the single fastest way to elevate how an app feels. Serif for headings, clean sans serif for body is a combination that works really well for most SaaS products.</p>
+<p>Stitch generates multiple variants from that one prompt. This is important. Don&#x27;t just accept the first output. Look at each variant and pull the best elements from each. The typography from one, the layout from another, the color energy from a third. You&#x27;re curating, not just accepting.</p>
+<p>One thing most people miss about why Stitch produces such strong output is that it generates images first before any code. That means it&#x27;s not constrained by what HTML and CSS can do. It can imagine anything visually. Then you work backwards from that reference to build it. That&#x27;s why the designs feel so much more polished than what you get from prompting a coding tool directly.</p>
+<p>You can also talk to Stitch via voice now instead of typing. It transcribes your words into prompts automatically. Small feature but genuinely useful when you&#x27;re deep in a session and want to keep moving fast.</p>
+<h2>Design.md Is the Real Game Changer</h2>
+<p>Once you&#x27;re happy with your designs, go to the right hand panel in Stitch and click on Design Systems. You&#x27;ll see that Stitch has already created one for you automatically based on everything you&#x27;ve been designing.</p>
+<p>Click into it and you&#x27;ll find the full design system I described earlier. Typography, colors, components, rules, everything documented and organized.</p>
+<p>Now click on design.md.</p>
+<p>Copy the entire file. Go to your project. Create a new file called design.md in the root directory. Paste it in. Save it.</p>
+<p>That file is now the single source of truth for your entire design language.</p>
+<p>Here&#x27;s why this matters so much. Before design.md, every time you prompted Claude Code to build a new screen or add a new feature, the design would drift. Colors would shift slightly. Fonts would change. Spacing would become inconsistent. Your app would end up looking like ten different people built it because effectively they did. Every prompt was a different context.</p>
+<p>After design.md, Claude Code references that file on every single prompt. Your design language stays locked across every screen, every component, and every new feature. The consistency problem that has plagued every AI built app is solved by one markdown file.</p>
+<p>And you can keep updating it as your product evolves. Add new component rules. New patterns. New constraints. It grows with you.</p>
+<h2>Connecting Stitch to Claude Code via MCP</h2>
+<p>This is where the workflow gets CRACKED.</p>
+<p>design.md gives Claude Code the rules. But the MCP connection gives Claude Code something even more powerful. Direct access to the actual HTML and CSS from your Stitch frames. Not a description of the design. The real source code.</p>
+<p>Claude reads the layout, understands how every element fits together, and rebuilds it in your actual app. It even adds things you didn&#x27;t explicitly ask for like hover effects and transitions because it&#x27;s interpreting real design code rather than guessing from a text prompt.</p>
+<p>Here&#x27;s the setup. Go to the Google Stitch documentation and search for Google Stitch MCP setup. You&#x27;ll find install commands for different platforms. Grab the one for your setup. Then go to Stitch Settings, navigate to the API section, and create an API key. Paste the install command along with your API key into your Claude Code terminal. Start a new session and Stitch will show as connected.</p>
+<p>Once connected, you prompt Claude Code something like this: &quot;Update the dashboard screen to match the layout of the desktop frame in Google Stitch using the Stitch MCP.&quot;</p>
+<p>Claude Code will list your Stitch projects, find the right frame, fetch the source code, and rebuild your UI to match. The whole process takes minutes.</p>
+<p>One thing to watch for though. Stitch sometimes designs features that don&#x27;t exist in your app yet. It might add a recent activity section or a notifications panel based on what it thinks your product should have. Be very explicit with Claude Code about what to include and what to skip. Tell it exactly which features are actually built in your codebase. Otherwise you&#x27;ll spend time removing things that shouldn&#x27;t be there.</p>
+<h2>Taking It All the Way to a Live Product</h2>
+<p>Once the design is solid, you can use Claude Code to handle everything else in the same session.</p>
+<p>For authentication, connect Supabase. Claude Code walks you through the entire process. You generate a token from Supabase, hand it over, and Claude sets up user accounts, login flows, and role level security. I&#x27;ve tested this and sessions persist on refresh which is exactly what you need for a real product.</p>
+<p>For payments, connect Stripe. Create a product in your Stripe dashboard with your pricing. Give Claude Code your public and secret keys. It finds the product ID automatically, builds the checkout flow, and connects it to your user system. Always test in Stripe&#x27;s sandbox mode first using the test card 4242 4242 4242 4242 before going live.</p>
+<p>For email, connect Resend. Password resets, welcome emails, and notifications all get wired up automatically. Claude Code builds the edge functions and connects them to your auth flow.</p>
+<p>For deployment, push to GitHub and deploy to Vercel. One click and your site is live. Every change you make in Claude Code from that point forward reflects on the live site automatically.</p>
+<p>The thing that makes this workflow so powerful is that Claude Code coaches you through every integration. You don&#x27;t need to understand how Stripe&#x27;s webhook system works or know the details of Supabase&#x27;s security model. You tell Claude what you want and it asks you for the specific credentials it needs. That&#x27;s it.</p>
+<h2>The Honest Caveats</h2>
+<p>I always share what doesn&#x27;t work perfectly because I think that matters more than hype.</p>
+<p>Fonts sometimes need a manual nudge after Claude Code applies the design from Stitch. Colors don&#x27;t always carry over at the exact right shade. The MCP reads HTML and CSS so if Stitch generates something particularly complex, Claude may interpret it slightly differently than what you see on the canvas. It&#x27;s also token hungry so longer sessions will cost more and you want to stay focused with your prompts.</p>
+<p>But none of that changes the fundamental shift here. What used to cost thousands of dollars and weeks of waiting can now be done by one person in an afternoon. The workflow is not perfect yet. It&#x27;s just dramatically better than everything that came before it. And given how fast Google is shipping updates to Stitch, the gaps are closing quickly.</p>
+<h2>This Is the New Standard</h2>
+<p>Here&#x27;s what I think most people are missing about this moment.</p>
+<p>Funded teams have always had designers. They have brand guidelines, Figma systems, and dedicated people maintaining design consistency across their entire product. Solo builders and small teams never had access to any of that.</p>
+<p>If you&#x27;re building with AI in 2026 and you&#x27;re still paying designers thousands for MVP level work, or you&#x27;re shipping apps that look like AI slop because you don&#x27;t know how to fix the design, this workflow exists now. It works. I&#x27;ve tested it.</p>
+<p>If you want to learn more workflows like this, I dropped a full course inside my free community. 10 videos. Idea to live product. Auth, payments, AI, database, deployment. The whole system.</p>
+<p>1,900+ builders already inside. FREE to join.
+Join here → https://www.skool.com/aimvpbuilders/about</p></div><a class="source" href="https://x.com/PrajwalTomar_/status/2037104246647382058" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

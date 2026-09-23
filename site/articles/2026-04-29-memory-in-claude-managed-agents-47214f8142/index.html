@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Memory in Claude Managed Agents">
+  <title>Memory in Claude Managed Agents · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Lance Martin @RLanceMartin · 2026-04-29</div><div class="prose"><h1>Memory in Claude Managed Agents</h1>
+<p>Claude Managed Agents (available on the Claude Platform) now has memory. Memories are stored as files and are accessible across sessions, allowing the agent to learn  from experience. Memories can also be exported via the API.</p>
+<p>@DavidSHershey shared a story about agent memory with me: in his work on Claude Plays Pokémon, he gave Claude a tool to read and write memory files to a folder. These memory files were meant to help Claude navigate the game.</p>
+<p>This didn’t work very well with earlier models. Sonnet 3.5 treated memory as a transcript, writing down what non-player characters said rather than what mattered. After 14,000 steps it had 31 memory files, but had not made much progress (it was stuck in the second town). Here’s an example of one file:</p>
+<p>json
+caterpie_weedle_info:
+- Caterpie and Weedle are both caterpillar Pokémon.
+- Caterpie is a caterpillar Pokémon that does not have poison.
+- Weedle is a caterpillar Pokémon that does have poison.
+- This information is crucial for future encounters and battles.
+- If our Pokémon get poisoned, we should seek healing at a Pokémon
+ Center as soon as possible.</p>
+<p>To overcome these limitations, many papers have proposed harnesses with tooling to manage memory. @tedsumers CoALA paper and the memGPT work from @sarahwooders and @charlespacker  are two of my favorites. These use ideas from cognitive sciences and operating system to model agent memory.</p>
+<p>But the Pokémon work showed an interesting result: later models learned to use the filesystem to organize memory much better. Opus 4.6, at the same step count, had 10 files organized into directories, three gym badges, and a learnings file distilled from its own failures:</p>
+<p>json
+/gameplay/learnings.md:
+- Bellsprout Sleep+Wrap combo: KO FAST with BITE before Sleep
+ Powder lands. Don&#x27;t let it set up!
+- Gen 1 Bag Limit: 20 items max. Toss unneeded TMs before dungeons.
+- Spin tile mazes: Different entry y-positions lead to DIFFERENT
+ destinations. Try ALL entries and chain through multiple pockets.
+- B1F y=16 wall CONFIRMED SOLID at ALL x=9-28 (step 14557)</p>
+<p>This example highlights a trend, which I wrote about here: give Claude general tools to manage its own context and actions. Claude can learn to use general tools to solve problems, like memory, with scaling intelligence.</p>
+<p>With a general tool to manage files, we’ve seen Claude learn what to save and how to organize its own memories. @Letta_AI independently showed that a filesystem can outperform specialized memory tools.</p>
+<p>This story explains why we use the filesystem for memory in Claude Managed Agents (available on the Claude Platform). Files can be organized however Claude wants, using its standard file tools. The platform just persists files between sessions using memory stores, which are workspace-scoped collections of text documents that outlive any single session.</p>
+<p><img alt="Article image" src="/assets/2026-04-29-memory-in-claude-managed-agents-47214f8142/01.png"></p>
+<p>When you attach a memory store to a session, it&#x27;s mounted into the container as a directory at /mnt/memory/&lt;store-name&gt;/. A short note about the mount is automatically injected into the system prompt so Claude knows it&#x27;s there.</p>
+<p>Multiple agents can access the same memory store and the platform will sync memories in real time: if one agent makes an edit, that edit will be reflected in the filesystem of all other agents that have the memory store mounted. It also will handle concurrency to make sure one agent doesn&#x27;t overwrite the memory updates made by another agent.</p>
+<p>Files have an additional benefit  - they are interpretable and sharable. In the Pokémon example, @DavidSHershey was able to just download and share the memory folders. With Managed Agents you can also export  memories:</p>
+<p>python
+client.beta.memory_stores.memories.list(store_id, view=&quot;full&quot;)</p>
+<p>This sets up a simple way to think about context in Managed Agents: there is a session log and a memory store. As @mc_anthropic, @gcemaj, and I wrote about here, Claude can fetch and transform session context over the course of a task. The session lives outside the context window, which has benefits that @a1zhang and @lateinteraction have nicely outlined here. Claude can write files to the memory store if it wants to persist context across sessions.</p>
+<p>To get started, see our docs or use our claude-api skill. This skill is built into Claude Code, and can be triggered by running &quot;/claude-api&quot;. You can then ask questions about Claude Managed Agents or other API features.</p></div><a class="source" href="https://x.com/RLanceMartin/status/2047720067107033525" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Portal by Spotify cut my Claude Code token usage by 90%">
+  <title>Portal by Spotify cut my Claude Code token usage by 90% · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">2026-09-06</div><div class="prose"><h1>Portal by Spotify cut my Claude Code token usage by 90%</h1>
+<p>Most of what an AI coding agent does for me isn&#x27;t thinking. It&#x27;s I/O.</p>
+<p>Reading five files to answer a question about one method. Generating a test file that follows the exact same pattern as the twenty test files next to it. Updating docs after a meeting. Thousands of tokens gone and almost zero reasoning. The seat license isn&#x27;t what hurts, it&#x27;s the tokens. And you&#x27;re feeding all of it to a frontier model that&#x27;s wildly overqualified. What if you could route the grunt work to something cheaper that handles it just as well, and save the expensive model for the problems that actually need it?</p>
+<p>It’s hardly just my problem. By 2028, AI coding costs are expected to blow past the average developer&#x27;s salary. A quarter of engineering leaders already burn $200–$500 per developer per month on tokens. Some are well past $2,000. The tooling pays for itself but only if you stop burning frontier tokens on work that doesn&#x27;t need them.</p>
+<p>Turns out, the fix didn&#x27;t require a platform team or a new subscription. Just two modes.</p>
+<p>Two modes, zero code</p>
+<p>This is exactly the kind of use case AiKA Modes in Portal by Spotify were built for. A mode is a declarative agent that runs on an ephemeral runtime - think AWS Lambda, but for agents. You define the instructions, pick a model, set parameters like temperature, and attach MCP tools. Portal handles the rest. No infra to manage, no API keys, no long-running servers. Modes are callable from the Portal CLI or API. They can be public (shared with the whole company) or private.</p>
+<p>For this router to work I created two modes. Both use Gemini 2.5 Flash as the worker model in the examples below, but the model field accepts any model you have configured in your Portal instance. Pick whichever works for you.</p>
+<p>For when Claude would otherwise read multiple large files just to answer one question.</p>
+<p>name: bulk-reader description: Bulk file reader for code analysis - delegates I/O from Claude Code instructions: You are a precise code analyst. Read the provided files and answer the question concisely. Output structured bullets only. No greetings, no prose, no preambles. Lead every bullet with the exact name, type, or line number. Use nested bullets for details. Skip anything the caller did not ask for. visibility: public model: gemini-2.5-flash resourceLimits: temperature: 0.2 tags: - coding - delegation</p>
+<p>For tests, config scaffolding, type stubs or anything where the output is predictable from existing patterns.</p>
+<p>That &quot;output only the code&quot; instruction matters. Without it, the model wraps everything in markdown fences and explanatory prose that Claude then has to parse through.</p>
+<p>The first version of this was a block of routing rules in CLAUDE.md. It sort of worked: Claude would read the instructions and self-route to Portal. But it had problems. The rules were advisory, not enforced. Claude could ignore them. And every project needed its own copy of the instructions.</p>
+<p>The current version is a Claude Code plugin called shunt . Delegation goes through the Portal CLI actions registry so the plugin works against any Portal instance with AiKA plugin enabled.</p>
+<p>Claude Code hooks fire before every tool call. Shunt registers two PreToolUse hooks:</p>
+<p>check-file-size fires on every Read call. If the file exceeds a configurable line threshold (default: 350), the hook blocks the read and tells Claude to use the /bulk-reader skill instead. Targeted reads pass through - Claude already knows what section it needs.</p>
+<p>check-bash-read catches cat, head, tail, less, and more on large files. Piped commands (cat file | grep) pass through since those are targeted reads.</p>
+<p>The threshold is configurable via the SHUNT_MIN_LINES environment variable. Set it in your shell profile or in .claude/settings.json:</p>
+<p>{ &quot;env&quot;: { &quot;SHUNT_MIN_LINES&quot;: &quot;500&quot; } }</p>
+<p>I have two bash scripts that wrap the Portal CLI calls. Claude calls a script with named arguments. The scripts handle everything internally: building the request, invoking the actions, unwrapping errors, and reporting token usage to stderr.</p>
+<p>Modes are addressed by name and resolved by Portal: case-insensitively, preferring your own mode, then your team&#x27;s, then public ones. Fork the public bulk-reader into a customized version and yours automatically takes precedence - no configuration needed.</p>
+<p>bulk-read wraps each file in XML tags for clear boundaries and sends them to the bulk-reader mode along with the question.</p>
+<p>Every delegation is one shot. The invocation is ephemeral (nothing is stored server-side) and re-sending the files on a follow-up is free where it matters, because the corpus goes to the worker model and never enters Claude&#x27;s context.</p>
+<p>code-write sends a spec and a reference file to the code-writer mode, strips markdown fences from the output, and can write directly to disk. Claude never sees the generated code. The reference is required: without a file to match patterns against, the worker would generate context-free code that fits nothing in your project.</p>
+<p>Two skill files tell Claude when and how to call the scripts. Skills are markdown files with a description and usage examples. When the hook blocks a read, the block message points Claude to the /bulk-reader skill, which shows the exact invocation syntax.</p>
+<p>This layering means the system degrades gracefully. Even if Claude doesn&#x27;t read the skill description, the hook still blocks the expensive read. The skill just makes the redirect smoother.</p>
+<p>Tested against a Java monorepo across four scenarios, measuring tokens Claude would consume reading files directly vs. consuming the bulk-reader&#x27;s summary or writing code via the code-writer. Mean bulk-read savings were around a whopping 90%.</p>
+<p>The code-write scenario is harder to measure in tokens because without shunt, Claude both reads the reference files and generates the output as expensive output tokens. With shunt, the code goes straight to disk, Claude never sees it.</p>
+<p>You can&#x27;t delegate editing. The worker model&#x27;s summaries don&#x27;t include reliable line numbers. If Claude needs to make edits based on the analysis, it still has to read the specific section directly. The hooks allow targeted reads (with offset/limit) for exactly this reason, so delegation saves tokens on understanding.</p>
+<p>You can&#x27;t delegate reasoning. The worker model found surface-level patterns but missed a subtle thread-safety bug in my testing. Claude spotted it in seconds once given the right context. The routing explicitly excludes debugging, architectural decisions, and safety-critical code.</p>
+<p>Latency adds up . Each delegation is a network round-trip: Claude Code to the Portal backend to the worker model and back. Responses typically take 10–30 seconds, and Portal caps a single invocation at 30 seconds, so very large generations need to be split into smaller calls. This is acceptable for large reads, but counterproductive for small ones. The line threshold exists for this reason, below it the overhead of delegation exceeds the savings.</p>
+<p>Token savings are just the starting point</p>
+<p>The plugin is a Claude Code artifact, but the idea underneath is model routing powered by AiKA modes. The modes are the load-bearing piece:</p>
+<p>They&#x27;re reusable. The same bulk-reader and code-writer modes work across every project and every tool that can shell out to the Portal CLI.</p>
+<p>They&#x27;re reusable. The same bulk-reader and code-writer modes work across every project and every tool that can shell out to the Portal CLI.</p>
+<p>They&#x27;re shareable. Both modes are public in AiKA. Anyone can use them today without creating their own.</p>
+<p>They&#x27;re shareable. Both modes are public in AiKA. Anyone can use them today without creating their own.</p>
+<p>They&#x27;re composable. You could create a doc-writer mode for documentation, a reviewer mode for code review summaries, a translator mode for i18n. Each one is a few clicks away.</p>
+<p>They&#x27;re composable. You could create a doc-writer mode for documentation, a reviewer mode for code review summaries, a translator mode for i18n. Each one is a few clicks away.</p>
+<p>They decouple the routing decision from the worker. The plugin decides when to delegate. The mode decides how to respond. Swap Gemini Flash for a cheaper model, change the system prompt, add MCP tools - the plugin doesn&#x27;t change.</p>
+<p>They decouple the routing decision from the worker. The plugin decides when to delegate. The mode decides how to respond. Swap Gemini Flash for a cheaper model, change the system prompt, add MCP tools - the plugin doesn&#x27;t change.</p>
+<p>This is the real power of AiKA modes: they turn model routing from a systems engineering problem into a configuration problem. You don&#x27;t build infrastructure. You describe what you want and name it.</p>
+<p>Install both plugins from the spotify/portal-ai-plugins marketplace: claude plugin marketplace add spotify/portal-ai-plugins claude plugin install portal@portal claude plugin install shunt@portal.</p>
+<p>Install both plugins from the spotify/portal-ai-plugins marketplace:</p>
+<p>claude plugin marketplace add spotify/portal-ai-plugins</p>
+<p>claude plugin marketplace add spotify/portal-ai-plugins</p>
+<p>claude plugin install portal@portal</p>
+<p>claude plugin install portal@portal</p>
+<p>claude plugin install shunt@portal.</p>
+<p>claude plugin install shunt@portal.</p>
+<p>The portal plugin provides the Portal CLI that shunt delegates through.</p>
+<p>In a new Claude Code session, run /portal:setup to set up and authenticate the Portal CLI against your Portal instance.</p>
+<p>In a new Claude Code session, run /portal:setup to set up and authenticate the Portal CLI against your Portal instance.</p>
+<p>You’re good to go, just ask a question that spans multiple files.</p>
+<p>You’re good to go, just ask a question that spans multiple files.</p>
+<p>The bulk-reader and code-writer modes are already public, so there is nothing to create. If you want to customize them - different worker model, different instructions - fork them in Portal and your version takes precedence automatically.</p>
+<p>The modes are reusable across projects and shareable with your team. The plugin enforces the routing so you don&#x27;t have to think about it. Learn more about modes .</p></div><a class="source" href="https://engineering.atspotify.com/2026/9/portal-by-spotify-cut-my-claude-code-token-usage-by-90" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

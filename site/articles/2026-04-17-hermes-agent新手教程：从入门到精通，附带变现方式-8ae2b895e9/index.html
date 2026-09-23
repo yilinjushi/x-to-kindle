@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Hermes Agent新手教程：从入门到精通，附带变现方式">
+  <title>Hermes Agent新手教程：从入门到精通，附带变现方式 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">努力赚钱的菜狗 @jiroucaigou · 2026-04-17</div><div class="prose"><h1>Hermes Agent新手教程：从入门到精通，附带变现方式</h1>
+<p>Hermes总结来是更高级的龙虾。它更稳定更省钱，会自动进化并且更好用。之前有人靠安装龙虾提车，学会Hermes教程拿去赚钱，这一次轮到你买车。本推带来从安装到实战的新手教程</p>
+<h1>1.新手入门</h1>
+<p>目标让你的Hermes跑起来，完成第一次对话</p>
+<p>核心概念</p>
+<p>记忆：跨会话的记住你的偏好、项目上下文以及环境</p>
+<p>技能skill：日常执行中自动总结并制作skill，以更好的工作与节省token</p>
+<p>网关系统：链接15+通讯平台的渠道</p>
+<p>以下是正式执行步骤</p>
+<p>一键安装Hermes</p>
+<p>macOS/Linux/WSL2</p>
+<p>bash
+curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash</p>
+<p>Windows 用户：
+需先安装 WSL2，然后在 WSL2 终端中执行上述命令。 citation</p>
+<p>非常简单安装过程中自动处理：</p>
+<p>安装过程会自动处理：</p>
+<ul>
+<li>
+<p>Python、Node.js、Git 等依赖项</p>
+</li>
+<li>
+<p>创建配置目录 ~/.hermes/</p>
+</li>
+<li>
+<p>设置环境变量</p>
+</li>
+</ul>
+<p>bash
+source ~/.bashrc  # 重载shell配置（zsh用户执行：source ~/.zshrc）
+hermes version    # 检查版本
+hermes doctor     # 诊断运行环境</p>
+<p>任务 2：配置模型供应商</p>
+<p>安装完成后，系统会自动进入配置向导。选择 Quick Setup（推荐新手），然后选择模型供应商。</p>
+<p>推荐的新手配置方案：</p>
+<p>模型供应商</p>
+<p>Deepseek、kimi等国产大模型，免费额度高，先尝试后再用高级大模型</p>
+<p>配置命令：</p>
+<p>bash
+hermes chat -q &quot;Hello! What tools do you have available?&quot;</p>
+<p>首次对话测试</p>
+<p>bash
+hermes model  # 交互式选择模型</p>
+<h1>或直接设置</h1>
+<p>hermes config set OPENROUTER_API_KEY sk-or-xxx</p>
+<p>如果回复正常则安装成功</p>
+<p>常见的命令
+hermes交互式命令行界面，开启对话
+hermes model选择大语言模型服务商与对应模型
+hermes tools配置启用的工具集
+hermes config set设置单项配置项
+hermes gateway启动消息网关
+hermes setup重新运行全量配置向导
+hermes doctor诊断运行环境与配置问题
+hermes status检查配置状态
+hermes update更新至最新版本</p>
+<h2>第二阶段：中级进阶</h2>
+<p>目标：让 Hermes 变得“有用”，接入常用通讯平台</p>
+<p>核心机制深度理解</p>
+<ol>
+<li>Skill 系统（技能沉淀）</li>
+</ol>
+<p>这是 Hermes 最强大的特性。当 Hermes 完成一个复杂任务后，它会自动总结经验并创建可复用的 Skill。</p>
+<p>触发 Skill 创建的时机：</p>
+<ul>
+<li>
+<p>完成多步骤任务后</p>
+</li>
+<li>
+<p>用户明确要求“创建技能”时</p>
+</li>
+<li>
+<p>跨会话重复某种工作模式时</p>
+</li>
+</ul>
+<p>查看已有技能：</p>
+<p>bash
+ls ~/.hermes/skills/</p>
+<p>ls ~/.hermes/skills/</p>
+<ol start="2">
+<li>消息网关（Gateway）</li>
+</ol>
+<p>一个网关可以同时接入 15+平台，实现“随时随地调用 AI”。</p>
+<p>实践任务清单</p>
+<p>任务 1：接入 Telegram 机器人</p>
+<p>步骤 1：创建 Bot</p>
+<ul>
+<li>
+<p>在 Telegram 中搜索 @BotFather</p>
+</li>
+<li>
+<p>发送 /newbot 创建新机器人</p>
+</li>
+<li>
+<p>获取 Bot Token</p>
+</li>
+</ul>
+<p>步骤 2：配置 Hermes</p>
+<h1>在 ~/.hermes/.env 中添加</h1>
+<p>TELEGRAM_BOT_TOKEN=your-bot-token</p>
+<h1>或通过命令配置</h1>
+<p>hermes config set TELEGRAM_BOT_TOKEN your-bot-token</p>
+<p>步骤 3：编辑配置文件</p>
+<p>yaml</p>
+<h1>~/.hermes/config.yaml</h1>
+<p>gateway:
+  adapters:
+    telegram:
+      enabled: true</p>
+<p>启动网关</p>
+<p>bash
+hermes gateway</p>
+<p>步骤 5：在 Telegram 中向机器人发送 /start</p>
+<p>任务 2：接入飞书/钉钉机器人</p>
+<p>飞书配置：</p>
+<p>bash
+hermes gateway setup</p>
+<h1>选择飞书，按照指引配置</h1>
+<p>或手动编辑 ~/.hermes/config.yaml：</p>
+<p>yaml
+gateway:
+  adapters:
+    feishu:
+      enabled: true
+      require_mention: false
+      default_group_policy: open</p>
+<p>钉钉配置：</p>
+<p>yaml
+gateway:
+  adapters:
+    dingtalk:
+      enabled: true</p>
+<p>任务 3：配置常用工具集</p>
+<p>bash
+hermes tools</p>
+<p>可用工具</p>
+<p>可启用的工具包括：
+filesystem文件读写操作
+web_search互联网搜索
+firecrawl网页抓取
+send_message多平台消息发送
+execute_command执行终端命令
+mcp模型上下文协议扩展</p>
+<p>任务 4：测试记忆功能</p>
+<ul>
+<li>
+<p>告诉 Hermes 你的偏好（如：“我叫小明，我喜欢用中文交流”）</p>
+</li>
+<li>
+<p>退出对话：exit</p>
+</li>
+<li>
+<p>重新开启对话：hermes chat</p>
+</li>
+<li>
+<p>问它：“你知道我是谁吗？”</p>
+</li>
+</ul>
+<p>如果它能记住你的名字，说明记忆系统正常工作。</p>
+<p>任务 5：触发 Skill 创建</p>
+<p>尝试让 Hermes 完成一个复杂任务：</p>
+<p>bash
+hermes chat
+&gt; 请帮我抓取 Hacker News 首页的AI新闻，并总结成中文摘要发给我</p>
+<p>观察 Hermes 是否会提示创建新技能。</p>
+<p>中级阶段验收标准</p>
+<ul>
+<li>
+<p>Telegram/飞书机器人能正常响应消息</p>
+</li>
+<li>
+<p>hermes tools 启用了至少 3 个工具</p>
+</li>
+<li>
+<p>跨会话记忆功能正常（重开对话后能识别你）</p>
+</li>
+<li>
+<p>成功触发至少一次 Skill 创建流程</p>
+</li>
+</ul>
+<h2>第三阶段：高手精通</h2>
+<p>目标：构建自进化闭环，实现自动化工作流</p>
+<p>核心机制深度理解</p>
+<ol>
+<li>MCP（Model Context Protocol）集成</li>
+</ol>
+<p>MCP 是一种标准协议，允许 Hermes 连接到外部工具和服务。通过 MCP，Hermes 可以：</p>
+<ul>
+<li>
+<p>连接本地数据库</p>
+</li>
+<li>
+<p>操作 GitHub 仓库</p>
+</li>
+<li>
+<p>调用自定义 API</p>
+</li>
+<li>
+<p>访问文件系统</p>
+</li>
+</ul>
+<ol start="2">
+<li>多 Agent 编排</li>
+</ol>
+<p>Hermes 支持并行任务处理，可以创建多个子 Agent 协同工作。</p>
+<ol start="3">
+<li>Cron 定时任务</li>
+</ol>
+<p>内置 Cron 调度，支持 7×24 小时自动执行任务。</p>
+<p>实践任务清单</p>
+<p>任务 1：MCP 扩展集成</p>
+<p>安装 MCP 扩展：</p>
+<p>bash
+uv pip install -e &quot;.[mcp]&quot;</p>
+<p>配置 MCP 服务器：</p>
+<p>在 ~/.hermes/config.yaml 中添加：</p>
+<p>yaml
+mcp:
+  servers:
+    filesystem:
+      command: &quot;npx&quot;
+      args: [&quot;-y&quot;, &quot;@modelcontextprotocol/server-filesystem&quot;, &quot;/path/to/dir&quot;]
+    github:
+      command: &quot;npx&quot;
+      args: [&quot;-y&quot;, &quot;@modelcontextprotocol/server-github&quot;]</p>
+<p>使用 MCP 工具：</p>
+<p>在对话中直接调用：</p>
+<p>请读取我GitHub上的最新Issue，并总结给</p>
+<p>任务 2：搭建定时自动化任务</p>
+<p>创建 Cron 任务：</p>
+<p>bash
+任务 2：搭建定时自动化任务</p>
+<p>创建 Cron 任务：</p>
+<p>Hermes 会自动创建对应的 Cron 任务配置。</p>
+<p>查看定时任务</p>
+<p>bash
+ls ~/.hermes/cron/</p>
+<p>手动管理 Cron：</p>
+<p>编辑 ~/.hermes/cron/tasks.yaml：</p>
+<p>yaml
+tasks:
+  - name: daily_news
+    schedule: &quot;0 9 * * *&quot;  # 每天早上9点
+    command: &quot;总结今日AI新闻&quot;
+    platform: telegram
+    chat_id: &quot;your-chat-id&quot;</p>
+<p>任务 3：多 Agent 编排</p>
+<p>创建主 Agent 调用子 Agent：</p>
+<p>bash
+hermes chat
+&gt; 创建一个调研Agent负责收集信息，一个写作Agent负责整理成文，一个校对Agent负责检查错误</p>
+<p>通过配置文件定义多 Agent 协作流程：</p>
+<p>yaml
+agents:
+  researcher:
+    role: &quot;调研员&quot;
+    tools: [web_search, firecrawl]
+  writer:
+    role: &quot;作家&quot;
+    tools: [filesystem]
+  editor:
+    role: &quot;校对员&quot;
+    tools: [filesystem]</p>
+<p>任务 4：高级配置与安全</p>
+<p>配置执行后端：</p>
+<p>bash</p>
+<h1>Docker隔离模式</h1>
+<p>hermes config set terminal.backend docker</p>
+<h1>SSH远程模式</h1>
+<p>hermes config set terminal.backend ssh</p>
+<p>数据备份</p>
+<p>bash</p>
+<h1>备份配置</h1>
+<p>tar -czvf hermes-backup.tar.gz ~/.hermes/</p>
+<h1>备份内容：</h1>
+<h1>~/.hermes/sessions/    # 对话历史</h1>
+<h1>~/.hermes/memories/    # 记忆数据</h1>
+<h1>~/.hermes/skills/      # 技能配置</h1>
+<h1>~/.hermes/config.yaml # 主配置</h1>
+<p>任务 5：性能优化</p>
+<p>监控日志：</p>
+<p>bash
+tail -f ~/.hermes/logs/hermes.log</p>
+<p>优化启动速度</p>
+<p>bash</p>
+<h1>预热模型</h1>
+<p>hermes model warmup</p>
+<p>资源限制：</p>
+<p>在 Docker 中运行以限制资源：</p>
+<p>bash
+docker run -d \
+  --name hermes-agent \
+  --memory=&quot;2g&quot; \
+  --cpus=&quot;2&quot; \
+  -v ~/.hermes:/home/hermes/.hermes \
+  ghcr.io/nousresearch/hermes-agent:latest \
+  hermes</p>
+<p>高手阶段验收标准</p>
+<ul>
+<li>
+<p>MCP 扩展正常集成（至少连接一个外部服务）</p>
+</li>
+<li>
+<p>Cron 定时任务能自动执行</p>
+</li>
+<li>
+<p>多 Agent 协作流程正常运行</p>
+</li>
+<li>
+<p>掌握数据备份与安全配置</p>
+</li>
+<li>
+<p>能阅读并修改 config.yaml 高级配置</p>
+</li>
+</ul>
+<p>常见问题与解决方案
+hermes: command not found执行 source ~/.bashrc 或检查 PATH
+安装后找不到命令ln -sf 重建软链接
+Windows 无法安装需先安装 WSL2
+API 密钥未设置运行 hermes model 配置
+模型不响应检查 API Key 额度
+更新后配置丢失运行 hermes config check 然后 hermes config migrate
+机器人无响应检查网关是否运行 hermes gateway
+权限错误验证 Bot Token 和权限
+消息未发送检查通道 ID 和配置
+诊断命令
+遇到任何问题，首先运行：
+hermes doctor
+这会告诉您缺少什么以及如何修复。</p>
+<h2>学习资源汇总</h2>
+<p>官方资源</p>
+<ul>
+<li>
+<p>GitHub 仓库：https://github.com/nousresearch/hermes-agent</p>
+</li>
+<li>
+<p>官网：https://hermes-agent.nousresearch.com/</p>
+</li>
+<li>
+<p>官方文档：https://hermes-agent.nousresearch.com/docs/</p>
+</li>
+</ul>
+<p>社区资源</p>
+<ul>
+<li>
+<p>菜鸟教程：https://www.runoob.com/ai-agent/hermes-agent.html</p>
+</li>
+<li>
+<p>橙皮书（花叔）：https://www.huasheng.ai/orange-books/hermes-agent/</p>
+</li>
+</ul>
+<h2>如何变现呢？</h2>
+<p>1.代部署、代安装服务在咸鱼、小红书上售卖安装服务</p>
+<p>2.为垂直行业置顶AI员工，针对行业进行定制</p>
+<p>3.卖skill技能包</p>
+<p>4.让代理自己去构建业务</p>
+<p>Hermes对比龙虾的优势：会自动进化，越用越聪明，安装简单并且更稳定，不会像龙虾经常崩溃，更省token。</p>
+<p>如果认为整理的还行就请关注支持一下，菜狗大学生努力学习中~</p></div><a class="source" href="https://x.com/jiroucaigou/status/2044249069699428665" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

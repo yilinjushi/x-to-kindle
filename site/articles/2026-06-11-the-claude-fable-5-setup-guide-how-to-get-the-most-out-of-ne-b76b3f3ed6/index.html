@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="The Claude Fable 5 Setup Guide: How to Get the Most Out of New Model (Exact Config Inside)">
+  <title>The Claude Fable 5 Setup Guide: How to Get the Most Out of New Model (Exact Config Inside) · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">darkzodchi @zodchiii · 2026-06-11</div><div class="prose"><h1>The Claude Fable 5 Setup Guide: How to Get the Most Out of New Model (Exact Config Inside)</h1>
+<p>The most powerful Claude ever is free until June 22. Then it costs 2x Opus. Here&#x27;s how to actually use it.</p>
+<p>Anthropic released the most powerful Claude ever yesterday.</p>
+<p>You have 13 days to test it for free before it gets expensive.</p>
+<p>Most people will run everything through it and burn out the free window.</p>
+<p>Here&#x27;s the setup that uses it only where it wins 👇</p>
+<p>Before we dive in, I share daily notes on AI &amp; vibe coding in my Telegram channel: https://t.me/zodchixquant🧠</p>
+<p><img alt="Article image" src="/assets/2026-06-11-the-claude-fable-5-setup-guide-how-to-get-the-most-out-of-ne-b76b3f3ed6/01.jpg"></p>
+<h2>What actually changed</h2>
+<p>Fable 5 is in a new tier. It&#x27;s not Opus 5, it&#x27;s something Anthropic calls Mythos-class, which sits above Opus.</p>
+<p>The numbers that matter:</p>
+<ul>
+<li>
+<p>Solves 8 out of 10 hard coding problems on the standard test. Opus solves 7. GPT-5.5 solves under 6.</p>
+</li>
+<li>
+<p>Reads your entire codebase in one go (about 2,500 pages of code at once).</p>
+</li>
+<li>
+<p>Writes a 300-page document in one response without breaking.</p>
+</li>
+<li>
+<p>Knows everything up to January 2026.</p>
+</li>
+<li>
+<p>You call it claude-fable-5 in your code.</p>
+</li>
+</ul>
+<p>Stripe used it during early access to run a codebase-wide migration in one day. The same migration would have taken their team over two months by hand.</p>
+<p>That&#x27;s the kind of task Fable is built for. Long, complex, multi-stage work that previous models couldn&#x27;t sustain.</p>
+<p>The media could not be played.
+Reload</p>
+<h2>The pricing reality</h2>
+<p>Fable costs 2x Opus across the board:</p>
+<p>Input    Output   Cached
+Fable 5       $10/M    $50/M    $1/M
+Opus 4.8      $5/M     $25/M    $0.50/M</p>
+<p>If you spent $100 last week on Opus, you spend $200 this week running everything through Fable.</p>
+<p>Real-world math on a typical 5,000-token task:</p>
+<p>Per task   100/day   Per month
+Fable 5       $0.25      $25       $750
+Opus 4.8      $0.125     $12.50    $375</p>
+<h2>When Fable 5 is worth the $50</h2>
+<p>Use Fable only when the task pays off the price difference. Three categories.</p>
+<p>Long autonomous work. Multi-step migrations, codebase-wide refactors, week-long research tasks. The kind of work where you&#x27;d otherwise babysit 4 hours of Opus retries. One clean Fable run beats 8 Opus retries on cost and time.</p>
+<p>Vision-heavy tasks. Fable is now state-of-the-art for vision. Rebuilding a web app from screenshots, extracting numbers from scientific figures, parsing complex diagrams. If your task involves images, Fable is the right model.</p>
+<p>The hardest coding problems. Tasks where Opus stalls or needs explicit hand-holding. If you&#x27;ve ever asked Opus the same thing 3 times in different ways, that task is Fable territory.</p>
+<h2>When Opus 4.8 still wins</h2>
+<p>Most daily work doesn&#x27;t need Fable.</p>
+<p>Short focused tasks. Single file edit, small refactor, one bug fix. Opus handles these in one shot. Paying 2x for the same outcome makes no sense.</p>
+<p>High-volume work. Doc updates, commit messages, routine reviews. If you run a task 50 times a day, the math is brutal: $0.125 per task on Opus vs $0.25 on Fable is the difference between $375 and $750 a month for the same output.</p>
+<p>Latency-sensitive work. Fable is bigger and runs longer per token. If you need fast iteration, Opus is faster.</p>
+<p>The pattern most teams settle on: route by task complexity, hard high-value jobs to Fable, everything else to Opus or Sonnet.</p>
+<p><img alt="Article image" src="/assets/2026-06-11-the-claude-fable-5-setup-guide-how-to-get-the-most-out-of-ne-b76b3f3ed6/02.jpg"></p>
+<h2>The exact CLAUDE.md routing config</h2>
+<p>Drop this in your CLAUDE.md:</p>
+<p>markdown</p>
+<h2>Model routing rules</h2>
+<p>Default model: claude-opus-4-8</p>
+<p>Switch to claude-fable-5 only when at least one is true:
+- Task spans more than 5 files or is expected to take more than 30 minutes
+- Task involves images, screenshots, or vision (extract data, rebuild from
+  visual, parse figures)
+- Previous attempts on Opus stalled or needed more than 2 retries
+- Task is async/autonomous and will run without human check-in for over
+  an hour</p>
+<p>For everything else, stay on Opus 4.8. Do not switch up because the task
+feels complex. Switch up only when the criteria above are met.</p>
+<p>For doc updates, commit messages, simple migrations, single-file edits,
+use claude-sonnet-4-6.</p>
+<p>Claude reads this on session start and routes itself. You don&#x27;t need to think about it task by task.</p>
+<h2>Prompt caching for the 90% discount</h2>
+<p>Fable&#x27;s input drops to $1 per million with prompt caching. Set it up in your client:</p>
+<p>python
+client.messages.create(
+    model=&quot;claude-fable-5&quot;,
+    max_tokens=8000,
+    system=[
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;text&quot;: large_system_prompt,
+            &quot;cache_control&quot;: {&quot;type&quot;: &quot;ephemeral&quot;}
+        }
+    ],
+    messages=[...]
+)</p>
+<p>If you run the same system prompt or CLAUDE.md across 20 sessions a day, caching pays for itself in the first hour.</p>
+<p>For Claude Code users, caching is on by default for project-level prompts, so the discount is automatic.</p>
+<h2>The free window: June 9 to June 22</h2>
+<p>Pro, Max, Team, and seat-based Enterprise plans include Fable 5 at no extra cost from June 9 through June 22.</p>
+<p>After June 22, using Fable on those plans needs usage credits. The Anthropic team said they might extend the window if capacity allows, but plan as if it ends on the 22nd.</p>
+<p>This is 13 days to test Fable on real work without paying for it.</p>
+<p>The right move: route your top 5 complex tasks of the week to Fable, see if the output justifies the $50 per million for your specific workload, and decide before the window closes.</p>
+<h2>Common mistakes after a model release</h2>
+<p>You swap the model string globally and forget about routing. This is how budgets double. Always pair a model change with explicit routing rules in CLAUDE.md.</p>
+<p>You don&#x27;t test on your own work first. Anthropic&#x27;s benchmark numbers are real, but your codebase is different. Run Fable on 5 of your hardest tasks before committing to it.</p>
+<p>You ignore the free window. June 9 through June 22 is the rare moment when you can test the most capable Claude on real work without paying. Use it.</p>
+<p>You assume bigger means slower means worse latency. Fable is bigger per token but it also stalls less and self-corrects more. Real-world tasks often finish faster on Fable than 3 retries on Opus.</p>
+<p>You skip prompt caching. Without it, Fable is twice as expensive on input as it needs to be. Turn it on.</p>
+<p><img alt="Article image" src="/assets/2026-06-11-the-claude-fable-5-setup-guide-how-to-get-the-most-out-of-ne-b76b3f3ed6/03.jpg"></p>
+<h2>The 5-minute setup</h2>
+<p>1 minute: copy the routing rules into your CLAUDE.md.</p>
+<p>1 minute: update model to claude-fable-5 in the calls that match the routing criteria (or let Claude Code route itself based on CLAUDE.md).</p>
+<p>1 minute: turn on prompt caching for your system prompts.</p>
+<p>2 minutes: queue your 5 hardest pending tasks and run them on Fable. See if the output justifies the cost.</p>
+<p>Done. Before June 22 you&#x27;ll know whether Fable belongs in your daily workflow or only in your hardest 5% of tasks.</p>
+<p>The model didn&#x27;t change your workflow. Your routing did.</p>
+<p>Thanks for reading!</p>
+<p>I share daily notes on AI, finance, and vibe coding in my Telegram channel: https://t.me/zodchixquant</p>
+<p><img alt="Article image" src="/assets/2026-06-11-the-claude-fable-5-setup-guide-how-to-get-the-most-out-of-ne-b76b3f3ed6/04.jpg"></p></div><a class="source" href="https://x.com/zodchiii/status/2064648905564815815" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

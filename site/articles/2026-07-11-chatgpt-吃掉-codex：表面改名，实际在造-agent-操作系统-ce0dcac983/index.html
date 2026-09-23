@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="ChatGPT 吃掉 Codex：表面改名，实际在造 Agent 操作系统">
+  <title>ChatGPT 吃掉 Codex：表面改名，实际在造 Agent 操作系统 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">知识猫AI实验室 @GeekCatX · 2026-07-11</div><div class="prose"><h1>ChatGPT 吃掉 Codex：表面改名，实际在造 Agent 操作系统</h1>
+<p>2026 年 7 月 9 日，OpenAI 将 Codex 正式并入 ChatGPT 桌面应用，同时推出 ChatGPT Work 与 GPT‑5.6。表面上看，这只是应用改名和入口合并；更深层的变化是，Codex 正从独立的编程工具演化为 ChatGPT 的 Agent 执行底座，而 Work 与 Codex 则成为同一套 Agent 基础设施上的两种专业工作模式。</p>
+<h2>一场看似“改名”的更新</h2>
+<p>最近，一位 Reddit 用户更新 Windows 版 Codex 后，发现应用突然变成了 ChatGPT：图标和界面名称都换了，但可执行文件依然叫 Codex；左上角则多出了 ChatGPT Work 与 Codex 两个入口。</p>
+<p>这引出了一个很有代表性的问题：ChatGPT Work 和 Codex 到底是什么关系？只是名字不同，还是底层能力也不同？</p>
+<p>这既不是简单改名，也不是用 Work 取代 Codex，而是一次产品架构的重新组织。根据 OpenAI Codex 更新日志，Codex 已于 2026 年 7 月 9 日正式成为 ChatGPT 桌面应用的一部分。原有 Codex 用户可以直接升级，已有项目、设置和工作流都会保留；用户仍可以把 Codex 设置为默认视图，并在 macOS 上保留原来的 Codex 图标。Windows 中仍然存在 Codex.exe，更可能是兼容迁移、安装包命名或内部启动机制的延续，并不意味着系统中仍运行着两个完全独立的产品。</p>
+<h2>一个工作台，两种专业模式</h2>
+<p>理解这次更新最简单的方式是：ChatGPT 桌面应用成为统一工作台，ChatGPT Work 负责通用知识工作，Codex 负责软件工程。两者共享账号体系、GPT‑5.6 模型家族，以及相当一部分 Agent 基础设施，但它们面对的工作对象、默认工具、上下文组织、执行流程和交付方式并不相同。</p>
+<p><img alt="Article image" src="/assets/2026-07-11-chatgpt-吃掉-codex：表面改名，实际在造-agent-操作系统-ce0dcac983/01.jpg"></p>
+<p>Work 的定位是：给它一个业务目标，让它交付一个成果。Codex 的定位是：给它一个工程目标，让它完成一组可验证的代码变更。</p>
+<h2>ChatGPT Work：从“回答问题”走向“交付成果”</h2>
+<p>传统 ChatGPT 的核心交互是对话：用户提出问题，模型给出回答。ChatGPT Work 的目标则更进一步——它不是只提供建议，而是接手一段较长、较复杂的工作流程。</p>
+<p>按照 ChatGPT 发布说明，Work 可以研究和分析信息，读取连接的应用、文件和资料，将复杂目标拆分成多个步骤，在执行过程中汇报进度并请求确认，生成文档、表格、演示、报告和 Sites，并通过 Scheduled Tasks 定时、重复或按条件触发任务。它更像一位面向知识工作的项目执行者。例如，你可以要求它调研某个市场，综合内部资料与公开信息，制作一份带数据表和管理层摘要的竞争分析报告。这个任务并不以代码仓库为中心，最终价值也不在于生成几段文字，而在于它能否完成资料收集、判断、结构化表达和成品制作的闭环。</p>
+<h2>Codex：仍然是面向真实工程环境的执行 Agent</h2>
+<p>Codex 并没有因为合并而消失。相反，它在统一桌面应用中变成了更明确的开发者专业模式。</p>
+<p>Codex 的工作中心始终是本地或远程代码仓库、Git 分支与 Worktree、Shell 与构建工具和测试环境、文件级 Diff 与行内评论、Commit 与 Pull Request 和代码审查、AGENTS.md 与 Skills 与 Hooks 与工程规范，以及 CLI 与 IDE 与云端任务和 SSH 主机。它的价值不是“更会写代码片段”，而是能在真实工程环境中完成一个完整循环：理解仓库和任务约束，检查相关文件和依赖，制订实现计划，修改多个文件，运行测试、构建与静态检查，根据结果继续修正，输出可审查的 Diff、Commit 或 PR。这正是 Codex 与普通聊天式代码助手之间最关键的区别——聊天助手主要给答案，Codex 直接操作并验证工程对象。</p>
+<h2>两者底层是不是同一个 Codex？</h2>
+<p>更准确地说，两者共享底层能力，但拥有不同的产品配置和执行回路。</p>
+<p>OpenAI 对 ChatGPT Work 的描述明确提到，它内置了 Codex 技术。这意味着 Work 很可能复用了 Codex 已经成熟的 Agent 能力，包括长时间运行的任务循环、目标拆解和子任务管理、文件与工具调用、权限确认和人工介入、并行任务与状态追踪、Skills 与插件与连接器，以及本地或远程执行基础设施。但“共享基础设施”不等于“两个模式完全相同”。Work 与 Codex 很可能在系统指令与任务策略、默认开放的工具和权限、上下文检索与注入方式、项目和工作空间抽象、审查与确认与回滚机制，以及产物展示及交付界面等层面采用不同配置。</p>
+<p>最合理的技术抽象不是“两个独立模型”，也不是“同一个按钮换皮”，而是同一套 Agent 操作系统上的两个专业 Agent——Work 面向开放式知识工作，Codex 面向约束更强、验证要求更高的软件工程。</p>
+<h2>GPT‑5.6：这次更新背后的模型升级</h2>
+<p>应用合并只是产品层变化，另一条同样重要的主线是 GPT‑5.6 上线。</p>
+<p>Reddit 原帖中的版本号 26.707.30751 并非偶然。OpenAI 在 GPT‑5.6 帮助文档中将其列为桌面端 Codex 使用 GPT‑5.6 的最低版本；Codex CLI 的最低版本则为 0.144.0。GPT‑5.6 采用了新的模型分层：Sol 是旗舰能力，适合高难度工作；Terra 在能力、速度与成本之间取得平衡；Luna 速度更快、成本更低；max 比原来的 xhigh 投入更多推理时间；ultra 则默认协调四个 Agent 并行执行复杂任务。</p>
+<p>这里尤其需要区分 max 与 ultra。max 是单个模型获得更多时间和计算资源，用于探索、检查和修正；ultra 则是多 Agent 编排，用并行工作流换取更强的复杂任务表现和更短的总等待时间。根据 GPT‑5.6 官方介绍，ultra 默认运行四个 Agent；Codex 的 Plus 及以上计划可以使用，ChatGPT Work 则主要向 Pro 与 Enterprise 开放。</p>
+<p>这意味着 OpenAI 正在把“推理强度”从一个简单的高低选项，扩展为两种不同的计算范式：纵向扩展让单个 Agent 思考得更久、更深，横向扩展让多个 Agent 分工并行、再由主 Agent 汇总。</p>
+<h2>普通 ChatGPT 去哪里了？</h2>
+<p>不少用户更新后只看见 Work 与 Codex，于是误以为普通聊天被删除了。实际情况是，桌面端的信息架构被重新调整：左上角主要用于切换 Work 与 Codex，普通对话通过侧边栏的 Quick chat 新建，移动端主要在 Chat 与 Work 之间切换，移动端暂时不能进入完整 Codex 工作界面，但可以通过 Remote 查看和控制支持的 Codex 任务。这些用法已经写入 ChatGPT Work and Codex FAQ。普通 ChatGPT 并未消失，只是从桌面应用的主模式切换器中退到了快速对话入口。</p>
+<p>这也透露了 OpenAI 对桌面端的新定位：桌面应用优先服务持续工作，临时问答则成为一个轻量入口。</p>
+<h2>实际使用时该怎么选择？</h2>
+<p>选择标准不是“哪个更强”，而是你的核心工作对象是什么。</p>
+<p>当任务涉及对真实仓库做跨文件修改、创建或管理 Git Worktree、执行测试与构建和 Lint、审查 Diff 与 Commit 和 PR、根据 AGENTS.md 遵循项目规范、调用工程 Skills 与脚本、连接 CLI 与 IDE 与 SSH 或远程开发环境，以及让多个编码 Agent 并行处理工程任务时，继续使用 Codex。</p>
+<p>当任务更接近调研一个主题并生成完整报告、从多个业务系统搜集和整合资料、分析数据并制作表格或演示、生成可分享的网页和 Sites、定期制作周报或市场监控或运营材料、将研究与需求与资料转化为成品，以及执行不以 Git 仓库为中心的复杂流程时，Work 更合适。</p>
+<h2>让 Work 与 Codex 组成一条流水线</h2>
+<p>Work 与 Codex 并不是竞争关系。真正高效的方式，是让它们分别承担最擅长的环节。</p>
+<p>第一阶段由 Work 负责定义与研究：收集公开资料和内部信息，澄清用户需求与业务目标，生成 PRD、规格和验收标准，识别风险、依赖和约束。第二阶段交给 Codex 负责工程执行：读取代码库及项目说明，把需求映射到现有架构，制订实现方案，修改代码并运行测试，输出 Diff、Commit、PR 和审查结果。第三阶段再由 Work 负责包装与交付：生成发布说明，更新项目报告，整理测试结果和决策记录，制作面向管理层、客户或市场的演示材料。</p>
+<p>过去，许多人需要在 ChatGPT 和 Codex 之间反复复制需求、计划、执行结果与总结。统一桌面应用的长期价值，正是逐渐消除这种上下文搬运，让“研究—规划—执行—验证—交付”形成连续工作流。</p>
+<h2>ChatGPT 正在成为工作操作系统</h2>
+<p>如果只看表面，这次更新只是把 Codex 图标换成 ChatGPT，并增加了一个 Work 入口。但从产品演化看，它代表了更大的方向变化。</p>
+<p>过去的 ChatGPT 主要是对话界面；Codex 则率先建立了一个可操作文件、调用工具、执行长任务并接受人工监督的 Agent 环境。随着非开发者开始用 Codex 制作报告、表格、演示和自动化流程，OpenAI 顺势将这套执行能力推广到通用知识工作。Codex 的角色正在发生变化——它不再只是一个独立的 Coding App，而是在演化为 ChatGPT 桌面端的 Agent Runtime。在这套架构中，Codex 是软件工程专业模式，Work 是知识工作专业模式，Quick chat 承担即时问答，Skills 与插件定义可复用能力，Computer Use 与 Browser Use 与连接器扩展行动范围，Scheduled Tasks 负责持续与重复工作，ultra 将多 Agent 编排产品化。</p>
+<p>未来，OpenAI 很可能继续统一任务系统、Skills、插件目录、本地与远程执行环境、Computer Use、多 Agent 编排，以及用量和计费体系。</p>
+<h2>结语</h2>
+<p>这次更新的真正含义，不是“Codex 被 ChatGPT 收编了”，而是 OpenAI 正把 ChatGPT 从聊天工具升级为统一的 Agent 工作平台。Codex 提供了一套在真实环境中执行、验证和交付工作的基础能力；ChatGPT Work 则把这套能力从软件开发推广到研究、分析、运营、产品与办公场景。</p>
+<p>短期内，二者仍应按任务类型明确分工：代码和工程环境优先交给 Codex，跨资料的知识工作与成品交付优先交给 Work。长期来看，它们会越来越像同一套工作系统中的两个专业角色。真正值得关注的，也不再是“该用 ChatGPT 还是 Codex”，而是如何设计一条由多个专业 Agent 协作完成的端到端工作流。</p></div><a class="source" href="https://x.com/GeekCatX/status/2075523729493549093" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

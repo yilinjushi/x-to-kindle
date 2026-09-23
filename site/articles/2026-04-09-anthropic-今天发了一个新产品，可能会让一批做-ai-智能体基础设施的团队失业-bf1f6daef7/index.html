@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Anthropic 今天发了一个新产品，可能会让一批做 AI 智能体基础设施的团队失业">
+  <title>Anthropic 今天发了一个新产品，可能会让一批做 AI 智能体基础设施的团队失业 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">宝玉 @dotey · 2026-04-09</div><div class="prose"><h1>Anthropic 今天发了一个新产品，可能会让一批做 AI 智能体基础设施的团队失业</h1>
+<p>这个产品叫 Claude Managed Agents。一句话概括：你告诉 Anthropic 你想要什么样的 AI 智能体，它帮你在云端跑起来，基础设施全包，按用量收费。Sentry 用它几周就上线了自动修 bug 的全流程，Rakuten 一周部署一个专项智能体。之前这些事需要一整个工程师团队干几个月。</p>
+<p>Claude
+@claudeai
+·
+Apr 8
+Introducing Claude Managed Agents: everything you need to build and deploy agents at scale.</p>
+<p>It pairs an agent harness tuned for performance with production infrastructure, so you can go from prototype to launch in days.</p>
+<p>Now in public beta on the Claude Platform.
+The media could not be played.
+Reload
+2K
+9K
+56K
+21M</p>
+<p>与此同时，Anthropic 的年经常性收入刚突破 300 亿美元，是去年 12 月的三倍。大部分增长来自企业客户。华尔街已经开始紧张了，WSJ 说投资者对传统 SaaS 公司的股价越来越谨慎，担心 Anthropic 这类产品会让一些传统软件服务变得多余。</p>
+<p>这个产品到底是什么？和你已经在用的 Claude Code 有什么区别？技术上怎么做到的？</p>
+<h2>它是什么？和 Claude Code 有什么区别？</h2>
+<p>如果你用过 Claude Code，你知道 AI 智能体怎么工作：你给它一个任务，它自己规划步骤、调用工具、写代码、改文件，一步步把事做完。</p>
+<p>Claude Code 跑在你自己的电脑上，是给开发者个人用的命令行工具。 你关了电脑，它就停了。</p>
+<p>Managed Agents 跑在 Anthropic 的云上，是给企业用的 API 服务。 它可以 24 小时不间断运行，断线了也不丢进度，你的产品可以直接内嵌智能体能力。Notion 就是这么干的：用户在 Notion 里把任务分配给 Claude 智能体，智能体在后台干完活把结果交回来，用户全程不需要离开 Notion。</p>
+<p><img alt="Article image" src="/assets/2026-04-09-anthropic-今天发了一个新产品，可能会让一批做-ai-智能体基础设施的团队失业-bf1f6daef7/01.jpg"></p>
+<p>几种典型用法：</p>
+<ul>
+<li>
+<p>事件触发型：系统发现 bug，自动派智能体修复并提 PR，中间不需要人介入。</p>
+</li>
+<li>
+<p>定时型：每天早上自动生成 GitHub 活动摘要或团队工作简报。</p>
+</li>
+<li>
+<p>即发即忘型：在 Slack 里给智能体派个活，它做完把表格、PPT、App 交回来。</p>
+</li>
+<li>
+<p>长时间任务型：跑几个小时的深度研究或代码重构。</p>
+</li>
+</ul>
+<h2>和企业自己搭的云端智能体有什么区别？</h2>
+<p>能自己搭，但很贵很慢。</p>
+<p>一个能上线的智能体，需要的东西远比“调一下 API”多得多：沙盒环境（sandbox，一个隔离的安全空间，AI 在里面跑代码、改文件，不管怎么折腾都不会影响外面的真实系统，相当于给 AI 一台专用虚拟电脑）、凭证管理、状态恢复、权限控制、全链路追踪……</p>
+<p>很多企业客户之前需要一整个工程师团队专门搞这些。现在开箱即用，工程师可以去做产品真正核心的部分。</p>
+<p>但 Managed Agents 解决的痛点还不只是省人力。</p>
+<p>马东锡（@dongxi_nlp）有一个精辟的总结：</p>
+<p>Dongxi 东锡 NLP
+@dongxi_nlp
+·
+Apr 8
+本地的 Harness 是徒劳的，因为随着模型迭代把问题本身解决，针对旧模型局限而精心设计的harness，便失去了存在的意义。</p>
+<p>换句话说，模型的局限性厂家最清楚，它可以完全按照模型的特性设计不同的harness，然后打包卖给你。</p>
+<p>这个包，就是 Managed Agents
+Quote
+Anthropic
+@AnthropicAI
+·
+Apr 8
+New on the Engineering Blog: </p>
+<p>Building Managed Agents—our hosted service for long-running agents—meant solving an old problem in computing: how to design a system for “programs as yet unthought of.”</p>
+<p>Read more: 
+https://
+anthropic.com/engineering/ma
+naged-agents
+…
+42
+59
+351
+90K</p>
+<p>Anthropic 工程博客里有一个具体的例子：Claude Sonnet 4.5 快到上下文窗口极限时会“焦虑”，草草结束任务。他们在调度框架里加了上下文重置来应对。但 Claude Opus 4.5 出来后，这个毛病消失了，之前的补丁反而变成了累赘。</p>
+<p>你自己搭调度框架，每次模型升级你都得跟着改。交给 Anthropic，他们替你优化，严格来说他们优化了卖给你。</p>
+<p><img alt="Article image" src="/assets/2026-04-09-anthropic-今天发了一个新产品，可能会让一批做-ai-智能体基础设施的团队失业-bf1f6daef7/02.jpg"></p>
+<h2>谁在用？怎么用的？</h2>
+<p>Notion 让用户在工作区里直接把编码、做 PPT、整理表格这些活扔给 Claude，几十个任务并行跑，整个团队在同一个输出上协作。Notion 产品经理 Eric Liu 说，用户可以把开放式的复杂任务直接委托出去，不用离开 Notion。</p>
+<p>Claude
+@claudeai
+·
+Apr 8
+Replying to 
+@claudeai
+@NotionHQ
+ lets teams delegate work to Claude directly inside their workspace. Dozens of tasks run in parallel, and whole teams collaborate on the outputs. Available now in private alpha:
+How Notion built with Claude Managed Agents
+From youtube.com
+18
+130
+1.4K
+1.3M</p>
+<p>Sentry 做了“从发现 bug 到提交修复代码”的全自动流程。他们的 AI debug 工具 Seer 找到问题根因后，Claude 直接写补丁、开 PR（代码提交合并请求）。工程总监 Indragie Karunaratne 说，几周就上线了，还省掉了持续维护自建基础设施的运营开销。</p>
+<p>Atlassian 把它接进了 Jira，开发者可以直接在 Jira 里把任务分配给 Claude 智能体。</p>
+<p>Asana 做了 AI Teammates，在项目管理里加入 AI 协作者，能接任务、交付物。</p>
+<p>General Legal（法律科技公司）的玩法最有趣：他们的智能体能根据用户的提问，临时写工具来查数据。以前每个用户问题都得提前预判并开发检索工具，现在智能体自己按需生成。CTO 说开发时间缩短了 10 倍。</p>
+<p>Rakuten 在工程、产品、销售、市场、财务各部门都部署了专项智能体，每个一周内上线，通过 Slack 和 Teams 接任务，交回来的是表格、PPT、App 这些实际交付物。</p>
+<h2>技术原理：大脑和手分开</h2>
+<p>Anthropic 工程团队写了一篇技术博客 Scaling Managed Agents: Decoupling the brain from the hands，讲了 Managed Agents 背后的架构演进。</p>
+<p>Anthropic
+@AnthropicAI
+·
+Apr 8
+New on the Engineering Blog: </p>
+<p>Building Managed Agents—our hosted service for long-running agents—meant solving an old problem in computing: how to design a system for “programs as yet unthought of.”</p>
+<p>Read more:
+Scaling Managed Agents: Decoupling the brain from the hands
+From anthropic.com
+379
+573
+3.5K
+582K</p>
+<p><img alt="Article image" src="/assets/2026-04-09-anthropic-今天发了一个新产品，可能会让一批做-ai-智能体基础设施的团队失业-bf1f6daef7/03.jpg"></p>
+<p>最早他们把所有东西塞进一个容器：AI 的推理循环、代码执行环境、会话记录，全在一起。好处是简单，坏处是鸡蛋全在一个篮子里，容器一挂，整个会话就丢了，而且没法单独替换某个部分。</p>
+<p>后来他们做了一个关键拆分：</p>
+<p><img alt="Article image" src="/assets/2026-04-09-anthropic-今天发了一个新产品，可能会让一批做-ai-智能体基础设施的团队失业-bf1f6daef7/04.jpg"></p>
+<ul>
+<li>
+<p>“大脑” 是 Claude 和它的调度框架，负责思考和决策。</p>
+</li>
+<li>
+<p>“手” 是沙盒和各种工具，负责执行具体操作。</p>
+</li>
+<li>
+<p>“记忆” 是独立的会话日志，记录发生的一切。</p>
+</li>
+</ul>
+<p>三者互不依赖，任何一个挂了都不影响其他两个。</p>
+<p>这个拆分带来几个实际好处：</p>
+<h2>快</h2>
+<p>不是每个任务都需要启动完整的沙盒环境，现在只有 AI 真的需要跑代码时才按需启动。首次响应延迟中位数降了约 60%，极端情况降了超过 90%。</p>
+<h2>安全</h2>
+<p>AI 生成的代码跑在沙盒里，而访问外部系统的凭证存在沙盒外面的安全保险箱里，两边物理隔离。比如访问 Git 仓库，系统初始化时就把代码克隆好了，AI 正常用 git push/pull，但 Token 本身对 AI 不可见。对于 Slack、Jira 这类服务，通过 MCP 协议接入，请求经过代理层，代理层去保险箱取凭证调服务，AI 全程不经手凭证。</p>
+<p><img alt="Article image" src="/assets/2026-04-09-anthropic-今天发了一个新产品，可能会让一批做-ai-智能体基础设施的团队失业-bf1f6daef7/05.jpg"></p>
+<h2>灵活</h2>
+<p>大脑不关心手是什么。工程博客里有句话很有意思：调度框架不知道沙盒到底是一个容器、一部手机、还是一个宝可梦模拟器。 只要符合“名字和输入进去，字符串出来”的接口就行。</p>
+<p>这也意味着多个大脑可以共享手，一个大脑可以把手交给另一个大脑，为多智能体协作打下了基础。</p>
+<h2>局限性</h2>
+<p>Managed Agents 并不是万能的。几个需要注意的点：</p>
+<p>部分功能还在研究预览阶段。 多智能体协作、高级记忆工具、自我评估迭代（让智能体自己判断任务完成质量并反复改进）这些能力目前还没有全面开放，需要申请才能使用。</p>
+<p>平台绑定。 选择 Managed Agents 意味着你的智能体基础设施绑在了 Anthropic 生态里。如果未来想换模型或换平台，迁移成本不可忽视。</p>
+<p>上下文管理仍然是难题。 虽然会话日志独立存储，但长时间任务中哪些信息该保留、哪些该丢弃，仍然涉及不可逆的决策。这是一个持续挑战，他们目前的做法是把上下文存储和上下文管理分开：存储保证不丢，管理策略随模型进化调整。</p>
+<p>成本可预测性。 0.08 美元/会话小时听起来不多，但智能体跑几个小时的复杂任务，Token 消耗加上运行时费用，成本可能不低。企业需要做好预算评估。</p>
+<p>Managed Agents 说明大多数企业离“全面用 AI 智能体干活”还有很长的路要走。基础设施的门槛降低了，但怎么定义好的任务、怎么设计好的工作流、怎么建立信任让 AI 接触核心业务数据，这些问题 Managed Agents 帮不了你。</p>
+<h2>AI 智能体基建的“AWS 时刻”</h2>
+<p>看起来 Managed Agents 走的是 AWS 当年的老路：先有了计算能力，然后把运行环境也包了。十年前企业纠结“上不上云”，现在纠结“Agent 基础设施自建还是托管”。历史经验告诉我们，大多数企业最终会选择托管，因为基础设施从来不是核心竞争力。 OpenAI 也推出了自己的 Agent 平台 Frontier，这个赛道的竞争刚刚开始。</p>
+<p>从技术角度看，“大脑和手分离”这个架构思路值得关注。它让系统的每个部分都可以独立演进：模型升级了，换大脑；需要新工具，加一双手；存储方案改了，替换记忆层。工程博客里的类比说得好：操作系统的 read() 命令不关心底下是 1970 年代的磁盘还是现代 SSD，抽象层稳定了，底下的实现随便换。</p>
+<p>从使用角度看，如果你是企业开发者，想在自己的产品里嵌入 AI 智能体能力，Managed Agents 可能会省掉你几个月的基础设施工作。六种语言（Python、TypeScript、Java、Go、Ruby、PHP）有 SDK 支持。如果你已经在用 Claude Code，更新到最新版，输入 /claude-api managed-agents-onboarding 就能开始。如果你是普通 AI 爱好者，短期内最直观的感受可能是：你用的那些 SaaS 产品里，会有越来越多的 AI 智能体在后台帮你干活，而这些智能体很可能就跑在 Managed Agents 上。</p>
+<p>定价参考：Token 费用按 Anthropic API 标准价格，运行时 0.08 美元/会话小时（空闲不计费），网页搜索 10 美元/千次。</p>
+<p>你觉得 AI 智能体的基础设施，最终会像云计算一样被几家大厂垄断吗？</p></div><a class="source" href="https://x.com/dotey/status/2042017036931305667" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

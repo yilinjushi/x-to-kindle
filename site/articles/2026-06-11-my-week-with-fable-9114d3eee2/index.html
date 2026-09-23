@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="My Week with Fable">
+  <title>My Week with Fable · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Matthew Berman @MatthewBerman · 2026-06-11</div><div class="prose"><h1>My Week with Fable</h1>
+<p>tl;dr I&#x27;ve been testing Fable (Mythos) for the past week and it feels unlike any other model I&#x27;ve used. It feels, and is priced, like a next-generation model. It also has some real quirks.</p>
+<h2>The Good</h2>
+<p>Workflow mode is the standout. I told it to do a &quot;full code review&quot; and watched it spin up hundreds of agents in parallel. It assigned an individual agent to basically every file in my application. It found bugs, edge cases, missing documentation, and UX improvements all over my application. And I&#x27;ve given this same prompt to other models that didn&#x27;t find nearly as many issues.</p>
+<p>It&#x27;s also wildly autonomous. It&#x27;s way more willing than any previous Claude or GPT model to go off and work for hours at a time. Most of all, I trusted it to complete the goal I set. It&#x27;ll happily burn a ton of tokens to get there. It felt like every time I kicked off Fable, it had the intention of taking on a massive project.</p>
+<p>I felt more confident in giving Fable massive, complex tasks. More so than any other model I&#x27;ve ever used. I couldn&#x27;t think of a problem that would make it stumble. And it felt like it was very eager to take on these massive tasks.</p>
+<p>And that’s where this models stands out - long horizon tasks. It’s hard to imagine where the limit of its time-horizon is.</p>
+<p>It&#x27;s not a God model though. There are things it needs to improve.</p>
+<h2>Quirks</h2>
+<p>It&#x27;s incredibly verbose. Explanations get deep in the weeds fast. I updated my claude.md to rein it in and even that wasn&#x27;t enough. I kept having to ask it to explain things more simply. It wasn&#x27;t just the verbosity either, it was the information density. The way it explained things made me feel genuinely dumb.</p>
+<p>A note on information density - I didn&#x27;t appreciate how important this is. The more information you can convey in a fixed token budget allows the model to be effectively smarter at a cheaper cost. This also is a strong argument for agents inventing their own hyper-dense language in the future.</p>
+<p>Fable loves clarifying questions. A single prompt turns into: questions, then a summary of my answers, then confirm the summary, then a spec, then confirm the spec, then confirm the agent approach (parallel vs sequential), then finally build. I wanted it to make those decisions for me. Anthropic told me this gets fixed with the updated system prompt.</p>
+<p>It feels slow. Slower than previous Opus models and even GPT. Slow to start, and it takes its time working through problems. That&#x27;s the opposite of what I&#x27;ve loved about Opus. Opus always felt faster than GPT-5.5 to me on two fronts: raw tokens/sec, and that it found shorter paths to solutions. Fable is different on both. Even on simple tasks it would crawl. I&#x27;d watch the timer climb while the output tokens sat static, five minutes in and only a few thousand tokens used. It wants to be as thorough as possible, and that takes time.</p>
+<h2>Conclusion</h2>
+<p>Pro tip: turn down the effort level, even more than you think you need to. It thinks a LOT even at the middle setting. Even on low effort it&#x27;s incredibly capable and still thinks for a while.</p>
+<p>All of these quirks are fixable - with model optimizations and increased compute capacity to increase speed, and with more fine-tuning/RL and system prompt adjustments to help with verbosity and being overly cautious to make decisions for me.</p>
+<p>Verdict: MYTHOS is extremely capable, and I&#x27;m still figuring out how to get the most out of it. It felt like it wanted my hardest tasks and anything less wasn&#x27;t good enough. This is the first look at a brand new training run and it&#x27;s already the most capable model I&#x27;ve used.</p>
+<p>That&#x27;s the part I can&#x27;t stop thinking about.</p></div><a class="source" href="https://x.com/MatthewBerman/status/2064393462028669176" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

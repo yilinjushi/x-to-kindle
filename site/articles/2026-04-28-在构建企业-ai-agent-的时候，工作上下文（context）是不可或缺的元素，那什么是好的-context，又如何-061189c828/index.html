@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="在构建企业 AI Agent 的时候，工作上下文（Context）是不可或缺的元素，那什么是好的 Context，又如何构建好的 Context？">
+  <title>在构建企业 AI Agent 的时候，工作上下文（Context）是不可或缺的元素，那什么是好的 Context，又如何构建好的 Context？ · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Barret李靖 @Barret_China · 2026-04-28</div><div class="prose"><h1>在构建企业 AI Agent 的时候，工作上下文（Context）是不可或缺的元素，那什么是好的 Context，又如何构建好的 Context？</h1>
+<p>好的 Context，是一套能让 AI 理解“此刻该如何行动”的组织记忆系统，它至少包含四层：</p>
+<p>1）情境记忆。也就是发生过什么、谁说过什么、在哪个时间点做过什么决定。这对应 Endel Tulving 在 1972 年提出的 episodic memory，对具体事件和经历的记忆。对企业来说，聊天、会议、文档、项目流、审批、工单，都是情境记忆。它的价值在于保留现场，让 AI 在面对结论时，同时能够理解当时的路径和判断过程。</p>
+<p>2）语义记忆。也就是从大量情境中抽象出来的稳定知识，例如规则、术语、流程、产品定义、组织共识、经验方法。Tulving 把 semantic memory 作为一种不依赖具体经历的知识系统。知识库真正产生价值的地方，在于把零散材料逐渐沉淀成可以反复使用的结构。</p>
+<p>3）程序化记忆。也就是“遇到某类问题应该怎么做”。后续的记忆研究中，procedural memory 常被单独拿出来看。映射到 AI 系统里，就是 SOP、模板、工作流、工具调用策略、Agent Skill。它会直接影响系统停留在建议层，还是能够进一步进入执行层。</p>
+<p>4）工作记忆。也就是当前任务窗口里，AI 临时需要的那一小块高相关信息。像 MemGPT 这样的工作，会把 LLM 的上下文窗口当成一种稀缺资源，通过分层管理来调用更大的长期记忆。这个视角很关键，Context 的核心在匹配程度，是否刚好支撑当前任务。</p>
+<p>那 Context 如何被有效地组织起来，让它变成真正有价值的 Agent 语料呢？不同的场景，需要不同的处理策略。</p>
+<p>例如在复杂项目推进、多人协作决策、跨周期目标管理中，对上下文的处理，适用于递归式记忆蒸馏与回注机制（Recursive Distillation &amp; Grounding）。在认知科学里，它更像是从情境记忆不断压缩到语义记忆，再反向投射回情境的一种循环。</p>
+<p>它有两个同时发生的动作：1）一条是向上抽象，日报 → 周报 → 月报，本质是在做信息压缩，把大量具体事件提炼成模式、趋势和判断；2）另一条是向下穿透，周报和月报反过来影响日报，让后续记录逐渐带上结构和重点，减少无序堆积。</p>
+<p>这两条链路形成一个闭环：经历不会直接沉没，而是不断被压缩、再利用、再强化。这和 Endel Tulving 提出的记忆转化过程是高度一致的：经历会逐渐抽象为知识，知识也会进一步参与后续行为的生成。</p>
+<p>类似的探索，在工作场景中，还有一些常见的组织模式：</p>
+<p>1）情境重构机制（Context Reframing），适用于问题推进卡住、讨论反复震荡的阶段。很多时候限制来自问题所处的框架本身。通过调整问题的边界、目标或观察视角，再把已有记录重新放进去看，会发现原本难以推进的讨论开始出现新的路径。同一批信息，在不同结构下会导向完全不同的判断，这种能力更像是在主动切换解空间。</p>
+<p>2）记忆遗忘与权重衰减机制（Forgetting &amp; Decay），适用于信息持续累积、系统开始变慢或噪声变多的阶段。信息如果被一视同仁地保留，会逐渐拖慢判断节奏。更有效的方式，是让信息在使用中自然分层，低频、过期、无效的内容逐渐退出核心上下文，高频被引用、对关键决策有贡献的内容则持续被强化。时间拉长之后，系统会变得更轻，也更准。</p>
+<p>3）任务驱动的 Context 编排机制（Context Assembly），适用于多任务并行或 AI 执行复杂流程的场景。上下文围绕当前目标展开，挑选出最相关的一小部分信息，并按照任务需要组织起来。不同任务对应不同的上下文切片，这种按需组装的方式，可以在有限空间内保持信息的高相关性，让执行过程更稳定，也更可控。</p>
+<p>Context 是生长出来的，需要逐步清洗、过滤和沉淀，形成对个体和团队分别有效的上下文。</p>
+<p>从当下开始，去构建自己工作/生活/学习的上下文，逐步让 AI 进来参与决策，AI 会帮助我们慢慢沉淀出一套稳定的认知结构，直接影响判断的质量与方向。</p>
+<p>或许，这也是让自己从繁琐的事务中解脱出来的必要路径。</p>
+<p><img alt="Article image" src="/assets/2026-04-28-在构建企业-ai-agent-的时候，工作上下文（context）是不可或缺的元素，那什么是好的-context，又如何-061189c828/01.jpg"></p></div><a class="source" href="https://x.com/Barret_China/status/2047868170254598152" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

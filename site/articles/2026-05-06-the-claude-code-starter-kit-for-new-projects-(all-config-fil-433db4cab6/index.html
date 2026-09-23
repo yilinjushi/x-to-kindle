@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="The Claude Code Starter Kit for New Projects (All Config Files Included)">
+  <title>The Claude Code Starter Kit for New Projects (All Config Files Included) · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">darkzodchi @zodchiii · 2026-05-06</div><div class="prose"><h1>The Claude Code Starter Kit for New Projects (All Config Files Included)</h1>
+<p>The average developer spends 2-3 hours configuring Claude Code per project. This kit does it in 5 minutes.</p>
+<p>Every new project starts with no CLAUDE.md, no settings.json, no skills, no deny rules. Claude doesn&#x27;t know your stack, asks permission for every command, and reads your .env without asking.</p>
+<p>One folder with 4 config files and 9 slash commands fixes all of this. Drop it into any project and Claude Code is fully configured before your first prompt.</p>
+<p>Here&#x27;s the full kit 👇</p>
+<p>Before we dive in, I share daily notes on AI &amp; vibe coding in my Telegram channel: https://t.me/zodchixquant🧠</p>
+<p>![Article image](/assets/2026-05-06-the-claude-code-starter-kit-for-new-projects-(all-config-fil-433db4cab6/01.jpg)</p>
+<h2>What&#x27;s inside</h2>
+<p>your-project/
+├── CLAUDE.md                          → project context + rules
+├── .gitignore                         → secrets + AI tool protection
+├── .claude/
+│   ├── settings.json                  → permissions + hooks
+│   ├── settings.local.json            → personal overrides (gitignored)
+│   └── skills/
+│       ├── review/SKILL.md            → /review
+│       ├── test/SKILL.md              → /test
+│       ├── commit/SKILL.md            → /commit
+│       ├── pr/SKILL.md                → /pr
+│       ├── debug/SKILL.md             → /debug
+│       ├── refactor/SKILL.md          → /refactor
+│       ├── docs/SKILL.md              → /docs
+│       ├── deploy-check/SKILL.md      → /deploy-check
+│       └── security/SKILL.md          → /security</p>
+<p>5 minutes to set up. Every session after that starts with full context, proper permissions, and 9 ready-to-use slash commands.</p>
+<h2>File 1: CLAUDE.md</h2>
+<p>This is the first file Claude reads. Stack, commands, architecture, rules. Under 60 lines.</p>
+<h1>CLAUDE.md</h1>
+<h2>Project</h2>
+<p>[One line: what this project does]</p>
+<h2>Stack</h2>
+<p>[Framework, language, database, deployment target]</p>
+<h2>Commands</h2>
+<ul>
+<li>Dev: <code>pnpm dev</code></li>
+<li>Build: <code>pnpm build</code></li>
+<li>Test single: <code>pnpm vitest run src/lib/__tests__/[file]</code></li>
+<li>Test all: <code>pnpm test</code></li>
+<li>Lint: <code>pnpm lint --fix</code></li>
+<li>Type check: <code>npx tsc --noEmit</code></li>
+</ul>
+<h2>Architecture</h2>
+<ul>
+<li>src/app/ → pages and API routes</li>
+<li>src/components/ → stateless UI components</li>
+<li>src/lib/services/ → business logic and data fetching</li>
+<li>src/lib/hooks/ → custom React hooks</li>
+<li>src/lib/utils/ → shared helpers</li>
+<li>src/lib/types/ → TypeScript types</li>
+</ul>
+<h2>Rules</h2>
+<ul>
+<li>NEVER commit .env files or secrets</li>
+<li>All database queries through src/lib/services/, never in components</li>
+<li>All async calls must use try/catch</li>
+<li>Prefix commits: feat:, fix:, docs:, refactor:, test:, chore:</li>
+<li>IMPORTANT: run type check after every code change</li>
+<li>No console.log in production code</li>
+</ul>
+<h2>Workflow</h2>
+<ul>
+<li>Ask before making architectural decisions</li>
+<li>Make minimal changes, don&#x27;t refactor unrelated code</li>
+<li>Run tests after every change, fix failures before moving on</li>
+<li>Create separate commits per logical change</li>
+<li>When unsure between two approaches, explain both and let me choose</li>
+</ul>
+<h2>Out of scope</h2>
+<ul>
+<li>migrations/ → managed by ORM CLI, don&#x27;t create manually</li>
+<li>public/assets/ → static files, don&#x27;t modify</li>
+<li>.github/workflows/ → CI/CD, don&#x27;t touch without asking</li>
+</ul>
+<p>Replace the brackets with your project&#x27;s details. Delete sections that don&#x27;t apply.</p>
+<h2>File 2: settings.json</h2>
+<p>Permissions + hooks. Claude stops asking permission for safe commands and stays blocked from dangerous ones.</p>
+<p>json
+{
+  &quot;permissions&quot;: {
+    &quot;allow&quot;: [
+      &quot;Read&quot;,
+      &quot;Glob&quot;,
+      &quot;Grep&quot;,
+      &quot;LS&quot;,
+      &quot;Edit&quot;,
+      &quot;MultiEdit&quot;,
+      &quot;Write(src/<strong>)&quot;,
+      &quot;Write(tests/</strong>)&quot;,
+      &quot;Write(docs/<strong>)&quot;,
+      &quot;Bash(npm run <em>)&quot;,
+      &quot;Bash(pnpm </em>)&quot;,
+      &quot;Bash(npm install <em>)&quot;,
+      &quot;Bash(npm test </em>)&quot;,
+      &quot;Bash(npx tsc <em>)&quot;,
+      &quot;Bash(npx vitest </em>)&quot;,
+      &quot;Bash(npx prettier <em>)&quot;,
+      &quot;Bash(npx eslint </em>)&quot;,
+      &quot;Bash(git status)&quot;,
+      &quot;Bash(git diff <em>)&quot;,
+      &quot;Bash(git log </em>)&quot;,
+      &quot;Bash(git add <em>)&quot;,
+      &quot;Bash(git commit </em>)&quot;,
+      &quot;Bash(git checkout <em>)&quot;,
+      &quot;Bash(git branch </em>)&quot;,
+      &quot;Bash(cat <em>)&quot;,
+      &quot;Bash(head </em>)&quot;,
+      &quot;Bash(tail <em>)&quot;,
+      &quot;Bash(wc </em>)&quot;,
+      &quot;Bash(find <em>)&quot;,
+      &quot;Bash(echo </em>)&quot;
+    ],
+    &quot;deny&quot;: [
+      &quot;Read(</strong>/.env<em>)&quot;,
+      &quot;Read(</em><em>/.dev.vars</em>)&quot;,
+      &quot;Read(<strong>/*.pem)&quot;,
+      &quot;Read(</strong>/<em>.key)&quot;,
+      &quot;Read(</em><em>/secrets/</em><em>)&quot;,
+      &quot;Read(</em><em>/credentials/</em><em>)&quot;,
+      &quot;Read(</em><em>/.aws/</em><em>)&quot;,
+      &quot;Read(</em><em>/.ssh/</em><em>)&quot;,
+      &quot;Read(</em><em>/.npmrc)&quot;,
+      &quot;Write(</em><em>/.env</em>)&quot;,
+      &quot;Write(<strong>/secrets/</strong>)&quot;,
+      &quot;Write(<strong>/.ssh/</strong>)&quot;,
+      &quot;Write(.github/workflows/<em>)&quot;,
+      &quot;Write(package-lock.json)&quot;,
+      &quot;Bash(rm -rf </em>)&quot;,
+      &quot;Bash(sudo <em>)&quot;,
+      &quot;Bash(git push </em>)&quot;,
+      &quot;Bash(git merge <em>)&quot;,
+      &quot;Bash(git rebase </em>)&quot;,
+      &quot;Bash(npm publish <em>)&quot;,
+      &quot;Bash(docker </em>)&quot;,
+      &quot;Bash(curl * | sh)&quot;,
+      &quot;Bash(wget <em>)&quot;,
+      &quot;Bash(chmod </em>)&quot;
+    ],
+    &quot;defaultMode&quot;: &quot;acceptEdits&quot;
+  },
+  &quot;hooks&quot;: {
+    &quot;PostToolUse&quot;: [
+      {
+        &quot;matcher&quot;: &quot;Write(<em>.ts)&quot;,
+        &quot;hooks&quot;: [
+          {
+            &quot;type&quot;: &quot;command&quot;,
+            &quot;command&quot;: &quot;npx prettier --write $file&quot;
+          }
+        ]
+      },
+      {
+        &quot;matcher&quot;: &quot;Write(</em>.tsx)&quot;,
+        &quot;hooks&quot;: [
+          {
+            &quot;type&quot;: &quot;command&quot;,
+            &quot;command&quot;: &quot;npx prettier --write $file&quot;
+          }
+        ]
+      }
+    ]
+  }
+}</p>
+<h2>File 3: .gitignore</h2>
+<p>Protects secrets, AI tool configs, and build artifacts from ever reaching git.</p>
+<h1>Dependencies</h1>
+<p>node_modules/
+.pnp.*</p>
+<h1>Build</h1>
+<p>dist/
+build/
+.next/
+out/</p>
+<h1>Environment</h1>
+<p>.env
+.env.*
+!.env.example</p>
+<h1>AI tools</h1>
+<p>.claude/settings.local.json
+.cursor/
+.aider*
+.continue/
+.cody/</p>
+<h1>Secrets &amp; credentials</h1>
+<p><em>.pem
+</em>.key
+<em>.p12
+credentials.json
+service-account</em>.json
+.npmrc
+.aws/
+.ssh/
+.docker/config.json</p>
+<h1>IDE</h1>
+<p>.vscode/settings.json
+.idea/</p>
+<h1>OS</h1>
+<p>.DS_Store
+Thumbs.db</p>
+<h1>Logs &amp; coverage</h1>
+<p>*.log
+coverage/
+.nyc_output/</p>
+<h1>Terraform</h1>
+<p>.terraform/
+<em>.tfstate
+</em>.tfstate.backup</p>
+<p>Note: .claude/settings.local.json is gitignored (personal overrides), but .claude/settings.json and .claude/skills/ are committed so your team shares them.</p>
+<h2>File 4: The 9 skills</h2>
+<p>Each skill is a SKILL.md file inside .claude/skills/[name]/.</p>
+<p>Here are the 3 most-used ones.</p>
+<p>The other 6 are in the full kit download at the end.</p>
+<h2>/review</h2>
+<hr>
+<p>name: review
+description: Review code for bugs, security issues, and style violations.
+  Use when reviewing PRs, checking code quality, or when user mentions
+  &quot;review&quot;, &quot;PR&quot;, &quot;code quality&quot;.
+allowed-tools: Read, Grep, Glob, Bash(git diff *)</p>
+<hr>
+<p>Review the current diff or specified files for:</p>
+<ol>
+<li>Bugs: logic errors, null handling, race conditions</li>
+<li>Security: hardcoded secrets, SQL injection, XSS</li>
+<li>Performance: N+1 queries, unnecessary re-renders</li>
+<li>Style: naming, dead code, TODOs</li>
+</ol>
+<p>Output as checklist grouped by severity: CRITICAL / WARNING / INFO
+End with summary: &quot;X critical, Y warnings, Z info&quot;</p>
+<h2>/commit</h2>
+<hr>
+<p>name: commit
+description: Create structured git commits from current changes.
+  Use when user says &quot;commit&quot;, &quot;save changes&quot;, or after finishing a feature.
+allowed-tools: Read, Bash(git *)</p>
+<hr>
+<ol>
+<li>Run <code>git status</code> and <code>git diff</code> to see all changes</li>
+<li>Group related changes into logical units</li>
+<li>For each unit, create a commit:</li>
+</ol>
+<p>type(scope): description under 50 chars</p>
+<ul>
+<li>What changed</li>
+<li>Why (if not obvious)</li>
+</ul>
+<ol start="4">
+<li>Stage and commit each unit separately</li>
+<li>Show summary: &quot;Created N commits: [titles]&quot;</li>
+</ol>
+<p>Types: feat, fix, refactor, docs, test, chore</p>
+<h2>/deploy-check</h2>
+<hr>
+<p>name: deploy-check
+description: Run pre-deployment checks. Use when user mentions
+  &quot;deploy&quot;, &quot;ship&quot;, &quot;release&quot;, or &quot;production&quot;.
+allowed-tools: Read, Bash(npm <em>), Bash(npx tsc </em>), Bash(git *), Grep</p>
+<hr>
+<p>Run in order, stop at first failure:</p>
+<ol>
+<li><code>npx tsc --noEmit</code> — types pass</li>
+<li><code>npm test</code> — tests pass</li>
+<li><code>npm run lint</code> — no lint errors</li>
+<li><code>npm run build</code> — build succeeds</li>
+<li>grep for console.log in src/</li>
+<li>Check for .env references in committed code</li>
+<li>git status — no uncommitted changes</li>
+</ol>
+<p>Output: ✅ or ❌ per check
+Summary: &quot;Ready to deploy&quot; or &quot;N issues to fix first&quot;</p>
+<h2>How to install</h2>
+<p>Option A: New project</p>
+<p>mkdir my-project &amp;&amp; cd my-project
+git init</p>
+<h1>Create CLAUDE.md (paste the template above)</h1>
+<h1>Create .claude/settings.json (paste above)</h1>
+<h1>Create .gitignore (paste above)</h1>
+<h1>Copy skills into .claude/skills/</h1>
+<p>git add -A
+git commit -m &quot;chore: add Claude Code starter kit&quot;</p>
+<p>Option B: Existing project</p>
+<p>cd your-project</p>
+<h1>Add CLAUDE.md to root (fill in your details)</h1>
+<h1>Merge settings.json into existing .claude/settings.json</h1>
+<h1>Update .gitignore with missing rules</h1>
+<h1>Copy skills folder</h1>
+<p>git add -A
+git commit -m &quot;chore: add Claude Code config files&quot;</p>
+<p>Option C: Global (every project)</p>
+<h1>Copy settings.json to ~/.claude/settings.json</h1>
+<h1>Copy skills to ~/.claude/skills/</h1>
+<h1>CLAUDE.md stays per-project (different stack each time)</h1>
+<h2>The workflow after setup</h2>
+<p>Your first session in a new project now looks like this:</p>
+<p>Before the kit:
+1. Open Claude Code
+2. Type your stack, commands, and rules manually
+3. Click &quot;Allow&quot; 30 times for basic operations
+4. Realize .env was read 5 minutes ago
+5. Try to remember your commit format
+6. Give up and type prompts from scratch</p>
+<p>After the kit:
+1. Open Claude Code
+2. Claude already knows your stack, commands, and rules
+3. Permission prompts: 0-3 per session
+4. .env is blocked at system level
+5. /commit, /review, /deploy-check ready to go
+6. Start working</p>
+<h2>What to customize first</h2>
+<p>Don&#x27;t use these files as-is forever. They&#x27;re a starting point. After your first week:</p>
+<ul>
+<li>
+<p>CLAUDE.md — add rules every time Claude makes a mistake. &quot;Update CLAUDE.md so this doesn&#x27;t happen again&quot; is the most powerful prompt in Claude Code</p>
+</li>
+<li>
+<p>settings.json — adjust Write scopes for your folder structure, add Bash rules for your specific tools</p>
+</li>
+<li>
+<p>Skills — modify /review to check for patterns specific to your codebase</p>
+</li>
+<li>
+<p>.gitignore — add entries for any new tools or credentials your project uses</p>
+</li>
+</ul>
+<p>The kit compounds over time. By month three, your CLAUDE.md has captured every mistake Claude has made in your project and prevents all of them automatically.</p>
+<p>Thanks for reading!</p>
+<p>I share daily notes on AI, finance, and vibe coding in my Telegram channel: https://t.me/zodchixquant</p>
+<p>![Article image](/assets/2026-05-06-the-claude-code-starter-kit-for-new-projects-(all-config-fil-433db4cab6/02.jpg)</p></div><a class="source" href="https://x.com/zodchiii/status/2051591553701835137" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

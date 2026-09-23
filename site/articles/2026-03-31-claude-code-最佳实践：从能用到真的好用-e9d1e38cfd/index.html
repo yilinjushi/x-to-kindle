@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="CLAUDE CODE 最佳实践：从&quot;能用&quot;到&quot;真的好用\">
+  <title>CLAUDE CODE 最佳实践：从&quot;能用&quot;到&quot;真的好用\ · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Mr Panda @PandaTalk8 · 2026-03-31</div><div class="prose"><h1>CLAUDE CODE 最佳实践：从&quot;能用&quot;到&quot;真的好用&quot;</h1>
+<h1>我用 Claude Code 大半年了，踩过的坑比写过的代码还多。</h1>
+<p>一开始我以为 Claude Code 就是一个&quot;更高级的 Copilot&quot;——在终端里打字，它帮我写代码，完事。后来才发现，这东西的上限远比我想象得高，但前提是你得知道怎么用。</p>
+<p>这篇文章结合官方文档和实战经验，整理了我认为最重要的使用技巧。有些是血泪教训，有些是读文档才知道的隐藏功能。</p>
+<h2>一、CLAUDE.MD：最被低估的功能</h2>
+<p>如果你只记住这篇文章的一件事，就记这个：写好你的 CLAUDE.md。</p>
+<p>CLAUDE.md 是 Claude Code 在每次对话开始时自动读取的指令文件。它就像你给一个新同事写的 onboarding doc——你希望他知道什么，你就写什么。</p>
+<p>很多人不写 CLAUDE.md，或者随便写两行。结果就是每次对话都要从头解释项目结构、编码规范、技术栈选择。这就像每天早上都要重新给同事介绍一遍公司。</p>
+<p>一个好的 CLAUDE.md 应该包含什么</p>
+<p>markdown</p>
+<h1>项目名称</h1>
+<p>​</p>
+<h2>构建和测试命令</h2>
+<ul>
+<li>安装依赖：npm install</li>
+<li>运行测试：npm test</li>
+<li>单个测试：npm test -- --grep &quot;test name&quot;</li>
+<li>格式化：npm run format
+​</li>
+</ul>
+<h2>编码规范</h2>
+<ul>
+<li>Python 使用 ruff 格式化，行宽 88</li>
+<li>测试用 pytest，每个 service 对应一个测试文件</li>
+<li>API 路由文件名用复数：users.py, orders.py</li>
+<li>提交信息用英文，格式：type(scope): description
+​</li>
+</ul>
+<h2>架构决策</h2>
+<ul>
+<li>选 Tailwind 而不是 CSS Modules，因为团队统一了这个规范</li>
+<li>用户权限校验在 middleware 里做，不要在每个路由重复写</li>
+<li>Redis 缓存的 key 前缀统一用 <code>app:v1:</code>
+​</li>
+</ul>
+<h2>常见陷阱</h2>
+<ul>
+<li>数据库连接池上限是 20，别在循环里开新连接</li>
+<li>不要 mock 数据库，上次 mock 测试通过但生产迁移失败了</li>
+</ul>
+<p>有几个关键原则：</p>
+<p>第一，写 Claude 从代码里读不出来的东西。 项目的&quot;为什么&quot;比&quot;是什么&quot;更重要。你不需要解释 React 怎么用，但你需要告诉它&quot;我们选 Tailwind 是因为团队统一了这个规范&quot;。</p>
+<p>第二，控制在 200 行以内。 官方文档明确提到，CLAUDE.md 太长会导致 Claude 忽略规则。用 markdown 标题和列表，保持可扫描性。</p>
+<p>第三，不要放频繁变化的内容。 详细的 API 文档、逐文件描述这些东西不适合放在 CLAUDE.md 里。放链接就好。</p>
+<h1>CLAUDE.md 的四级层级</h1>
+<p>Claude Code 支持四级 CLAUDE.md，按优先级从高到低：</p>
+<p><img alt="Article image" src="/assets/2026-03-31-claude-code-最佳实践：从能用到真的好用-e9d1e38cfd/01.png"></p>
+<p>我的全局 CLAUDE.md 里通常会写：</p>
+<ul>
+<li>我是一名全栈工程师，不需要过度解释基础概念</li>
+<li>回复尽量简洁，不要加无关的客套话</li>
+<li>代码改动后不要总结你做了什么，我会看 diff</li>
+<li>优先用简单方案，不要过度工程</li>
+</ul>
+<p>这四行，能省掉你几百次重复纠正的时间。</p>
+<p>进阶：用 .claude/rules/ 组织规则</p>
+<p>当项目大了之后，一个 CLAUDE.md 文件塞不下所有规则。官方提供了一个更优雅的方案：把规则拆到 .claude/rules/ 目录下。</p>
+<p>.claude/rules/
+├── testing.md        # 测试规范
+├── api-style.md      # API 编写风格
+└── frontend.md       # 前端约定</p>
+<p>更强大的是，你可以用 YAML frontmatter 把规则限定到特定文件：</p>
+<hr>
+<h2>paths: [&quot;src/api/<strong>/*.ts&quot;, &quot;src/routes/</strong>/*.ts&quot;]</h2>
+<p>​
+API 路由必须包含输入验证和错误处理。
+所有新端点需要在 tests/api/ 下添加集成测试。</p>
+<p>这样这条规则只在 Claude 访问匹配的文件时才会加载，节省上下文空间。</p>
+<h2>二、提示词的质量决定产出的质量</h2>
+<p>这听起来像废话，但我见过太多人这样用 Claude Code：</p>
+<p>&quot;帮我写一个登录功能&quot;</p>
+<p>然后对着生成的一大坨代码发愁——这不是我想要的啊。</p>
+<p>好的指令应该包含三个要素：目标、约束、上下文。</p>
+<p>差的指令 vs 好的指令</p>
+<p>差：&quot;给用户列表加个搜索功能&quot;</p>
+<p>好：&quot;在 @src/pages/UserList.tsx 的表格上方加一个搜索框。搜索走后端 API /api/users?search=xxx，不要前端过滤。用 debounce 300ms，样式和现有的 Filter 组件保持一致。&quot;</p>
+<p>区别在哪？好的指令减少了歧义。Claude Code 不需要猜你要前端搜索还是后端搜索，不需要猜 debounce 时间，不需要猜样式规范。</p>
+<p>官方推荐的提示技巧</p>
+<ol>
+<li>用 @ 引用具体文件</li>
+</ol>
+<p>Claude Code 支持用 @文件路径 直接把文件内容拉进上下文。比起说&quot;那个认证相关的代码&quot;，直接写 @src/auth/login.ts 精确得多。你甚至可以指定行号范围：@src/auth/login.ts#5-30。</p>
+<ol start="2">
+<li>贴截图和图片</li>
+</ol>
+<p>用 Ctrl+V 可以直接粘贴图片。调试 UI 问题时，贴一张&quot;现在长这样&quot;和&quot;我想要这样&quot;的截图，比文字描述有效十倍。</p>
+<ol start="3">
+<li>给验证标准</li>
+</ol>
+<p>不要只说&quot;帮我修这个 bug&quot;，而是：</p>
+<p>&quot;修复登录超时后无法重新认证的问题。修复后，用户在 token 过期后点击任意按钮应该自动跳转到登录页。测试用例在 @tests/auth.test.ts 里，修完后跑一下确认通过。&quot;</p>
+<p>给 Claude 一个可以自我验证的标准——测试用例、截图、预期输出——它就能自己检查工作质量，减少来回修改。</p>
+<ol start="4">
+<li>明确&quot;不要做&quot;的事</li>
+</ol>
+<p>Claude Code 有时候会过度热心——你让它修一个 bug，它顺手把周围的代码也重构了。明确说&quot;只改这个函数，不要动其他代码&quot;，能省很多事。</p>
+<p>模糊指令也有用武之地</p>
+<p>并不是所有时候都需要精确的指令。探索性任务用模糊指令反而更好：</p>
+<ul>
+<li>
+<p>&quot;这个文件有什么可以改进的地方？&quot;</p>
+</li>
+<li>
+<p>&quot;帮我理解一下这个模块的架构&quot;</p>
+</li>
+<li>
+<p>&quot;这段代码有什么潜在问题？&quot;</p>
+</li>
+</ul>
+<p>但到了实现阶段，切回精确模式。</p>
+<h2>三、PLAN MODE：先想清楚，再动手</h2>
+<p>Claude Code 有一个 Plan Mode，这是我认为最被低估的工作流。</p>
+<p>怎么进入 Plan Mode</p>
+<p>三种方式：</p>
+<h1>启动时直接进入</h1>
+<p>claude --permission-mode plan
+​</p>
+<h1>对话中切换（按两次 Shift+Tab）</h1>
+<p>Shift+Tab Shift+Tab
+​</p>
+<h1>在提示词里说</h1>
+<p>&quot;先不要改代码，帮我做个计划&quot;</p>
+<p>在 Plan Mode 下，Claude Code 只能读取文件、搜索代码，不能做任何修改。它会探索代码库，分析你的需求，然后给出一个详细的实现计划。</p>
+<p>Plan Mode 的正确打开方式</p>
+<p>关键操作：按 Ctrl+G 可以在你的编辑器里打开并编辑计划。</p>
+<p>这意味着你可以：</p>
+<ul>
+<li>
+<p>让 Claude 生成初始计划</p>
+</li>
+<li>
+<p>Ctrl+G 打开计划，删掉你不同意的部分，补充你自己的想法</p>
+</li>
+<li>
+<p>切回正常模式（Shift+Tab），让 Claude 按修改后的计划执行</p>
+</li>
+</ul>
+<p>改一个计划只需要一句话，改已经写好的代码要花十倍的时间。</p>
+<p>推荐的复杂任务工作流</p>
+<p>官方推荐的标准流程是四步：探索 → 规划 → 实现 → 验证。</p>
+<ol>
+<li>进入 Plan Mode</li>
+<li>让 Claude 阅读相关代码：&quot;读一下 src/auth/ 下的代码，理解 session 处理逻辑&quot;</li>
+<li>请求计划：&quot;制定一个 OAuth2 迁移方案&quot;</li>
+<li>Ctrl+G 审查和编辑计划</li>
+<li>切回正常模式</li>
+<li>&quot;按照计划实现，写完跑测试&quot;</li>
+<li>让 Claude 对照需求自查</li>
+</ol>
+<p>什么时候不需要 Plan Mode</p>
+<ul>
+<li>
+<p>改一个变量名</p>
+</li>
+<li>
+<p>修一个明显的 typo</p>
+</li>
+<li>
+<p>加一行日志</p>
+</li>
+</ul>
+<p>判断标准很简单：如果这个任务的实现方式只有一种，直接做。如果有多种选择，先规划。</p>
+<h2>四、子 AGENT：CLAUDE CODE 的分身术</h2>
+<p>子 Agent 是 Claude Code 的一个强大机制——它可以启动独立的 AI 进程来并行处理任务，每个子 Agent 有自己的上下文窗口，不会污染你的主对话。</p>
+<p>内置的子 Agent 类型</p>
+<p>类型能力用途Explore只读，快速搜索代码库探索、找文件、找定义Plan只读，研究分析Plan Mode 下的代码分析General完整能力复杂的多步骤任务</p>
+<p>子 Agent 最大的价值：隔离上下文</p>
+<p>当你让 Claude 跑测试、分析日志、搜索大量文件时，这些操作会产生海量输出，塞满你的上下文窗口。用子 Agent 来做这些事，输出留在子 Agent 的上下文里，只有摘要返回给你。</p>
+<p>比如：</p>
+<p>&quot;用子 Agent 跑一下全量测试，把失败的用例列出来&quot;</p>
+<p>&quot;用子 Agent 搜索所有使用了 deprecated API 的文件&quot;</p>
+<p>后台运行：Ctrl+B</p>
+<p>按 Ctrl+B 可以把子 Agent 放到后台运行。你可以继续和 Claude 聊其他事，等后台任务完成后会自动通知你。</p>
+<p>适合：</p>
+<ul>
+<li>
+<p>跑测试套件（通常需要几分钟）</p>
+</li>
+<li>
+<p>大范围代码搜索</p>
+</li>
+<li>
+<p>不紧急的代码审查</p>
+</li>
+</ul>
+<p>自定义子 Agent</p>
+<p>你可以在 .claude/agents/ 目录下创建自定义 Agent：</p>
+<hr>
+<p>name: code-reviewer
+description: 代码审查专家。代码改动后自动触发。
+tools: Read, Grep, Glob, Bash
+model: sonnet</p>
+<hr>
+<p>你是一位资深代码审查者。检查以下维度：
+- 代码清晰度和可读性
+- 错误处理是否完整
+- 有没有暴露敏感信息
+- 输入验证
+- 性能隐患</p>
+<p>然后在对话中用 @&quot;code-reviewer (agent)&quot; 调用它。</p>
+<h2>五、上下文管理：最容易被忽视的关键</h2>
+<p>Claude Code 的上下文窗口虽然大（最多 1M token），但它不是无限的，而且上下文管理直接决定了输出质量。</p>
+<p>上下文里都装了什么</p>
+<ul>
+<li>
+<p>你的对话历史</p>
+</li>
+<li>
+<p>Claude 读取的所有文件内容</p>
+</li>
+<li>
+<p>命令执行的输出</p>
+</li>
+<li>
+<p>CLAUDE.md 文件（每次都加载）</p>
+</li>
+<li>
+<p>Memory 文件（前 200 行）</p>
+</li>
+<li>
+<p>加载的 Skill 和 MCP 工具定义</p>
+</li>
+</ul>
+<p>五个实用策略</p>
+<ol>
+<li>/clear ：一件事做完就清</li>
+</ol>
+<p>不要在同一个对话里又修 bug 又加功能又重构。/clear 会清空上下文但保留 CLAUDE.md，相当于一次免费的重启。</p>
+<ol start="2">
+<li>/compact ：手动压缩上下文</li>
+</ol>
+<p>当对话变长时，输入 /compact 让 Claude 自动总结和压缩之前的对话。更好的用法是给压缩加一个焦点：</p>
+<p>/compact 专注于 API 改动和测试结果</p>
+<p>这样 Claude 在压缩时会优先保留你关心的内容。</p>
+<ol start="3">
+<li>/context ：看看上下文被谁吃了</li>
+</ol>
+<p>输入 /context 可以看到当前上下文的使用情况——哪些文件占了多少 token，MCP 工具定义占了多少。我经常发现一些没用的 MCP server 占了大量空间。</p>
+<ol start="4">
+<li>用子 Agent 隔离噪声</li>
+</ol>
+<p>跑测试、分析日志这些操作会产生大量输出。让子 Agent 去做，主对话的上下文保持干净。</p>
+<ol start="5">
+<li>在 CLAUDE.md 里写压缩保留指令</li>
+</ol>
+<p>你可以告诉 Claude 压缩时必须保留什么：</p>
+<h1>压缩指令</h1>
+<p>压缩上下文时，始终保留：
+- 已修改文件的完整列表
+- 测试命令和结果
+- 关键的架构决策</p>
+<p>Memory vs CLAUDE.md</p>
+<p><img alt="Article image" src="/assets/2026-03-31-claude-code-最佳实践：从能用到真的好用-e9d1e38cfd/02.png"></p>
+<p>Memory 适合存什么： 你的偏好（&quot;这个人喜欢简洁回复&quot;）、项目约定（&quot;部署有个特殊步骤&quot;）、历史决策（&quot;上次选了方案 A 是因为 X&quot;）。</p>
+<p>Memory 不适合存什么： 代码细节、Git 历史、临时状态——这些从代码和 Git 里获取更准确。</p>
+<p>用 /memory 命令可以查看和管理所有已加载的 Memory。</p>
+<h2>六、权限管理：安全和效率的平衡</h2>
+<p>Claude Code 提供了五种权限模式，用 Shift+Tab 在对话中循环切换：</p>
+<p><img alt="Article image" src="/assets/2026-03-31-claude-code-最佳实践：从能用到真的好用-e9d1e38cfd/03.png"></p>
+<h2>权限规则配置</h2>
+<p>在 .claude/settings.json 里，你可以精细控制每种工具的权限：</p>
+<p>{
+  &quot;permissions&quot;: {
+    &quot;allow&quot;: [
+      &quot;Bash(npm run <em>)&quot;,
+      &quot;Bash(git commit </em>)&quot;,
+      &quot;Edit(src/<em><em>/</em>.ts)&quot;,
+      &quot;Read(</em>.md)&quot;
+    ],
+    &quot;deny&quot;: [
+      &quot;Bash(rm -rf *)&quot;,
+      &quot;Edit(.env)&quot;
+    ]
+  }
+}</p>
+<p>规则优先级：deny → ask → allow（deny 最优先）。</p>
+<p>这意味着你可以大胆地 allow 常用命令，同时用 deny 保护敏感文件。比如 .env 文件，无论如何都不应该被编辑。</p>
+<h2>设置文件的层级</h2>
+<p>和 CLAUDE.md 类似，settings 也有多级：</p>
+<p>组织策略（最高优先级）
+  ↓
+CLI 参数
+  ↓
+.claude/settings.local.json（本地，不提交到 Git）
+  ↓
+.claude/settings.json（项目级，团队共享）
+  ↓
+~/.claude/settings.json（全局，个人）
+  ↓
+默认值（最低优先级）</p>
+<p>我的建议：把团队共享的规则放 .claude/settings.json，个人偏好放 ~/.claude/settings.json，敏感配置放 .claude/settings.local.json（记得加到 .gitignore）。</p>
+<h2>七、HOOKS：让规则变成铁律</h2>
+<p>CLAUDE.md 里的指令是&quot;建议&quot;——Claude 大部分时候会遵守，但偶尔会忘。Hooks 是&quot;铁律&quot;——无论如何都会执行。</p>
+<p>Hooks 是在特定生命周期事件上自动触发的 shell 命令。配置在 settings.json 里。</p>
+<h2>关键事件类型</h2>
+<p><img alt="Article image" src="/assets/2026-03-31-claude-code-最佳实践：从能用到真的好用-e9d1e38cfd/04.png"></p>
+<p>实用示例</p>
+<p>自动格式化——每次编辑后运行 Prettier：</p>
+<p>{
+  &quot;hooks&quot;: {
+    &quot;PostToolUse&quot;: [{
+      &quot;matcher&quot;: &quot;Edit|Write&quot;,
+      &quot;hooks&quot;: [{
+        &quot;type&quot;: &quot;command&quot;,
+        &quot;command&quot;: &quot;jq -r &#x27;.tool_input.file_path&#x27; | xargs npx prettier --write&quot;
+      }]
+    }]
+  }
+}</p>
+<p>保护关键文件——阻止修改生产配置：</p>
+<p>{
+  &quot;hooks&quot;: {
+    &quot;PreToolUse&quot;: [{
+      &quot;matcher&quot;: &quot;Edit|Write&quot;,
+      &quot;hooks&quot;: [{
+        &quot;type&quot;: &quot;command&quot;,
+        &quot;command&quot;: &quot;.claude/hooks/protect-files.sh&quot;
+      }]
+    }]
+  }
+}</p>
+<p>Hook 命令返回 exit code 0 表示允许，exit code 2 表示阻止。这意味着你可以写任意复杂的判断逻辑。</p>
+<p>上下文压缩后重新注入关键信息：</p>
+<p>{
+  &quot;hooks&quot;: {
+    &quot;SessionStart&quot;: [{
+      &quot;matcher&quot;: &quot;compact&quot;,
+      &quot;hooks&quot;: [{
+        &quot;type&quot;: &quot;command&quot;,
+        &quot;command&quot;: &quot;echo &#x27;用 Bun 不用 npm。提交前跑 bun test。&#x27;&quot;
+      }]
+    }]
+  }
+}</p>
+<p>这解决了一个常见痛点：对话太长被压缩后，之前提过的重要指令可能丢失。用 Hook 可以在每次压缩后自动重新注入。</p>
+<p>Hook 的四种类型</p>
+<p>类型说明command执行 shell 命令，从 stdin 读取 JSONhttp向 URL 发送 POST 请求prompt单次 LLM 调用，做 yes/no 判断agent启动一个子 Agent 进行验证</p>
+<h2>八、GIT 工作流：用好 WORKTREE</h2>
+<p>Claude Code 能执行 Git 命令，这是一把双刃剑。但官方提供了一个很好的安全网：Worktree。</p>
+<p>Git Worktree：隔离的工作空间</p>
+<h1>在隔离的 worktree 中启动 Claude</h1>
+<p>claude --worktree feature-auth
+claude --worktree bugfix-123
+​</p>
+<h1>自动生成名字</h1>
+<p>claude --worktree</p>
+<p>Worktree 会在 .claude/worktrees/ 下创建一个独立的 Git 分支副本。Claude 在里面怎么折腾都不影响你的主分支。退出时：</p>
+<ul>
+<li>
+<p>如果没有改动 → 自动清理</p>
+</li>
+<li>
+<p>如果有改动 → 提示你保留或删除</p>
+</li>
+</ul>
+<p>这对于探索性任务特别有用。 不确定某个重构方案能不能行？开个 worktree 试试，不行就扔掉，零风险。</p>
+<p>几个 Git 铁律</p>
+<ol>
+<li>永远不要让 Claude Code 自动 push</li>
+</ol>
+<p>它可以 commit，但 push 这个动作应该由你来确认。一旦 push 到远端，回退成本就大了。</p>
+<ol start="2">
+<li>频繁 commit</li>
+</ol>
+<p>做完一个小功能就 commit。用 /rewind 可以回退到任意一个 checkpoint，但前提是你有 commit 记录。</p>
+<ol start="3">
+<li>警惕破坏性操作</li>
+</ol>
+<p>如果 Claude Code 要执行 git reset --hard、git push --force、rm -rf，一定要在脑子里过一遍后果再批准。 这些操作没有 undo。你也可以在权限规则里直接 deny 掉这些命令。</p>
+<ol start="4">
+<li>从 PR 恢复上下文</li>
+</ol>
+<p>这会自动加载 PR 的改动和讨论作为上下文，非常适合 code review 或者继续别人的工作。</p>
+<p>claude --from-pr 123</p>
+<h2>九、快捷键和命令速查</h2>
+<p>这些快捷键我每天都在用，强烈建议记住：</p>
+<p>最常用的快捷键</p>
+<p><img alt="Article image" src="/assets/2026-03-31-claude-code-最佳实践：从能用到真的好用-e9d1e38cfd/05.png"></p>
+<p>最常用的斜杠命令</p>
+<p>/compact [焦点]     # 压缩上下文，可指定保留重点
+/clear              # 清空对话，重新开始
+/context            # 查看上下文使用情况
+/memory             # 查看和管理 Memory
+/rewind             # 回退到某个 checkpoint
+/resume [名称]       # 恢复之前的对话
+/model              # 切换模型
+/effort [级别]       # 设置推理深度：low/medium/high/max
+/init               # 自动生成 CLAUDE.md
+/mcp                # 管理 MCP 服务器
+/permissions        # 查看权限规则
+/cost               # 查看 token 消耗</p>
+<p>/init 对新项目特别有用——它会自动分析你的代码库，帮你生成一个 CLAUDE.md 的初稿。虽然通常需要手动调整，但比从零开始快得多。</p>
+<h2>十、EXTENDED THINKING：让 CLAUDE 想深一点</h2>
+<p>对于复杂问题，你可以开启 Extended Thinking 模式，让 Claude 在回答前花更多时间推理。</p>
+<h2>怎么用</h2>
+<h1>快捷键切换</h1>
+<p>Option+T (Mac) / Alt+T (Windows/Linux)
+​</p>
+<h1>或者用命令</h1>
+<p>/effort high    # 更深入的推理
+/effort max     # 最大推理深度
+/effort low     # 简单任务，省 token</p>
+<h2>什么时候该用</h2>
+<ul>
+<li>
+<p>复杂的架构决策</p>
+</li>
+<li>
+<p>棘手的 debug（多个可能原因需要排除）</p>
+</li>
+<li>
+<p>多步骤的重构方案设计</p>
+</li>
+<li>
+<p>权衡多个方案的利弊</p>
+</li>
+</ul>
+<p>什么时候不需要</p>
+<ul>
+<li>
+<p>简单的代码修改</p>
+</li>
+<li>
+<p>格式化、重命名</p>
+</li>
+<li>
+<p>已经很明确的 bug 修复</p>
+</li>
+</ul>
+<p>小技巧： 在提示词里写 ultrathink 可以强制触发最高推理深度，不需要手动调整 effort 设置。</p>
+<h2>十一、MCP SERVER：让 CLAUDE 连接外部世界</h2>
+<p>MCP（Model Context Protocol）让 Claude Code 能和外部工具通信——GitHub、数据库、Slack、Notion 等等。</p>
+<h2>快速添加</h2>
+<p>claude mcp add github -- npx @anthropic-ai/mcp-server-github
+claude mcp add postgres -- npx @anthropic-ai/mcp-server-postgres postgresql://localhost:5432/mydb</p>
+<p>配置文件</p>
+<p>MCP 配置在 .mcp.json 里：</p>
+<p>{
+  &quot;mcpServers&quot;: {
+    &quot;github&quot;: {
+      &quot;type&quot;: &quot;stdio&quot;,
+      &quot;command&quot;: &quot;npx&quot;,
+      &quot;args&quot;: [&quot;@modelcontextprotocol/server-github&quot;],
+      &quot;env&quot;: {
+        &quot;GITHUB_TOKEN&quot;: &quot;$GITHUB_TOKEN&quot;
+      }
+    }
+  }
+}</p>
+<p>注意上下文开销</p>
+<p>每个 MCP server 会额外消耗 100-500+ token 的工具定义。 用 /mcp 命令可以查看每个 server 的开销，禁用不用的 server。</p>
+<p>我的经验：不要贪多。 常用的 2-3 个 MCP server 就够了。装太多，上下文空间被工具定义吃掉，反而影响代码分析的质量。</p>
+<h2>十二、IDE 集成：不只是终端</h2>
+<h2>VS Code</h2>
+<p>安装 Claude Code 扩展后，你可以在 VS Code 里直接使用 Claude，而不需要切到终端。</p>
+<p>几个好用的功能：</p>
+<ul>
+<li>
+<p>并排 diff 视图：Claude 的改动以 diff 形式显示，一目了然</p>
+</li>
+<li>
+<p>Option+K / Alt+K：快速插入当前文件的 @引用</p>
+</li>
+<li>
+<p>多标签对话：在不同的标签页里开多个独立对话</p>
+</li>
+<li>
+<p>Cmd+Shift+Esc：快速打开新的对话标签</p>
+</li>
+</ul>
+<h2>JetBrains</h2>
+<p>IntelliJ、PyCharm、WebStorm 等 JetBrains 全家桶也有 Claude Code 插件，在 Plugins 市场搜索 &quot;Claude Code&quot; 安装即可。</p>
+<h2>十三、审查代码：信任但要验证</h2>
+<p>Claude Code 写的代码质量总体不错，但你不能盲目信任。</p>
+<h2>几个常见问题</h2>
+<ol>
+<li>过度工程</li>
+</ol>
+<p>你让它写一个简单的工具函数，它给你搞出一个完整的抽象层，带泛型、带接口、带工厂模式。杀鸡用了牛刀。</p>
+<p>解决方法： 在 CLAUDE.md 里写上&quot;优先用简单方案&quot;，或在指令里明确说&quot;不需要抽象&quot;。</p>
+<ol start="2">
+<li>幻觉 API</li>
+</ol>
+<p>它有时候会用不存在的 API 或者过时的语法。尤其是小众库的新版本。</p>
+<p>解决方法： 跑测试。这也是为什么指令里应该包含验证标准。</p>
+<ol start="3">
+<li>改动范围膨胀</li>
+</ol>
+<p>你让它改一个函数，它把整个文件都重构了。</p>
+<p>解决方法： 明确说&quot;只改 X，不要动其他代码&quot;。或者用 /freeze 命令限制编辑范围到指定目录。</p>
+<h2>Writer/Reviewer 模式</h2>
+<p>官方推荐的一个高级模式：用两个独立的会话分别扮演&quot;写代码&quot;和&quot;审查代码&quot;的角色。</p>
+<p>两个会话有独立的上下文，Reviewer 不受 Writer 的思路影响，能发现 Writer 的盲点。</p>
+<p>会话 A（Writer）：&quot;实现 API 限流中间件&quot;
+会话 B（Reviewer）：&quot;审查 @src/middleware/rateLimiter.ts 里的限流实现，
+                     重点看边界情况、竞态条件、一致性&quot;
+会话 A：&quot;修复审查反馈：[粘贴 B 的输出]&quot;</p>
+<h2>十四、不要用 CLAUDE CODE 做的事</h2>
+<p>说了这么多&quot;应该怎么做&quot;，最后聊聊&quot;不应该做什么&quot;。</p>
+<ol>
+<li>不要让它做你完全不了解的事</li>
+</ol>
+<p>如果你对 Kubernetes 一无所知，不要让 Claude Code 帮你写部署配置然后直接用。你无法审查你不懂的东西。</p>
+<ol start="2">
+<li>不要在没有版本控制的环境下用</li>
+</ol>
+<p>没有 Git 就没有回退的能力。Claude Code 的改动可能覆盖你的文件，没有版本控制就是裸奔。</p>
+<ol start="3">
+<li>不要一口气扔一个巨大的任务</li>
+</ol>
+<p>&quot;把整个项目从 JavaScript 迁移到 TypeScript&quot;</p>
+<p>这种指令等于让 Claude Code 自由发挥。结果不可控。拆成小步骤，每一步确认后再做下一步。</p>
+<ol start="4">
+<li>不要指望一次就完美</li>
+</ol>
+<p>迭代是正常的。用 /rewind 回退，用精确的反馈描述&quot;哪里不对&quot;。</p>
+<h2>总结</h2>
+<p>Claude Code 的核心使用哲学其实很简单：</p>
+<p>它是一个极其能干的协作者，但不是自动驾驶。方向盘始终在你手里。</p>
+<p>按重要性排序，我的建议是：</p>
+<ul>
+<li>
+<p>写好 CLAUDE.md — 一次投入，每次对话都受益</p>
+</li>
+<li>
+<p>给精确的指令 — 目标 + 约束 + 验证标准</p>
+</li>
+<li>
+<p>用 Plan Mode — 复杂任务先规划再动手</p>
+</li>
+<li>
+<p>管理上下文 — /clear、/compact、子 Agent</p>
+</li>
+<li>
+<p>控制权限 — deny 危险操作，allow 常用命令</p>
+</li>
+<li>
+<p>频繁 commit — 保留回退能力</p>
+</li>
+</ul>
+<p>做到这些，Claude Code 能让你的效率翻好几倍。做不到，它只会更快地帮你制造混乱。</p>
+<p>工具的价值，永远取决于使用它的人。</p>
+<p>以上结合了 Claude Code 官方文档和实战经验。如果你有更好的实践，欢迎交流。</p></div><a class="source" href="https://x.com/PandaTalk8/status/2035975664730575325" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

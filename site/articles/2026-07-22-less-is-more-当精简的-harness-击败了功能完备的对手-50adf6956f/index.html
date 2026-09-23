@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Less is More: 当精简的 Harness 击败了功能完备的对手">
+  <title>Less is More: 当精简的 Harness 击败了功能完备的对手 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">SaladDay @saladday · 2026-07-22</div><div class="prose"><h1>Less is More: 当精简的 Harness 击败了功能完备的对手</h1>
+<p>最近，Databricks 发布了一项引人注目的基准测试。他们从自己的百万行生产代码库中提取任务——Scala、Rust、TypeScript、Protobuf、Bazel 全栈覆盖。任务来自真实工程师的 Pull Request，测试由真实的测试套件评判，不用 LLM judge。</p>
+<p>https://www.databricks.com/blog/benchmarking-coding-agents-databricks-multi-million-line-codebase</p>
+<p>他们横向对比了多个 coding agent harness（包括 Claude Code、Pi、Codex 等），搭配多种模型（Opus 4.8、Sonnet 5、GPT 5.4 Mini、GLM 5.2）。结果中有一个数据格外醒目：同一模型，Pi 每轮发送的上下文仅为 Claude Code 的约 1/3，但是任务完成率持平</p>
+<p><img alt="Article image" src="/assets/2026-07-22-less-is-more-当精简的-harness-击败了功能完备的对手-50adf6956f/01.png"></p>
+<h1>Harness 是什么，为什么它如此重要</h1>
+<p>在讨论具体设计之前，需要先厘清一个概念。当我们说&quot;Claude Code&quot;或&quot;Pi&quot;时，我们说的不是模型，而是 harness，模型的运行环境。</p>
+<p>一个 coding agent harness 做三件事：</p>
+<ul>
+<li>
+<p>构造上下文：撰写 system prompt，决定每轮给模型看什么信息</p>
+</li>
+<li>
+<p>提供工具：定义模型可以调用的工具（读文件、执行命令、编辑代码……）</p>
+</li>
+<li>
+<p>管理对话：决定历史消息如何保留、压缩或丢弃</p>
+</li>
+</ul>
+<p>模型本身的能力是固定的：它通过标准的 API 协议（system prompt + tool definitions + messages）接收请求，不知道也不关心自己跑在哪个 harness 里。从 Claude 的视角看，Pi 发来的请求和 Claude Code 发来的请求在格式上完全一致，只是内容不同。</p>
+<p>因此，harness 的设计本质上是一个信息架构问题：在模型有限的上下文窗口里，放什么、不放什么、以什么形式放。</p>
+<h1>两种截然不同的设计哲学</h1>
+<h2>Claude Code：信息最大化</h2>
+<p>Claude Code 的设计假设是：模型需要尽可能完整的上下文来做出好决策。</p>
+<p>它的 system prompt 包含详细的行为规则（安全策略、权限分类、git 操作规范、PR 创建模板……），每轮通过 system-reminder 注入环境状态（MCP server 连接状态、deferred tools 列表、git status 快照），加载全部的 CLAUDE.md 项目配置，提供几十个工具的完整定义。</p>
+<p>这种设计的逻辑是直觉的：信息越多，模型的决策质量越高。Harness 的角色是搬运工，尽可能把能找到的信息全部送到模型面前。</p>
+<h2>Pi：信息精简</h2>
+<p>Pi 的设计假设恰恰相反：模型足够聪明，给它精选过的关键信息就够了。</p>
+<p>它的 system prompt 只有约 170 行，核心就一句&quot;You are an expert coding assistant&quot;加上工具列表。没有详细的行为规则，没有 MCP，没有 system-reminder 注入。默认只给模型 4 个工具（read、bash、edit、write），而不是几十个。工具输出被激进截断（50KB 硬限制）。历史对话通过 LLM 生成的结构化摘要压缩。</p>
+<p>PI一共就7个工具，需要 grep / find / ls？那就通过 bash 调用。需要搜索？其实用bash也能组合完成。</p>
+<p>其实这里就很像arm指令集合x64指令集....</p>
+<h1>精简发生在哪里</h1>
+<h2>1. 工具输出的激进截断</h2>
+<p>这是效果最直接的一层。Pi 对每个工具的输出设了两个限制：2000 行或 50KB，先到先截：</p>
+<p>// Pi 的全局截断常量
+const DEFAULT_MAX_LINES = 2000;
+const DEFAULT_MAX_BYTES = 50 * 1024; // 50KB</p>
+<p>一次 npm install 输出 3000 行依赖解析日志，Pi 只保留最后 2000 行（对于 bash 是尾部截断，因为错误信息通常在最后）。多余的部分写入临时文件，只把路径告诉模型。如果模型需要看前面的内容，它可以自己去 read 那个文件。</p>
+<p>每次工具调用节省几 KB 看起来不多，但一个任务下来可能有 10-20 次工具调用，而且这些输出不仅在当轮计费，在后续每一轮都作为历史上下文重复发送。</p>
+<h2>2. 结构化的上下文压缩</h2>
+<p>当上下文接近窗口限制时，Pi 的 compaction 系统用 LLM 生成一份结构化摘要来替代原始历史：</p>
+<h2>Goal</h2>
+<p>[用户想做什么]</p>
+<h2>Progress</h2>
+<h3>Done</h3>
+<ul>
+<li>[x] 修复了 auth 模块的 token 过期问题</li>
+</ul>
+<h3>In Progress</h3>
+<ul>
+<li>[ ] 添加单元测试</li>
+</ul>
+<h2>Key Decisions</h2>
+<ul>
+<li><strong>用 refresh token 而非重新登录</strong>: 减少用户中断</li>
+</ul>
+<p>&lt;modified-files&gt;
+src/auth/token.ts
+src/auth/refresh.ts
+&lt;/modified-files&gt;</p>
+<p>三个关键设计：</p>
+<ul>
+<li>
+<p>保留最近 ~20K tokens 原文不动，只压缩更早的历史。模型手头的工作不受影响。</p>
+</li>
+<li>
+<p>新对话合并到旧摘要上，不是每次重新生成。即使经过多次压缩，摘要大小是有界的。</p>
+</li>
+<li>
+<p>摘要末尾标注哪些文件读过、改过，让模型不需要重新读文件来恢复上下文。</p>
+</li>
+</ul>
+<h2>3. 精简的 System Prompt</h2>
+<p>Pi 的 system prompt 信任模型的内在能力。它不告诉模型&quot;用 Read 而不是 cat&quot;，模型的训练数据里已经包含了这类最佳实践。它不列出 50 条行为规则，模型已经知道不该在代码里硬编码密钥。</p>
+<p>技能（skills）也是懒加载的：system prompt 里只放 name + description + file path，模型需要时自己 read 对应的文件。不需要时，这些内容完全不占上下文。</p>
+<h2>4. 干净的消息协议</h2>
+<p>每轮发送给模型的消息中，Pi 不注入任何环境元信息。没有 git status 快照，没有 MCP server 状态，没有 deferred tools 列表，没有 CLAUDE.md 全文重发。模型看到的就是纯粹的对话：user、assistant、toolResult，没有额外噪声。</p>
+<h1>为什么&quot;更少&quot;反而&quot;更好&quot;</h1>
+<p>这是整篇文章最核心的问题。直觉上，信息越多决策越好。</p>
+<p>但对于当前的 Transformer 架构，这个直觉在两个层面上是错的。</p>
+<p>Transformer 的 self-attention 机制要求每个 token 对所有其他 token 计算注意力权重。当上下文从 20K tokens 膨胀到 60K tokens 时，真正相关的信息（当前报错信息、用户的具体要求）在注意力分配中被稀释了。</p>
+<p>system prompt 里的 50 条行为规则互相竞争注意力，不如 5 条规则都被模型充分理解和执行。30 个工具定义让模型在每次决策时面对更大的搜索空间，不如 4 个工具让选择变得确定。</p>
+<p>同时，Claude Code 的 system prompt 中有大量对 Opus 4.8 级别模型来说是冗余的规则。&quot;不要在 URL 参数里放敏感数据&quot;、&quot;git commit 消息格式&quot;、&quot;用 they/them 代词&quot;，这些模型的训练数据早已覆盖。</p>
+<p>这些规则不仅占用 token，还有一个微妙的负面效应：它们暗示模型不具备这些判断力。过度具体的指令可能导致模型在没有明确指令的场景下反而犹豫不决：&quot;这个情况 system prompt 没有覆盖到，我是否应该保守行事？&quot;</p>
+<p>Pi 的做法是信任模型的通用智能，只在真正需要偏离默认行为时才给出指令。</p>
+<h1>为什么不同模型在 Pi 上表现都不错</h1>
+<p>Databricks 测试的一个值得注意的结果是：不只是 Claude，各家模型在 Pi 上的表现普遍不错。这引出了一个更深层的问题。</p>
+<p>有人可能会问：Claude 是在 Anthropic 自己的 harness 上做了后训练的，为什么它在 Pi 这个第三方 harness 上也能好用？GPT 和 GLM 同理。</p>
+<p>答案是：模型的后训练绑定的是协议层，不是 harness 层。</p>
+<p>所有主流模型的 tool-use 能力都是在标准的 function calling 协议上训练的：接收 JSON schema 格式的工具定义，生成结构化的工具调用，处理工具返回结果。这个协议是通用的。Pi 使用的是完全相同的协议，只是定义了更少的工具、更短的描述。</p>
+<p>从任何模型的视角看，Pi 发来的请求就是一个标准 API 调用：一段简短的 system prompt、4 个工具定义、一组消息。模型不知道自己跑在 Pi 上还是 Claude Code 上，它只是在做自己被训练的事情：理解指令、调用工具、解决问题。</p>
+<p>而且，精简的上下文对所有模型都有利。一个被训练得擅长处理复杂场景的模型，面对更简单的场景只会更轻松，不会更困难。</p></div><a class="source" href="https://x.com/Salad95238547/status/2079508549382644194" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

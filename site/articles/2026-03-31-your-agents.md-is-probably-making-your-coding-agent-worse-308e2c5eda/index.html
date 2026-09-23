@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Your AGENTS.md is probably making your coding agent worse">
+  <title>Your AGENTS.md is probably making your coding agent worse · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Morgan @morganlinton · 2026-03-31</div><div class="prose"><h1>Your AGENTS.md is probably making your coding agent worse</h1>
+<p>After spending more time trying to optimize the heck out of my AGENTS.md file, and reading more feedback from other people trying to do the same, I&#x27;ve come to the conclusion that for many people, it&#x27;s hurting more than helping.</p>
+<p>For a while there I thought it was just me, struggling to get my agent to actually read and follow what I put in AGENTS.md, but after seeing this tweet from Karpathy I realized, okay - it&#x27;s not just me.</p>
+<p>Andrej Karpathy
+@karpathy
+·
+Mar 21
+Replying to 
+@RhysSullivan
+I&#x27;m not very happy with the code quality and I think agents bloat abstractions, have poor code aesthetics, are very prone to copy pasting code blocks and it&#x27;s a mess, but at this point I stopped fighting it too hard and just moved on. The agents do not listen to my instructions
+Show more
+249
+487
+4.2K
+823K</p>
+<p>Karpathy says it directly: &quot;The agents do not listen to my instructions in the AGENTS.md files.&quot;</p>
+<p>I think the core of the issue here is that Agents don&#x27;t need more text, what they really need is better state. This is something Anthropic talked about back in September of last year...but I missed it. I don&#x27;t like including links in my articles because then ppl accuse me of being a shill, so you can go find the article if you want, it&#x27;s called &quot;Effective context engineering for AI agents&quot; and it&#x27;s from Sept 29th of last year.</p>
+<p>At the core, when you look at an AGENTS.md file, I don&#x27;t think the issue is whether you have it or not, it&#x27;s really about if the agents is able to actually get the right commands, constraints, and recent decisions, at the right time. In the article I referenced above from Anthropic, they talk about summarization and compression of critical details as part of how long-running coding agents maintain continuity.</p>
+<p>The problem is, and I&#x27;m guilty of this as much as anyone else, big AGENTS.md files don&#x27;t end up making your agents smarter, they really just end up being a tax on every task. OpenAI has talked about this themselves w/respect to Codex, essentially saying that since Codex reads AGENTS.md before starting work, a bloated file can end up being fixed overhead on every run.</p>
+<p>Where I&#x27;m at now is probably in the extreme &quot;less is more&quot; camp. I think the most useful stuff I&#x27;m putting in my AGENTS.md file these days is exact test commands, wacky project-specific setup steps, deployment funkiness, etc. Pretty much things that I don&#x27;t think the agent is going to get just from reading the code and the README.md file.</p>
+<p>The things that I used to put in my AGENTS.md file that I&#x27;m leaving out now are things like coding philosophy, which I think was the first thing I pulled out. I see soooooo many sample AGENTS.md files that have these super long-winded coding philosophy blocks in them, get those out - it&#x27;s such a waste.</p>
+<p>I&#x27;m also removing things like architecture summaries, stuff that&#x27;s already in the README.md file, and anything else I think the agent can probably get itself from the codebase.</p>
+<p>So while I haven&#x27;t gotten rid of AGENTS.md completely, and wouldn&#x27;t tell anyone to completely scrap the file necessarily, I am now, more than anything, treating it as a living exception file.</p>
+<p>And yes, I wake up on Monday morning, thinking about these things randomly, which is why I thought I&#x27;d whip up this article.</p>
+<p>Okay, that&#x27;s all I got, time for my second cup of coffee, thanks for reading and as my Uncle Irv used to say - TGIM (thank goodness it&#x27;s Monday).</p></div><a class="source" href="https://x.com/morganlinton/status/2036071183284830307" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

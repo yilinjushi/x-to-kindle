@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Claude Code Masterclass: The Complete Guide From Zero to Shipping">
+  <title>Claude Code Masterclass: The Complete Guide From Zero to Shipping · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">CyrilXBT @cyrilXBT · 2026-04-28</div><div class="prose"><h1>Claude Code Masterclass: The Complete Guide From Zero to Shipping</h1>
+<p>I am going to tell you something that took me months to figure out.</p>
+<p>Claude Code is not a coding assistant.</p>
+<p>That framing is what keeps most people stuck at the surface. They open it, ask it to write a function, get the function, close it. They think they used Claude Code.</p>
+<p>They did not.</p>
+<p>Claude Code is an autonomous agent that lives in your terminal and can build, test, deploy, and maintain entire software projects with minimal supervision. The gap between using it as a coding assistant and using it as an autonomous builder is the gap between getting occasional help and having an engineer who works around the clock.</p>
+<p>This guide closes that gap completely. Every concept. Every command. Every workflow. From installation to shipping your first real product.</p>
+<h2>Part One: Installation and Setup</h2>
+<p>Installing Claude Code</p>
+<p>Claude Code runs in your terminal. You need Node.js version 18 or higher installed first.</p>
+<p>Check your Node version:</p>
+<p>node --version</p>
+<p>If you need to install or update Node, go to nodejs.org and download the current LTS version.</p>
+<p>Install Claude Code globally:</p>
+<p>npm install -g @anthropic/claude-code</p>
+<p>Verify the installation worked:</p>
+<p>claude --version</p>
+<p>Setting Up Your API Key</p>
+<p>Get your API key from console.anthropic.com. Create an account if you do not have one. Navigate to API Keys and create a new key.</p>
+<p>Set it in your terminal:</p>
+<p>export ANTHROPIC_API_KEY=your_key_here</p>
+<p>To make this permanent so you never have to set it again, add it to your shell profile. For most Mac and Linux users:</p>
+<p>echo &#x27;export ANTHROPIC_API_KEY=your_key_here&#x27; &gt;&gt; ~/.zshrc
+source ~/.zshrc</p>
+<p>For Windows users using PowerShell:</p>
+<p>Launching Claude Code</p>
+<p>Navigate to your project directory and launch:</p>
+<p>cd your-project-folder
+claude</p>
+<p>Or start a new project from scratch:</p>
+<p>mkdir my-new-project
+cd my-new-project
+claude</p>
+<p>Claude Code will initialize in that directory. Everything it does will be scoped to that folder unless you explicitly tell it otherwise.</p>
+<h2>Part Two: The CLAUDE.md File</h2>
+<p>This is the most important concept in the entire guide.</p>
+<p>Most people who struggle with Claude Code have never built a proper CLAUDE.md file. Most people who get extraordinary results from Claude Code have one that is deeply specific and detailed.</p>
+<p>The CLAUDE.md file is a markdown document you create at the root of your project. Claude Code reads it every single time it launches in that directory. It is the permanent context that tells Claude Code who you are, what you are building, how your project is structured, and exactly what you want it to do.</p>
+<p>Without a CLAUDE.md Claude Code starts every session from zero. With a strong CLAUDE.md it starts every session already deeply briefed on your entire project.</p>
+<p>Here is a complete CLAUDE.md template:</p>
+<h1>PROJECT: [Your Project Name]</h1>
+<h2>What This Is</h2>
+<p>[One paragraph describing exactly what you are building and who it is for]</p>
+<h2>Tech Stack</h2>
+<ul>
+<li>Frontend: [React / Next.js / Vue / plain HTML]</li>
+<li>Backend: [Node / Python / etc]</li>
+<li>Database: [Supabase / PostgreSQL / MongoDB]</li>
+<li>Styling: [Tailwind / CSS / SCSS]</li>
+<li>Deployment: [Vercel / Railway / etc]</li>
+</ul>
+<h2>Project Structure</h2>
+<p>[Describe your folder structure and what lives where]
+src/
+  components/ — reusable UI components
+  pages/ — route-level page components
+  lib/ — utility functions and helpers
+  api/ — API route handlers</p>
+<h2>Coding Standards</h2>
+<ul>
+<li>[Your language preferences — TypeScript vs JavaScript]</li>
+<li>[Error handling approach]</li>
+<li>[How you name files and functions]</li>
+<li>[Any patterns you always use]</li>
+</ul>
+<h2>What I Am Building Right Now</h2>
+<p>[The current feature or task you are working on]</p>
+<h2>What Claude Code Should Never Do</h2>
+<ul>
+<li>Never modify files in [protected folders]</li>
+<li>Never read or access .env files</li>
+<li>Never push to git without my explicit instruction</li>
+<li>Never delete files without confirming with me first</li>
+</ul>
+<h2>Important Context</h2>
+<p>[Anything else Claude Code needs to know about your project]</p>
+<p>Save this as CLAUDE.md in your project root. The more specific you make it the better Claude Code performs.</p>
+<h2>Part Three: Core Commands and Workflows</h2>
+<p>Basic Commands</p>
+<p>Once Claude Code is running you interact with it in plain English. But knowing which phrases trigger which behaviors makes you dramatically more effective.</p>
+<p>Starting a new feature:</p>
+<p>Build a user authentication system with email and password login.
+Use Supabase for the backend. Store sessions in cookies.
+Create the login page, signup page, and a protected dashboard route.</p>
+<p>Reviewing existing code:</p>
+<p>Read all the files in the src/components folder.
+Tell me what each component does and identify any code quality issues,
+duplicate logic, or patterns that should be refactored.</p>
+<p>Fixing a bug:</p>
+<p>There is a bug where [describe the behavior].
+It happens when [describe the trigger].
+I expect it to [describe expected behavior].
+Find the cause and fix it.</p>
+<p>Adding to existing code:</p>
+<p>I want to add [feature] to the existing [component/file].
+Read the current implementation first, then extend it.
+Do not change anything that is currently working.
+Only add what is needed for the new feature.</p>
+<p>The /compact Command</p>
+<p>When your conversation gets long, context fills up and Claude Code starts to lose track of earlier decisions. Run this regularly:</p>
+<p>/compact</p>
+<p>This summarizes the conversation so far and clears the context while preserving the essential information. Think of it as hitting save on a long session.</p>
+<p>The /clear Command</p>
+<p>If Claude Code seems confused or is building in the wrong direction, start fresh:</p>
+<p>/clear</p>
+<p>This completely resets the conversation. Your files are not affected. Only the conversation history is cleared.</p>
+<p>Asking Claude Code to Review Its Own Work</p>
+<p>One of the most powerful prompts in Claude Code is asking it to evaluate what it just produced:</p>
+<p>Review what you just built.
+Identify any lines of code that seem fragile, any edge cases not handled,
+any security issues, and any places where the code could break in production.
+Fix everything you find before we move on.</p>
+<p>This self-review prompt catches more issues than most code reviews and costs you nothing but ten seconds to type.</p>
+<h2>Part Four: Building Skills</h2>
+<p>Skills are the most underused feature in Claude Code and the one that makes the biggest difference for power users.</p>
+<p>A skill is a markdown file stored in a skills folder inside your project that defines a reusable workflow. Instead of typing out complex instructions every time you want to do the same process, you store the instructions once and call them by name.</p>
+<p>Create your skills folder:</p>
+<p>mkdir .claude
+mkdir .claude/skills</p>
+<p>Example Skill: Code Review</p>
+<p>Create .claude/skills/code-review.md:</p>
+<h1>Skill: Code Review</h1>
+<h2>Trigger</h2>
+<p>When the user says &quot;review this file&quot; or &quot;code review&quot; or &quot;check this code&quot;</p>
+<h2>Process</h2>
+<ol>
+<li>Read the specified file completely before making any comments</li>
+<li>Evaluate the code against these criteria:
+   - Correctness: does the code do what it claims to do
+   - Security: are there any injection vulnerabilities, exposed secrets, or unsafe operations
+   - Performance: are there obvious inefficiencies or N+1 query patterns
+   - Readability: is the code clear and well-named
+   - Edge cases: what inputs or states could cause this to fail</li>
+<li>Provide feedback organized by severity:
+   - CRITICAL: must fix before shipping
+   - IMPORTANT: should fix soon
+   - SUGGESTION: would be better with this change</li>
+<li>For each issue, provide the specific line or section and a suggested fix</li>
+</ol>
+<h2>Output format</h2>
+<p>Numbered list organized by severity.
+For each item: what the issue is, why it matters, and how to fix it.
+End with a summary score out of 10 and one sentence on overall code quality.</p>
+<p>Now whenever you say &quot;review this file&quot; Claude Code runs the full review process exactly as you defined it.</p>
+<p>Example Skill: Feature Planning</p>
+<p>Create .claude/skills/plan-feature.md:</p>
+<h1>Skill: Plan Feature</h1>
+<h2>Trigger</h2>
+<p>When the user says &quot;plan this feature&quot; or &quot;help me plan&quot; or &quot;feature planning&quot;</p>
+<h2>Process</h2>
+<ol>
+<li>Ask clarifying questions if the feature is ambiguous — do not proceed until you understand what is being built</li>
+<li>Identify all the files that will need to be created or modified</li>
+<li>List the potential side effects on existing functionality</li>
+<li>Identify any dependencies or blockers</li>
+<li>Break the work into steps ordered by dependency — what must be built first</li>
+</ol>
+<h2>Output</h2>
+<p>A numbered implementation plan where:
+- Each step is specific enough to execute immediately
+- Dependencies are clearly marked
+- Estimated complexity is noted (simple / medium / complex)
+- Any risks or edge cases are flagged upfront</p>
+<p>Example Skill: Bug Investigation</p>
+<p>Create .claude/skills/debug.md:</p>
+<h1>Skill: Debug</h1>
+<h2>Trigger</h2>
+<p>When the user says &quot;debug this&quot; or &quot;find the bug&quot; or &quot;this is broken&quot;</p>
+<h2>Process</h2>
+<ol>
+<li>Read all files relevant to the reported behavior before forming any hypothesis</li>
+<li>State your hypothesis about the cause — do not start fixing yet</li>
+<li>Ask the user to confirm the hypothesis is correct</li>
+<li>Only after confirmation, implement the fix</li>
+<li>After fixing, explain what was wrong and why the fix works</li>
+</ol>
+<h2>Key rules</h2>
+<ul>
+<li>Never guess and change code simultaneously. Diagnose first, fix second.</li>
+<li>If you are not confident in the diagnosis after reading the files, say so and ask for more information.</li>
+<li>Always test the fix mentally — trace through the code after the change to confirm the bug is actually resolved.</li>
+</ul>
+<h2>Part Five: Multi-File Projects and Architecture</h2>
+<p>Where Claude Code becomes genuinely powerful is in its ability to hold large amounts of context and work across multiple files simultaneously.</p>
+<p>Reading a Full Codebase</p>
+<p>When starting work on an existing project:</p>
+<p>Read all the files in this project.
+Start with the package.json to understand dependencies.
+Then read the main entry point.
+Then systematically read through each folder.
+After reading everything, give me a two paragraph summary of what this codebase does and how it is structured.</p>
+<p>This briefing step takes a few minutes but saves hours of confusion later. Claude Code will have a complete mental model of your project before touching anything.</p>
+<p>Maintaining Consistency Across Files</p>
+<p>When adding a feature that touches multiple files:</p>
+<p>I want to add a [feature] that will require changes to:
+- [file 1] to add the new data model
+- [file 2] to add the API endpoint
+- [file 3] to add the frontend component
+- [file 4] to add the test</p>
+<p>Before you write any code, read all four files and tell me what currently exists in each one.
+Then implement the changes in dependency order, reading each file again immediately before modifying it.</p>
+<p>The &quot;read each file immediately before modifying it&quot; instruction is critical. If Claude Code read a file twenty messages ago the information may be stale. Reading immediately before editing ensures accuracy.</p>
+<p>Refactoring Large Codebases</p>
+<p>Refactoring is where Claude Code significantly outperforms what most developers expect:</p>
+<p>This codebase has [describe the structural problem].
+I want to refactor it to [describe the target architecture].</p>
+<p>Before making any changes:
+1. List every file that will need to change
+2. Describe exactly what will change in each file
+3. Identify the order of changes to avoid breaking anything mid-refactor
+4. Flag any changes that could break existing functionality</p>
+<p>After I approve the plan, execute it step by step. Show me what you changed in each file before moving to the next one.</p>
+<h2>Part Six: Security and Best Practices</h2>
+<p>Protecting Sensitive Files</p>
+<p>Add this to every CLAUDE.md you create:</p>
+<h2>Security Rules</h2>
+<ul>
+<li>Never read, access, reference, or modify any .env files</li>
+<li>Never read any file containing the words &quot;secret&quot;, &quot;key&quot;, &quot;token&quot;, or &quot;password&quot; in the filename</li>
+<li>Never commit sensitive information to git</li>
+<li>Never log environment variables or API keys</li>
+<li>If you encounter hardcoded credentials anywhere in the codebase, flag them immediately instead of using them</li>
+</ul>
+<p>Safe Git Practices</p>
+<p>Never let Claude Code push to git without your explicit review:</p>
+<p>Show me every file you changed in this session.
+Give me a git diff summary.
+Do not commit or push anything until I confirm.</p>
+<p>When you are ready to commit:</p>
+<p>Create a git commit with a descriptive commit message that explains what was changed and why.
+Stage only the files relevant to this feature. Do not stage anything else.
+Show me the staged files and the commit message before committing.</p>
+<p>Reviewing Before Production</p>
+<p>Before any code goes live:</p>
+<p>Do a production readiness review of everything we built today.</p>
+<p>Check for:
+1. Exposed API keys or secrets in any file
+2. Missing error handling on any async operation
+3. SQL injection or other security vulnerabilities
+4. Missing input validation on any user-facing form or API endpoint
+5. Console.log statements that should be removed
+6. Any TODO comments that represent unfinished work
+7. Missing loading states or error states in the UI</p>
+<p>Give me a list of everything that needs to be fixed before this ships.</p>
+<h2>Part Seven: Automations and Routines</h2>
+<p>Claude Code supports scheduled automations called routines. These let you run Claude Code workflows on a schedule without manual triggering.</p>
+<p>Creating a Daily Code Review Routine</p>
+<p>Create .claude/routines/daily-review.md:</p>
+<h1>Routine: Daily Code Review</h1>
+<h2>Schedule</h2>
+<p>Every day at 9am</p>
+<h2>Process</h2>
+<ol>
+<li>Read all files modified in the last 24 hours using git log</li>
+<li>Run the code review skill on each modified file</li>
+<li>Compile all issues found into a daily report</li>
+<li>Save the report to .claude/reports/[date]-daily-review.md</li>
+</ol>
+<h2>Output</h2>
+<p>A markdown file with all issues organized by file and severity.
+Include the total issue count and a recommended priority order for fixing.</p>
+<p>Creating a Weekly Dependency Audit</p>
+<p>Create .claude/routines/weekly-audit.md:</p>
+<h1>Routine: Weekly Dependency Audit</h1>
+<h2>Schedule</h2>
+<p>Every Monday at 8am</p>
+<h2>Process</h2>
+<ol>
+<li>Read package.json</li>
+<li>Check for any dependencies flagged as having security vulnerabilities</li>
+<li>Identify any dependencies that have not been updated in more than 6 months</li>
+<li>Check if any major version updates are available for core dependencies</li>
+<li>Save findings to .claude/reports/[date]-dependency-audit.md</li>
+</ol>
+<h2>Part Eight: From Zero to Shipped</h2>
+<p>Here is the exact workflow I use to go from idea to live product using Claude Code.</p>
+<p>Day One: Architecture and Scaffold</p>
+<p>I am building [describe your product in 2-3 sentences].
+The users are [describe your target user].
+The core value is [describe the one thing users get from this].</p>
+<p>Tech stack decision:
+- Frontend: Next.js 14 with TypeScript
+- Backend: Next.js API routes
+- Database: Supabase
+- Auth: Supabase Auth
+- Styling: Tailwind CSS
+- Deployment: Vercel</p>
+<p>Create the full project scaffold with:
+- Folder structure as described in my CLAUDE.md
+- Basic layout component
+- Supabase client setup
+- Environment variable template (.env.example — do not create .env)
+- Package.json with all dependencies
+- Basic README with setup instructions</p>
+<p>Do not start with placeholder content. Make every file production-ready from the start.</p>
+<p>Day Two: Core Features</p>
+<p>The scaffold is working. Now build the core features in this order:</p>
+<ol>
+<li>Database schema — create the Supabase migration files for [describe your data model]</li>
+<li>API layer — create the API routes that handle [describe your operations]</li>
+<li>UI components — create the reusable components needed for [describe your interface]</li>
+<li>Page assembly — assemble the components into pages</li>
+</ol>
+<p>After each step, tell me what you built and what the next step depends on before continuing.</p>
+<p>Day Three: Polish and Deploy</p>
+<p>The core features are working. Now do a full production readiness pass:</p>
+<ol>
+<li>Error handling — every API call and async operation needs proper error handling</li>
+<li>Loading states — every data-fetching operation needs a loading state</li>
+<li>Empty states — every list or data display needs an empty state</li>
+<li>Mobile responsiveness — every page needs to work on mobile</li>
+<li>SEO — add proper meta tags to every page</li>
+<li>Performance — identify and fix any obvious performance issues</li>
+</ol>
+<p>After the readiness pass, set up deployment to Vercel.
+Create a deployment checklist and walk me through each step.</p>
+<h2>The Real Edge</h2>
+<p>The people who get extraordinary results from Claude Code are not the ones who know more programming.</p>
+<p>They are the ones who treat Claude Code as a system rather than a tool.</p>
+<p>They have CLAUDE.md files that are deeply specific. They have skills for every repeating workflow. They have routines running automatically in the background. They read files before editing them. They do production readiness reviews before shipping. They ask Claude Code to evaluate its own work.</p>
+<p>The gap between using Claude Code as a coding assistant and using it as an autonomous builder is not about what Claude Code can do.</p>
+<p>It is about what you set up to let it do.</p>
+<p>This guide is the setup.</p>
+<p>Bookmark it. Build the CLAUDE.md. Create the skills. Ship the first project.</p>
+<p>The compound starts the moment you do.</p>
+<p>Follow @cyrilXBT for daily Claude Code builds, AI tools, and the exact systems behind everything I ship.</p></div><a class="source" href="https://x.com/cyrilXBT/status/2047710536981176777" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="I Fixed Claude&#x27;s Token Limits. Here&#x27;s How.">
+  <title>I Fixed Claude&#x27;s Token Limits. Here&#x27;s How. · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Rahul @sairahul1 · 2026-05-02</div><div class="prose"><h1>I Fixed Claude&#x27;s Token Limits. Here&#x27;s How.</h1>
+<p>I use Claude all day without hitting my usage limit. Here&#x27;s how.</p>
+<p>Most people don&#x27;t realize this: Claude doesn&#x27;t count messages — it counts tokens. And here&#x27;s what nobody tells you — every time you send a message, Claude re-reads the entire conversation from the beginning.</p>
+<p>Message 1 costs 500 tokens. Message 30 costs 15,500 tokens. After 30 messages, you&#x27;re already at 250,000 cumulative tokens. And before you even type your first message, Claude silently loads your memory, connected tools, files, and system prompts. One connected tool alone can load 18,000 tokens — per message — even if you just type &quot;hi.&quot;</p>
+<p>You&#x27;re not hitting your limit because you use Claude too much. You&#x27;re hitting it because nobody explained how it actually charges you.</p>
+<p>Here&#x27;s how to fix it.</p>
+<ol>
+<li>Edit your prompt — never send a follow-up</li>
+</ol>
+<p>Every &quot;No, I meant...&quot; gets stacked permanently on top of the full conversation history. Claude re-reads all of it on every turn. The Edit button replaces your old message entirely — cleaner, cheaper, and it actually fixes the problem instead of burying it under more history.</p>
+<ol start="2">
+<li>Start a new chat every ~20 messages</li>
+</ol>
+<p>By message 30, a simple question can silently cost 50,000 tokens. Ask Claude to summarize the key points, copy it, open a new chat, paste it in. Long conversations are expensive. Fresh ones aren&#x27;t.</p>
+<ol start="3">
+<li>Stack your questions into one message</li>
+</ol>
+<p>Three separate messages means three separate turns of full-history processing. Bundle them into one. You&#x27;ll spend fewer tokens and get better answers — Claude sees the full picture at once instead of guessing your direction.</p>
+<ol start="4">
+<li>Convert files before uploading</li>
+</ol>
+<p>A single PDF page can cost up to 3,000 tokens. Instead of uploading the raw file, paste the text into a Google Doc and download it as a .md file. Same content, 90% cheaper. It takes 30 seconds and it&#x27;s one of the highest-leverage swaps you can make.</p>
+<ol start="5">
+<li>Be surgical about what you paste</li>
+</ol>
+<p>Before dropping in a large document, ask yourself: does Claude need all of this? If the bug is in one function, paste just that function. If it needs one paragraph, paste just that paragraph. Every extra line you feed Claude is tokens you&#x27;re paying for. Precision in equals precision out.</p>
+<ol start="6">
+<li>Upload recurring files to Projects</li>
+</ol>
+<p>If you&#x27;re uploading the same file in every new chat, you&#x27;re paying tokens for it each time. Projects caches your files. Upload once, reuse for free across every future conversation.</p>
+<ol start="7">
+<li>Plan in Chat. Build in Cowork.</li>
+</ol>
+<p>Chat is cheap. Cowork is expensive. Figure out exactly what you want in Chat first — the structure, the requirements, the approach. Then paste the finished plan into Cowork with Opus. You get the output quality without burning expensive compute on the thinking phase.</p>
+<ol start="8">
+<li>Type &quot;ask me questions&quot; instead of writing a long prompt</li>
+</ol>
+<p>Most people spend forever crafting the perfect prompt. There&#x27;s a faster way. Keep your prompt under 30 words and let Claude do the clarifying:</p>
+<p>&quot;I want to [task] to achieve [outcome]. Read my folder. Ask me questions before you start.&quot;</p>
+<p>Claude pulls out what it needs. You answer. The result is almost always better than whatever you would have written upfront.</p>
+<ol start="9">
+<li>Set up Memory and custom instructions</li>
+</ol>
+<p>Without stored context, you waste 3–5 messages re-explaining who you are, how you work, and what tone you want. Save your role, preferences, and working style in Settings → Memory once. Claude applies them automatically in every chat after that.</p>
+<ol start="10">
+<li>Disconnect tools you&#x27;re not actively using</li>
+</ol>
+<p>Every connected tool — web search, MCP servers, connectors — loads tokens into your context on every single message, whether you use them or not. One MCP server alone adds 18,000 tokens per message. Disconnect everything you&#x27;re not actively using in this session. The savings are immediate.</p>
+<ol start="11">
+<li>Watch Claude work — don&#x27;t walk away</li>
+</ol>
+<p>When Claude runs a long task, stay and watch. Sometimes it goes down the wrong path. Sometimes it gets stuck re-reading the same files in a loop. A bad loop running to completion can burn 80% of your session tokens and produce nothing. Catch it early and stop it.</p>
+<ol start="12">
+<li>Match the model to the task</li>
+</ol>
+<p>There&#x27;s a right tool for every job:</p>
+<ul>
+<li>
+<p>Quick question → Chat with Haiku</p>
+</li>
+<li>
+<p>Writing a report from files → Cowork with Opus</p>
+</li>
+<li>
+<p>Building a chart from data → Code with Sonnet</p>
+</li>
+</ul>
+<p>If 80% of your work runs through Haiku instead of Opus, you&#x27;re saving significant budget without sacrificing quality on the work that actually matters. Using Opus to fix a sentence is like flying business class to check your email.</p>
+<ol start="13">
+<li>Spread your work across 2–3 sessions</li>
+</ol>
+<p>Claude operates on a rolling 5-hour reset window. Exhaust your limit in one long morning session and you&#x27;re locked out until it refreshes. Break your day into blocks — research in the morning, editing in the afternoon, final review in the evening. Three windows, triple the output.</p>
+<p>And know when to stop: if you&#x27;re near your limit with hours left on the clock, stop entirely. Come back with a full budget rather than burning the last 5% and getting stuck mid-task.</p>
+<p>The people hitting their limit by noon aren&#x27;t using Claude more. They&#x27;re just using it less efficiently. Same limit, smarter habits, all-day access.</p></div><a class="source" href="https://x.com/sairahul1/status/2049758043152449849" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Cost effective harnesses with Fable">
+  <title>Cost effective harnesses with Fable · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Lance Martin @RLanceMartin · 2026-07-12</div><div class="prose"><h1>Cost effective harnesses with Fable</h1>
+<p>There is a lot of interest in cost effective use of Fable 5. Agent harnesses will get better at knowing when to use frontier intelligence. I wanted to share some tests I’ve run to better understand when and how to use Fable 5.</p>
+<h2>The task shape</h2>
+<p>Many tasks have asymmetry in the intelligence needed across their tokens. Harnesses can recognize this and pick when to use Fable 5. A few patterns have emerged, but we’ll likely see more over time:</p>
+<ul>
+<li>
+<p>Use Fable 5 as an orchestrator that delegates to lower cost workers.</p>
+</li>
+<li>
+<p>Use Fable 5 as an advisor that lower cost executors ask for advice.</p>
+</li>
+<li>
+<p>Use Fable 5 as a verifier to check work (e.g., in a /goal or Outcomes loop).</p>
+</li>
+</ul>
+<p><img alt="Article image" src="/assets/2026-07-12-cost-effective-harnesses-with-fable-c73a4952ce/01.jpg"></p>
+<p>For example, @mitchellh called out an orchestrator-verifier approach:</p>
+<p>Mitchell Hashimoto
+@mitchellh
+·
+Jul 2
+I&#x27;m having a lot success using Fable xhigh as a planner/architect, using GPT 5.5 xhigh (subscription) as a coder, then Fable xhigh again as a judge. At API pricing, planning+judge costs are in the ~few dollar range compared to typical $50+ full round trips. </p>
+<p>I&#x27;ve seen some
+Show more
+284
+282
+5.6K
+1.7M</p>
+<p>I explored this on Parameter Golf, an ML engineering challenge similar to @karpathy&#x27;s  autoresearch: let an agent edit training code, launch training, see results, and decide what experiment to run next.</p>
+<p>The goal is to train the best model that fits in a 16MB artifact in &lt; 10 minutes on 8xH100s. I previously showed that Fable 5 is strong at this task. So, I wanted to see if I could use Fable 5 only for experimental design and Sonnet 5 as a worker to absorb the implementation tokens.</p>
+<p>I set this up with Claude Managed Agents with access to a @modal self-hosted 8xH100 sandbox and a Sonnet 5 executor that can call Fable 5. I instructed Sonnet 5 to consult Fable 5 as an advisor on the initial plan and later at 2 checkpoints during the 20 experiments.</p>
+<p>The results below show validation loss (bits per byte) across 3 configurations (where lower is better): Fable 5 and Sonnet 5 together got ~90% of Fable-5-solo&#x27;s improvement at ~34% of the token cost.</p>
+<p><img alt="Article image" src="/assets/2026-07-12-cost-effective-harnesses-with-fable-c73a4952ce/02.jpg"></p>
+<p>The upfront advising step was not the primary benefit. Fable 5’s initial ranking was anti-correlated with what worked.</p>
+<p>The value came from the advisory checkpoints. Sonnet 5 tends to get caught hill-climbing on marginal gains with no tendency to step back and re-rank. Fable&#x27;s checkpoints provide steering and re-prioritization.</p>
+<p>The distribution of judgment mattered in this case: upfront planning wasn&#x27;t sufficient, but sprinkling Fable 5 as an advisor across the task at fixed points helped steer it in more promising directions.</p>
+<p>In hindsight this matches the task&#x27;s shape: this type of experimentation is exploratory and each result reshapes what&#x27;s worth trying next. Judgment needs to be scattered across it rather than front-loaded.</p>
+<h2>The cost of delegation</h2>
+<p>Even if a task has intelligence asymmetry that the harness can exploit, it doesn’t always pay to offload it. Sometimes we just do things ourselves because there’s a coordination cost involved in delegation.</p>
+<p>@brada and I saw this when testing Fable 5 with BrowseComp, an eval for multi-constraint web search. It’s a good task shape for Fable 5 to plan and delegate to Sonnet 5 workers that search, open pages, and cross-reference until the constraints pin a unique answer.</p>
+<p>On BrowseComp200, an easy subset with ~0.37M tokens of reading per problem, Fable 5 alone was cheaper than mixing Fable 5 with Sonnet 5. Orchestration added a 60% markup for no benefit in performance.</p>
+<p>But on the full BrowseComp eval set (~31M tokens of reading per problem), orchestration paid off. Fable 5 orchestrator with Sonnet 5 workers landed at 96% of the score at 46% of the cost.</p>
+<p><img alt="Article image" src="/assets/2026-07-12-cost-effective-harnesses-with-fable-c73a4952ce/03.jpg"></p>
+<p>The token cost arbitrage gained by delegation to workers needs to offset the coordination cost. In this case, coordination cost has a few components:</p>
+<ul>
+<li>
+<p>Boundary duplication - every token that crosses between models is billed at least twice: the lead writes a brief, the worker reads it; the worker writes a report, the lead reads it.</p>
+</li>
+<li>
+<p>Fan-out overlap –  In many harnesses, workers don&#x27;t communicate and many partially overlap in their research. @walden_yan wrote a nice article on this problem last year.</p>
+</li>
+</ul>
+<p>This means the cost benefit of cheap workers has to offset a coordination cost that is roughly fixed per handoff. In this case, the worker benefit scales with the tokens each worker absorbs.</p>
+<h2>Cost effective harnesses</h2>
+<p>Here are the types of guidance that I&#x27;ve been giving Fable 5 when writing cost effective harnesses for various tasks; Fable is effective at understanding how and when to utilize its own intelligence with some of the this guidance:</p>
+<ol>
+<li>
+<p>Examine the task shape. Assess the intelligence needed across the task. Judgement scattered across the task, as we saw in Parameter Golf, can benefit from a cheap executor and a Fable 5 advisor. Judgement upfront or to review work can benefit from a Fable 5 orchestrator or verifier.</p>
+</li>
+<li>
+<p>Use delegation heuristics. Sometimes we can provide Claude with priors for worker delegation. @theo has an example here where various models are ranked according to &quot;taste&quot; and &quot;intelligence&quot;; these can help the harness  decide when to incorporate each one.</p>
+</li>
+<li>
+<p>Assess the cost of coordination. Delegation comes with a cost. As I saw with BrowseComp, make sure that you are delegating a large enough volume of tokens to offset the coordination cost. Because Fable 5 can be more token efficient than a model with a lower $ / token, the benefit of delegation should be carefully considered.</p>
+</li>
+<li>
+<p>Ensure prompt caching. Models maintain their own prompt caches, and getting this wrong is an easy way for delegation costs to blow up. As @cognition calls out here, sub-agents should maintain a prompt cache across calls. Route calls to the same worker so its cache accumulates, rather than spawning a fresh worker per request and re-paying the context write every time. In my experiments, Claude Managed Agents has sub-agents that supported this natively, but I&#x27;ve seen cases where a low prompt cache hit rate offsets the cost benefit of using a lower $ / token worker.</p>
+</li>
+</ol>
+<p>As @trq212 shared here, Claude can write its own harness on the fly based upon the task. Some of the considerations in this article can help Claude write cost effective harnesses that selectively apply frontier intelligence.</p></div><a class="source" href="https://x.com/RLanceMartin/status/2075641284635799865" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

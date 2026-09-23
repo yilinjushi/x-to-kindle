@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="How to cut Claude Code costs by 3x (using Karpathy&#x27;s context engineering principles)">
+  <title>How to cut Claude Code costs by 3x (using Karpathy&#x27;s context engineering principles) · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Avi Chawla @_avichawla · 2026-04-22</div><div class="prose"><h1>How to cut Claude Code costs by 3x (using Karpathy&#x27;s context engineering principles)</h1>
+<p>A full breakdown of how one open-source tool cuts your Claude Code session costs by 3x, without any changes to CLAUDE.md, prompts, or models (covered with a setup guide and why it is effective).</p>
+<p>The MCPMark V2 benchmarks revealed something counterintuitive.</p>
+<p>When Claude moved from Sonnet 4.5 to Sonnet 4.6, backend token usage through Supabase’s MCP server went up, from 11.6M to 17.9M tokens across 21 database tasks.</p>
+<p>The model got smarter, but the backend token usage actually increased.</p>
+<p>![Article image](/assets/2026-04-22-how-to-cut-claude-code-costs-by-3x-(using-karpathy&#x27;s-context-a5b7ae8155/01.jpg)</p>
+<p>The reason is subtle, and it has nothing to do with the model.</p>
+<p>Instead, it has to do with how the backend exposes info to the agent. When context is incomplete, a more capable model doesn’t just skip the gap.</p>
+<p>It spends more tokens reasoning about the gap, runs more discovery queries, and retries more frequently. So the missing context doesn’t disappear with a better model. It gets more expensive.</p>
+<p>Let’s look at why backends are a token sink for agents, what an alternative architecture looks like, and what the cost difference is on a real project.</p>
+<h1>Why Supabase’s MCP server wastes tokens</h1>
+<p>Supabase is a great backend. But it wasn’t designed to be operated by AI agents, and the MCP server that was added later inherits that limitation.</p>
+<p>Three specific mechanisms cause the token bloat.</p>
+<h2>1) Documentation retrieval returns everything</h2>
+<p>When CC needs to set up Google OAuth through Supabase, it invokes the search_docs MCP tool.</p>
+<p>Supabase’s implementation returns full GraphQL schema metadata on every call, which has 5-10x more tokens than the agent actually needs.</p>
+<p>![Article image](/assets/2026-04-22-how-to-cut-claude-code-costs-by-3x-(using-karpathy&#x27;s-context-a5b7ae8155/02.jpg)</p>
+<p>If the agent asked for OAuth setup instructions, it got the entire authentication docs, including sections on email/password, magic links, phone auth, SAML, and SSO.</p>
+<p>This happens on every search_docs call, like database queries, storage configuration, and edge function deployment.</p>
+<p>Each call dumps the full metadata for that entire domain. Across a session where the agent sets up auth, database, storage, and functions, the docs overhead alone can account for thousands of wasted tokens.</p>
+<h2>2) No visibility into backend state</h2>
+<p>When you use Supabase as a human dev, you open the dashboard and see everything at a glance, like active auth providers, tables, RLS policies, configure storage buckets, deployed edge functions, etc.</p>
+<p>An agent can’t see the dashboard.</p>
+<p>Supabase’s MCP server does expose some state through individual tools like list_tables and execute_sql, but there’s no way to ask “what does my entire backend look like right now?” and get one structured response.</p>
+<p>![Article image](/assets/2026-04-22-how-to-cut-claude-code-costs-by-3x-(using-karpathy&#x27;s-context-a5b7ae8155/03.jpg)</p>
+<p>So the agent pieces it together through multiple calls, each call returns a partial view, and some info (like which auth providers are configured) isn’t available through MCP at all.</p>
+<p>This fragmented discovery process costs tokens, and the agent often needs several attempts because the information comes back incomplete or in a format that requires further queries to interpret.</p>
+<h2>3) No structured error context</h2>
+<p>When something goes wrong (and it will, because the agent is guessing), Supabase returns raw error messages. It could be a 403 from an RLS denial, a 500 from a misconfigured edge function, etc.</p>
+<p>A human dev would look at it, check the Supabase dashboard, cross-reference with the logs, and fix the issue.</p>
+<p>The agent doesn’t have that path. It gets the error message, reasons about what might have caused it, and tries a fix.</p>
+<p>If the fix is wrong, it retries. Each retry re-sends the entire conversation history and compounds the token cost.</p>
+<p>These three mechanisms (doc overhead, state discovery, error retry loops) compound fast.</p>
+<p>A model that reasons more extensively, like Sonnet 4.6, makes each exploration step more thorough and more expensive.</p>
+<p>That’s why the token gap widened from Sonnet 4.5 to 4.6, and it’ll likely widen further with each new model release.</p>
+<h1>What “backend context engineering” should look like</h1>
+<p>The fix isn’t switching to another model.</p>
+<p>It’s giving the agent a structured backend context so it doesn’t have to explore and guess.</p>
+<p>This is what Karpathy means by context engineering: &quot;the delicate art and science of filling the context window with just the right information for the next step.&quot; He explicitly includes tools and state as part of that context. Most people apply the idea to prompts and RAG retrieval.</p>
+<p>But the backend is part of the context window too, and right now, it&#x27;s the part almost nobody is optimizing.</p>
+<p>To see what this looks like in practice, InsForge (open source with 8k stars) implements this approach.</p>
+<p>![Article image](/assets/2026-04-22-how-to-cut-claude-code-costs-by-3x-(using-karpathy&#x27;s-context-a5b7ae8155/04.jpg)</p>
+<p>It provides the same primitives as Supabase (Postgres with pgvector, auth, storage, edge functions, and realtime) but structures the information layer so agents can consume it efficiently.</p>
+<p>The key architectural difference is how it delivers context to Claude Code.</p>
+<p>Three layers work together:</p>
+<ul>
+<li>
+<p>Skills for static knowledge.</p>
+</li>
+<li>
+<p>CLI for direct backend operations.</p>
+</li>
+<li>
+<p>MCP for live state inspection.</p>
+</li>
+</ul>
+<p>Each layer solves a different problem and reduces tokens for a different reason.</p>
+<h2>1) Skills: static knowledge with zero round-trips</h2>
+<p>The primary approach for knowledge is Skills. They load directly into the agent’s context at session start, so the SDK patterns, code examples, and edge cases for every backend operation are available without any tool calls.</p>
+<p>Skills also use progressive disclosure, wherein only the metadata (name, description, ~70-150 tokens per skill) loads initially.</p>
+<p>The full skill content loads only when the agent determines it matches the current task. This means you can have 100+ skills installed without context bloat, which isn’t possible with MCP’s all-or-nothing schema loading.</p>
+<p>Four skills cover the full stack, each scoped to a specific domain:</p>
+<p>![Article image](/assets/2026-04-22-how-to-cut-claude-code-costs-by-3x-(using-karpathy&#x27;s-context-a5b7ae8155/05.jpg)</p>
+<ul>
+<li>
+<p>insforge for frontend code that talks to the backend.</p>
+</li>
+<li>
+<p>insforge-cli for backend infrastructure management</p>
+</li>
+<li>
+<p>insforge-debug for structured error diagnosis across common failures like auth errors, slow queries, edge function failures, RLS denials, deployment issues, and performance degradation)</p>
+</li>
+<li>
+<p>insforge-integrations for third-party auth providers (Clerk, Auth0, WorkOS, Kinde, Stytch).</p>
+</li>
+</ul>
+<p>Install all four with one command:</p>
+<p>bash
+npx skills add insforge/insforge-skills</p>
+<h2>2) CLI for direct execution</h2>
+<p>For actually executing backend operations (creating tables, running SQL, deploying functions, managing secrets), the InsForge CLI is the primary interface.</p>
+<p>Every command supports --json for structured output, -y to skip confirmation prompts, and returns semantic exit codes so agents can detect auth failures, missing projects, or permission errors programmatically.</p>
+<p>This is helpful because Claude Code can pipe CLI output through jq, grep, and awk in ways that would require multiple sequential MCP tool calls.</p>
+<p>Benchmarks from Scalekit showed CLI+Skills achieving near-100% success rates with 10-35x better token efficiency than equivalent MCP setups for single-user workflows.</p>
+<p>These are some example operations the agent actually runs:</p>
+<p>bash</p>
+<h1>Inspect backend state (run first to discover what&#x27;s configured)</h1>
+<p>npx @insforge/cli metadata --json</p>
+<h1>Database operations</h1>
+<p>npx @insforge/cli db query &quot;CREATE TABLE posts (...)&quot; --json
+npx @insforge/cli db policies  # inspect existing RLS policies</p>
+<h1>Edge functions</h1>
+<p>npx @insforge/cli functions deploy my-handler
+npx @insforge/cli functions invoke my-handler --data &#x27;{&quot;action&quot;:&quot;test&quot;}&#x27; --json</p>
+<h1>Storage</h1>
+<p>npx @insforge/cli storage create-bucket documents --json
+npx @insforge/cli storage upload ./file.pdf --bucket documents</p>
+<h1>Frontend deployment</h1>
+<p>npx @insforge/cli deployments env set VITE_INSFORGE_URL https://...
+npx @insforge/cli deployments deploy ./dist --json</p>
+<h1>Diagnostics</h1>
+<p>npx @insforge/cli diagnose db --check connections,locks,slow-queries</p>
+<p>The agent parses the JSON and handles errors based on exit codes.</p>
+<h2>3) MCP tools for live backend state</h2>
+<p>MCP is still useful, but for a narrower purpose, like inspecting the current state of your backend when that state is changing.</p>
+<p>InsForge’s MCP server exposes a lightweight get_backend_metadata tool that returns a structured JSON with the full backend topology in a single call:</p>
+<p>json
+json{
+  &quot;auth&quot;: {
+    &quot;providers&quot;: [&quot;google&quot;, &quot;github&quot;],
+    &quot;jwt_secret&quot;: &quot;configured&quot;
+  },
+  &quot;tables&quot;: [
+    {&quot;name&quot;: &quot;users&quot;, &quot;columns&quot;: [&quot;id&quot;, &quot;email&quot;, &quot;created_at&quot;], &quot;rls&quot;: &quot;enabled&quot;},
+    {&quot;name&quot;: &quot;posts&quot;, &quot;columns&quot;: [&quot;id&quot;, &quot;title&quot;, &quot;body&quot;, &quot;author_id&quot;], &quot;rls&quot;: &quot;enabled&quot;}
+  ],
+  &quot;storage&quot;: { &quot;buckets&quot;: [&quot;avatars&quot;, &quot;documents&quot;] },
+  &quot;ai&quot;: { &quot;models&quot;: [{&quot;id&quot;: &quot;gpt-4o&quot;, &quot;capabilities&quot;: [&quot;chat&quot;, &quot;vision&quot;]}] },
+  &quot;hints&quot;: [&quot;Use RPC for batch operations&quot;, &quot;Storage accepts files up to 50MB&quot;]
+}</p>
+<p>In one call and ~500 tokens, the agent knows the full backend topology. The hints field provides agent-specific guidance that reduces incorrect API usage.</p>
+<p>The key design choice here is that MCP is used for state inspection (which changes as the agent works), not for documentation retrieval (which doesn’t).</p>
+<p>This inverts the typical usage pattern and is the main reason InsForge consumes far fewer tokens than Supabase on equivalent tasks.</p>
+<h1>Supabase vs Insforge: Build DocuRAG with Claude Code</h1>
+<p>To make this concrete, I built the same app using Claude Code on both backends and recorded the full session.</p>
+<p>The app is called DocuRAG. Users sign in via Google OAuth, upload PDFs, the system chunks and embeds the text (text-embedding-3-small, 1536 dimensions), stores the vectors in pgvector, and users ask natural-language questions answered via GPT-4o.</p>
+<p>This touches nearly every backend primitive at once: user auth, file storage, a documents table, vector embeddings, embedding generation, chat completion, a retrieval edge function, and RLS to isolate each user’s documents.</p>
+<p>Here&#x27;s the setup for each.</p>
+<h2>Supabase</h2>
+<ul>
+<li>
+<p>Create a Supabase account and create a new project.</p>
+</li>
+<li>
+<p>Connect the MCP server to Claude Code and authenticate:</p>
+</li>
+</ul>
+<p>bash
+claude mcp add --scope project --transport http supabase \
+  &quot;https://mcp.supabase.com/mcp?project_ref=&lt;your-project-ref&gt;&quot;</p>
+<p>claude /mcp</p>
+<ul>
+<li>Install Supabase&#x27;s Agent Skills (marked as “Optional” in Supabase&#x27;s official setup):</li>
+</ul>
+<p>bash
+npx skills add supabase/agent-skills</p>
+<p>This installs two skills:</p>
+<ul>
+<li>
+<p>supabase: broad catch-all skill covering Database, Auth, Edge Functions, Realtime, Storage, Vectors, Cron, Queues, client libraries (supabase-js, @ supabase/ssr), SSR integrations (Next.js, React, SvelteKit, Astro, Remix), CLI, MCP, schema changes, migrations, and Postgres extensions</p>
+</li>
+<li>
+<p>supabase-postgres-best-practices: Postgres performance optimization across 8 categories</p>
+</li>
+</ul>
+<p>Supabase ships one broad skill that triggers on &quot;any task involving Supabase,&quot; plus a specialized Postgres optimization skill. When the Supabase skill activates, all its content loads because the trigger conditions cover almost the entire product surface.</p>
+<h2>Insforge</h2>
+<ul>
+<li>
+<p>Create an Insforge account and create a new project (you can also self-host and run it fully locally using Docker Compose).</p>
+</li>
+<li>
+<p>Install all four Skills:</p>
+</li>
+</ul>
+<p>npx skills add insforge/insforge-skills</p>
+<p>This installs insforge (SDK patterns), insforge-cli (infrastructure commands), insforge-debug (failure diagnostics), and insforge-integrations (third-party auth providers).</p>
+<ul>
+<li>Link the CLI to your project (primary execution layer):</li>
+</ul>
+<p>bash
+npx @insforge/cli link --project-id &lt;project-id&gt;</p>
+<p>InsForge ships four narrowly scoped skills, each covering a specific domain.</p>
+<ul>
+<li>
+<p>When you&#x27;re writing frontend code, only Insforge activates.</p>
+</li>
+<li>
+<p>When you&#x27;re creating tables, only insforge-cli activates.</p>
+</li>
+<li>
+<p>When something breaks, only insforge-debug activates.</p>
+</li>
+</ul>
+<p>Full skill content only loads for the one skill that matches the current task. The other three remain at metadata-only cost.</p>
+<p>The prompt is nearly identical for both sessions, with one key difference.</p>
+<ul>
+<li>Supabase:</li>
+</ul>
+<p>plaintext
+Build a chat with document app called DocuRAG.
+It will be a typical RAG setup where a user
+can upload a document. It will be chunked, embedded,
+and stored in a vector DB. Once done, a user can ask
+questions about the document. The engine will retrieve
+the relevant chunks after embedding the query. Finally,
+it will generate a coherent response using GPT-4o based
+on the query and the retrieved context. Add Google OAuth.
+Use Supabase as the backend and LLMs/embedding models via
+the OpenAI API. Build frontend in next.js.</p>
+<ul>
+<li>InsForge:</li>
+</ul>
+<p>plaintext
+Build a chat with document app called DocuRAG.
+It will be a typical RAG setup where a user
+can upload a document. It will be chunked,
+embedded, and stored in a vector DB. Once done,
+A user can ask questions about the document.
+The engine will retrieve the relevant chunks
+after embedding the query. Finally, it will
+generate a coherent response using GPT-4o based on
+the query and the retrieved context. Add Google OAuth.
+Use Insforge as the backend and also for the model
+gateway. Build the front-end in Next.js.</p>
+<p>The Supabase prompt says &quot;LLMs/embedding models via the OpenAI API&quot; (two systems to wire). The InsForge prompt says &quot;also for the model gateway&quot; (one system).</p>
+<p>I ran both sessions side by side and recorded the full build. Here’s the side-by-side video showing what happened from prompt to working app.</p>
+<p>The media could not be played.
+Reload</p>
+<p>It also showcases the final app from both sessions, built on two different backends.</p>
+<p>One thing not captured in the video: Supabase required manual Google OAuth setup outside of Claude Code. I had to navigate to Google Cloud Console, create an OAuth 2.0 client ID, configure the consent screen, add my email as a test user, copy the Client ID and Client Secret, then paste it into Supabase’s dashboard. This was not required in Insforge.</p>
+<p>Before diving into the session-specific details, here’s what the numbers looked like at the end:</p>
+<p>![Article image](/assets/2026-04-22-how-to-cut-claude-code-costs-by-3x-(using-karpathy&#x27;s-context-a5b7ae8155/06.jpg)</p>
+<ul>
+<li>
+<p>Supabase: 10.4M tokens; $9.21 Cost with 12 user messages (10 error reports)</p>
+</li>
+<li>
+<p>InsForge: 3.7M tokens; $2.81 Cost, with 1 user messages (0 error reports)</p>
+</li>
+</ul>
+<p>Now let’s look at what actually happened in each session.</p>
+<p>To analyze both sessions objectively, I exported the full Claude Code session history from both runs (as JSONL files) and fed them to a separate Claude instance. The analysis below, including tool call counts, error sequences, and token breakdowns, comes from parsing those session logs.</p>
+<h1>Supabase (consumed 10.4M tokens with $9.21 cost)</h1>
+<p>The initial build went smoothly.</p>
+<p>The agent loaded the supabase skill, discovered the backend state via MCP tools (list_tables, list_extensions, execute_sql), scaffolded the Next.js project, created the database schema, wrote two edge functions (ingest-document and query-document), and deployed everything. The build passed.</p>
+<p>![Article image](/assets/2026-04-22-how-to-cut-claude-code-costs-by-3x-(using-karpathy&#x27;s-context-a5b7ae8155/07.png)</p>
+<h2>First problem: login didn’t work</h2>
+<p>![Article image](/assets/2026-04-22-how-to-cut-claude-code-costs-by-3x-(using-karpathy&#x27;s-context-a5b7ae8155/08.png)</p>
+<p>When I tried to sign in with Google OAuth, the app threw an error. The agent had wired the authentication using the wrong Supabase client library for Next.js.</p>
+<p>![Article image](/assets/2026-04-22-how-to-cut-claude-code-costs-by-3x-(using-karpathy&#x27;s-context-a5b7ae8155/09.png)</p>
+<p>In Next.js, the OAuth callback runs on the server, but the agent used a client-side library that stores login state in the browser. The browser state isn’t available on the server, so the login flow broke.</p>
+<p>The agent fixed this by switching to a different library (@ supabase/ssr), rewriting how the app handles login sessions, and rebuilding.</p>
+<p>![Article image](/assets/2026-04-22-how-to-cut-claude-code-costs-by-3x-(using-karpathy&#x27;s-context-a5b7ae8155/10.jpg)</p>
+<h2>Document upload failed (took 8 turns to fix)</h2>
+<p>After the login was fixed, I tried uploading a document. The edge function returned an error, I reported it, it tried a fix, failed, then I tried again, and it returned the same error. This cycle repeated 8 times:</p>
+<p>![Article image](/assets/2026-04-22-how-to-cut-claude-code-costs-by-3x-(using-karpathy&#x27;s-context-a5b7ae8155/11.jpg)</p>
+<ul>
+<li>
+<p>The agent tried adding auth headers manually → Same error.</p>
+</li>
+<li>
+<p>Redeployed with extra logging to see what was happening → Same error.</p>
+</li>
+<li>
+<p>Tried showing the real error message instead of the generic one → Different error (now a network/CORS issue).</p>
+</li>
+<li>
+<p>Fixed the CORS issue → Back to the original error.</p>
+</li>
+<li>
+<p>Tried a different way of reading the user’s login token → Same error.</p>
+</li>
+<li>
+<p>Tried yet another authentication approach → Same error.</p>
+</li>
+</ul>
+<p>After 8 failed attempts, the agent finally figured out what was going on: “The 401s may be happening at the platform’s verify_jwt gate before our code even runs.”</p>
+<p>In plain terms, Supabase has a security layer that checks login tokens before the edge function code even starts. The new auth library the agent installed (to fix the first problem) was sending a token format that this security layer didn’t recognize.</p>
+<p>So every request was getting rejected at the door before the function code had a chance to run. That’s why none of the code-level fixes worked.</p>
+<p>![Article image](/assets/2026-04-22-how-to-cut-claude-code-costs-by-3x-(using-karpathy&#x27;s-context-a5b7ae8155/12.jpg)</p>
+<p>The agent spent 8 rounds fixing code-level issues when the problem was upstream of the code entirely.</p>
+<p>The solution was simple: turn off the platform’s automatic token checking and handle authentication inside the function code instead.</p>
+<p>It took 8 attempts because every time, it saw a 401 (unauthorized) error, but nothing told it where the rejection was coming from. Without that signal, it kept attempting to fix the code.</p>
+<p>But during this debugging process, the edge function was redeployed 8 times (on top of 2 initial deploys during the build). Each redeployment, log check, and retry re-sent the entire growing conversation history, compounding the token cost.</p>
+<p>Final session stats involved:</p>
+<ul>
+<li>
+<p>12 user messages (10 were error reports)</p>
+</li>
+<li>
+<p>135 tool calls</p>
+</li>
+<li>
+<p>30+ MCP tool calls.</p>
+</li>
+<li>
+<p>10.4M tokens</p>
+</li>
+<li>
+<p>$9.21 Cost</p>
+</li>
+</ul>
+<p>Insforge (consumed 3.7M tokens with $2.81 cost)</p>
+<p>The InsForge session completed without any errors that required my intervention.</p>
+<p>The agent started by inspecting the backend state.</p>
+<p>Its first action was npx <code>@ insforge/cli metadata --json</code>, which returned a structured overview of the project, including the configured auth providers, existing tables, storage buckets, available AI models, and real-time channels.</p>
+<p>![Article image](/assets/2026-04-22-how-to-cut-claude-code-costs-by-3x-(using-karpathy&#x27;s-context-a5b7ae8155/13.jpg)</p>
+<p>This gave the agent a complete picture of what it was working with before it wrote any code.</p>
+<p>In the Supabase session, the agent needed multiple MCP calls (list_tables, list_extensions, execute_sql) to piece together a similar understanding, and even then, it missed critical details like the verify_jwt behavior.</p>
+<p>The schema setup ran through 6 CLI commands, all of which succeeded.</p>
+<p>![Article image](/assets/2026-04-22-how-to-cut-claude-code-costs-by-3x-(using-karpathy&#x27;s-context-a5b7ae8155/14.jpg)</p>
+<p>The agent enabled pgvector, created the documents and chunks tables (with a vector(1536) column), enabled Row Level Security on both, created the access policies, and set up the match_chunks similarity search function.</p>
+<p>Each command returned structured output confirming what happened, so the agent could verify each step before moving to the next.</p>
+<p>The auth and edge function problems from the Supabase session didn&#x27;t occur here.</p>
+<p>The insforge skill included the correct client library patterns for Next.js, so the agent wired authentication correctly on the first attempt.</p>
+<p>And the two edge functions (embed-chunks and query-rag) both deployed and ran without errors because the model gateway for embeddings and chat completion was part of the same backend.</p>
+<p>![Article image](/assets/2026-04-22-how-to-cut-claude-code-costs-by-3x-(using-karpathy&#x27;s-context-a5b7ae8155/15.jpg)</p>
+<p>The agent didn&#x27;t need to integrate OpenAI separately, manage a second API key, or deal with cross-service authentication.</p>
+<p>The metadata response already listed text-embedding-3-small and gpt-4o as available models, so the agent called them directly through the InsForge SDK.</p>
+<p>Final session stats involved:</p>
+<ul>
+<li>
+<p>1 user message</p>
+</li>
+<li>
+<p>77 tool calls</p>
+</li>
+<li>
+<p>0 MCP tool calls.</p>
+</li>
+<li>
+<p>3.7M tokens</p>
+</li>
+<li>
+<p>$2.81 Cost</p>
+</li>
+</ul>
+<p>I asked Claude to generate a tabular summary, and here’s what it produced:</p>
+<p>![Article image](/assets/2026-04-22-how-to-cut-claude-code-costs-by-3x-(using-karpathy&#x27;s-context-a5b7ae8155/16.png)</p>
+<p>The Supabase session’s token cost was driven by the error retry loop.</p>
+<p>Each of the 8 edge functions redeploys re-sent the entire conversation history (which grew with each attempt).</p>
+<p>The agent checked logs 6 times, redeployed functions 8 times, and tried 6 different authentication strategies before finding the root cause.</p>
+<p>None of this was the agent’s fault. The Supabase platform’s verify_jwt gate was rejecting the token before the function code ran, and the logs didn’t distinguish between platform-level and code-level rejections.</p>
+<p>The Insforge session avoided these problems because the skills loaded the correct auth patterns from the start, the CLI gave structured feedback on every operation, and the model gateway meant there was no second service to integrate.</p>
+<p>The agent didn’t hit a single error that required debugging.</p>
+<h1>Putting it together</h1>
+<p>This comparison highlights a problem that goes beyond Supabase specifically.</p>
+<p>Most backends were designed for human developers who can read dashboards, interpret ambiguous errors, and mentally track state across multiple services.</p>
+<p>When an agent takes over that workflow, the assumptions break. The agent can’t see the dashboard. It can’t tell where an error came from if the logs don’t say. And every time it guesses wrong, the token cost compounds.</p>
+<p>![Article image](/assets/2026-04-22-how-to-cut-claude-code-costs-by-3x-(using-karpathy&#x27;s-context-a5b7ae8155/17.jpg)</p>
+<p>InsForge is built around a different set of assumptions.</p>
+<ul>
+<li>
+<p>The backend exposes its state through structured metadata and the CLI gives the agent programmatic control with clear success/failure signals.</p>
+</li>
+<li>
+<p>The skills encode the correct patterns so the agent doesn’t have to discover them through trial and error.</p>
+</li>
+<li>
+<p>And the model gateway keeps LLM operations inside the same backend, which removes the cross-service integration issues that caused most of the Supabase session&#x27;s debugging.</p>
+</li>
+</ul>
+<p>Whether these architectural choices matter to you depends on how you’re using Claude Code or any other coding agent.</p>
+<p>If you’re building frontend-only apps, the backend layer isn’t where your tokens go.</p>
+<p>If you’re building full-stack applications with auth, storage, vector search, and LLM calls, the backend is exactly where the token cost lives, and how that backend communicates with the agent makes a measurable difference.</p>
+<p>But the core insight applies regardless of what tools you use.</p>
+<p>If your agent is spending tokens discovering how your backend works, guessing at configurations, and retrying operations because error messages don&#x27;t tell it what went wrong, you&#x27;re paying for missing context.</p>
+<p>The fix isn&#x27;t a better model or a longer context window. It&#x27;s giving the agent structured information about your backend before it starts writing code.</p>
+<p>That&#x27;s context engineering applied to the backend. Karpathy said it right that filling the context window with the right information is the core skill.</p>
+<p>The insight from this experiment is that your backend infrastructure is one of the biggest sources of that context, and most of us aren&#x27;t treating it that way.</p>
+<p>InsForge is fully open source under Apache 2.0, and you can self-host it via Docker.</p>
+<p>The code, the skills, and the CLI are all on its GitHub repo: https://github.com/InsForge/InsForge</p>
+<p>P.S. The 2.8x token reduction in this experiment was partly driven by the debugging loop on the Supabase side, where the agent spent 8 rounds fixing an issue that turned out to be upstream of its own code. That&#x27;s a real scenario, but not every session might hit that specific problem. The MCPMark V2 benchmarks tested 21 database tasks across 4 independent runs each and showed a more consistent 2.4x reduction on Sonnet 4.6.</p>
+<p>That&#x27;s a wrap!</p>
+<p>If you enjoyed this tutorial:</p>
+<p>Find me → @_avichawla</p>
+<p>Every day, I share tutorials and insights on DS, ML, LLMs, and RAGs.</p></div><a class="source" href="https://x.com/_avichawla/status/2046500537584218438" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>
