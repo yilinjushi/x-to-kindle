@@ -13,7 +13,7 @@ Every extracted article is also preserved as Markdown with locally downloaded im
 - Cloudflare Pages output directory: `site`
 - No build command is required because the delivery workflows regenerate the HTML before committing.
 - To publish recent bookmarks without sending them to Kindle, run the `Publish Bookmarks To Blog` workflow.
-- Blog synchronization also runs hourly at minute 17 (UTC), scanning the latest 50 bookmarks. GitHub scheduling and Pages deployment can add delay; saving a bookmark does not instantly update the site.
+- Blog synchronization also runs every 3 days at 10:30 UTC (same cadence as Kindle delivery, starting 2026-09-25), scanning the latest 50 bookmarks. GitHub scheduling and Pages deployment can add delay; saving a bookmark does not instantly update the site.
 - Blog sync includes short posts and skips URLs already present in the archive, independently of Kindle sent history. Manual runs default to 15 bookmarks; increase `count` for a larger backlog.
 - Failed extractions make the sync fail visibly; successful archives are still committed so the next run can retry only missing items.
 
@@ -56,10 +56,7 @@ Create a new **private** GitHub repository and add these repository secrets:
 - `ARCHIVE_DEPLOY_KEY`: private SSH key whose public half is a write-enabled deploy key on `yilinjushi/x-to-kindle-archive`
 - `NOTEBOOKLM_STORAGE_STATE`, `NOTEBOOKLM_MASTER_TOKEN`: contents of `storage_state.json` and `master_token.json` from `notebooklm login --master-token`
 
-The workflow in `.github/workflows/kindle-delivery.yml` runs twice a day:
-
-- `02:00 UTC` = `10:00` China Standard Time
-- `06:00 UTC` = `14:00` China Standard Time
+The workflow in `.github/workflows/kindle-delivery.yml` runs every 3 days at `11:00 UTC` (`19:00` UTC+8), starting 2026-09-25.
 
 It also supports manual runs through `workflow_dispatch`.
 
