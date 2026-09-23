@@ -17,12 +17,11 @@ Every extracted article is also preserved as Markdown with locally downloaded im
 - Blog sync includes short posts and skips URLs already present in the archive, independently of Kindle sent history. Manual runs default to 15 bookmarks; increase `count` for a larger backlog.
 - Failed extractions make the sync fail visibly; successful archives are still committed so the next run can retry only missing items.
 
-## NotebookLM mirror
+## Knowledge base
 
-- A Claude Code routine (Haiku, every 3 days at 12:00 UTC) writes `category: "<slug>"` into new archive files, using `categories.json` in the private repository as the fixed category table.
-- `.github/workflows/notebooklm-sync.yml` runs daily at 13:00 UTC and calls `notebooklm_sync.py`: categorized articles are deduplicated, merged into one text source per category and month, and uploaded to one NotebookLM notebook per category (a new notebook `<name> · 2` is created when one is full). Changed sources are replaced; sources or notebooks deleted in the NotebookLM web UI are re-uploaded on the next run.
-- Sync state lives in `state/notebooklm.json` in the private repository. Preview the plan without signing in: `python notebooklm_sync.py --archive-dir <archive> --categories <categories.json> --state <state.json> --dry-run`.
-- It uses the unofficial [`notebooklm-py`](https://github.com/teng-lin/notebooklm-py) client, which can break when Google changes internal endpoints.
+- The private repository doubles as an LLM-maintained wiki (Karpathy's "LLM Wiki" pattern): a Claude Code routine (Sonnet, every 3 days at 12:00 UTC) compiles new archive files into `wiki/` — one summary page per article, concept pages across articles, and generated indexes starting at `wiki/index.md`.
+- The schema and ingest/query rules live in `CLAUDE.md` of the private repository; `tools/wiki.py` there lists uncompiled articles and rebuilds the indexes.
+- Questions are answered by Claude reading `wiki/index.md` first and drilling down, so only a few pages are loaded per question.
 
 ## What counts as a long article
 
@@ -54,7 +53,6 @@ Create a new **private** GitHub repository and add these repository secrets:
 - `GMAIL_APP_PASSWORD`: the Gmail app password
 - `X_SESSION_JSON`: the full contents of your local `x_session.json`
 - `ARCHIVE_DEPLOY_KEY`: private SSH key whose public half is a write-enabled deploy key on `yilinjushi/x-to-kindle-archive`
-- `NOTEBOOKLM_STORAGE_STATE`, `NOTEBOOKLM_MASTER_TOKEN`: contents of `storage_state.json` and `master_token.json` from `notebooklm login --master-token`
 
 The workflow in `.github/workflows/kindle-delivery.yml` runs every 3 days at `11:00 UTC` (`19:00` UTC+8), starting 2026-09-25.
 
