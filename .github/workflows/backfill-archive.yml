@@ -1,0 +1,93 @@
+name: Backfill Archive
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: Stop after this many articles (0 = all)
+        required: false
+        default: "0"
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+concurrency:
+  group: publish-bookmarks
+  cancel-in-progress: false
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      ARCHIVE_DIR: ${{ github.workspace }}/archive-repo/archive
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check out private archive
+        uses: actions/checkout@v4
+        with:
+          repository: yilinjushi/x-to-kindle-archive
+          path: archive-repo
+          ssh-key: ${{ secrets.ARCHIVE_DEPLOY_KEY }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Playwright browser
+        run: python -m playwright install --with-deps chromium
+
+      - name: Restore X session
+        shell: bash
+        run: |
+          cat <<'EOF' > x_session.json
+          ${{ secrets.X_SESSION_JSON }}
+          EOF
+
+      - name: Archive articles sent before the archive existed
+        env:
+          LIMIT: ${{ inputs.limit }}
+        run: python backfill_archive.py --limit "${LIMIT:-0}"
+
+      - name: Commit archive updates to private archive
+        if: ${{ !cancelled() }}
+        shell: bash
+        working-directory: archive-repo
+        run: |
+          git add archive/
+          if git diff --cached --quiet; then
+            echo "No archive changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Backfill archive from Kindle send history"
+          git pull --rebase
+          git push
+
+      - name: Commit site updates
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          git add site/
+          if git diff --cached --quiet; then
+            echo "No site changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Publish backfilled articles to blog"
+          git pull --rebase
+          git push
