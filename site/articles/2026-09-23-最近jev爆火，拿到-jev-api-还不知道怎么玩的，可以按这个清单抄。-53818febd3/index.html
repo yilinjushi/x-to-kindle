@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="最近Jev爆火，拿到 Jev API 还不知道怎么玩的，可以按这个清单抄。">
+  <title>最近Jev爆火，拿到 Jev API 还不知道怎么玩的，可以按这个清单抄。 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">雪踏乌云 @Pluvio9yte · 2026-09-23</div><div class="prose"><h1>最近Jev爆火，拿到 Jev API 还不知道怎么玩的，可以按这个清单抄。</h1>
+<ol>
+<li>jev-ultrafast
+Browser Use 做的高速浏览器 Agent。Jev 每一步只判断「做什么、点哪个元素」，要打字才叫小模型。Google Flights 搜一次航班大约 7 秒。</li>
+</ol>
+<p>https://
+github.com/browser-use/je
+v-ultrafast
+…</p>
+<ol start="2">
+<li>fast-jev-compaction
+给 Claude Code 做上下文压缩。每次工具调用先让 Jev 判断还有没有用，没用的删掉，留下来的原文不重写。</li>
+</ol>
+<p>https://
+github.com/tamaratran/fas
+t-jev-compaction
+…</p>
+<ol start="3">
+<li>json-render
+Vercel Labs 的生成式 UI 框架。实验里 Jev 不逐 token 写 JSON，只负责选组件、属性和布局。</li>
+</ol>
+<p>https://
+github.com/vercel-labs/js
+on-render
+…</p>
+<ol start="4">
+<li>typesafe-mcp
+最适合刚拿到 API 的人。把 Jev 接进 Claude Code、Claude Desktop、Codex 和 Pi，随时做 Choice / Score / Noul。</li>
+</ol>
+<p>https://
+github.com/itsmostafa/typ
+esafe-mcp
+…</p>
+<ol start="5">
+<li>jev-mcp
+现成的 Agent 判断工具箱：事实核验、内容筛查、语义排序、分类和信息提取。</li>
+</ol>
+<p>https://
+github.com/jkudish/jev-mcp</p>
+<ol start="6">
+<li>SemDecide
+把 Jev 做成命令行。Shell 里直接分类、打分、过滤，适合接爬虫、CI 和数据流水线。</li>
+</ol>
+<p>https://
+github.com/sharziki/semde
+cide
+…</p>
+<ol start="7">
+<li>jev-codex-router
+先让 Jev 判断这一轮编程任务有多难，再决定模型档位、推理深度和速度模式。</li>
+</ol>
+<p>https://
+github.com/0xNatoshi/jev-
+codex-router
+…</p>
+<ol start="8">
+<li>Winnow
+给 Claude Code 做上下文垃圾回收。Read / Bash / Grep 吐一大堆时，Jev 先判断哪些真和当前任务有关。</li>
+</ol>
+<p>https://
+github.com/GhalebDweikat/
+winnow
+…</p>
+<ol start="9">
+<li>jev-review
+代码审查前先过一遍 Jev，把高风险改动挑出来，再交给更贵的大模型或人。带本地看板。</li>
+</ol>
+<p>https://
+github.com/devagrawal09/j
+ev-review
+…</p>
+<ol start="10">
+<li>Blink
+把 Jev 当代码库导航器。每走到一层目录，就判断哪些文件和当前问题最相关，再继续往下找。</li>
+</ol>
+<p>https://
+github.com/ellipsis-dev/b
+link
+…</p>
+<ol start="11">
+<li>agent-desktop
+桌面自动化。读系统无障碍树，判断下一步该点哪个按钮、菜单或输入框。</li>
+</ol>
+<p>https://
+github.com/lahfir/agent-d
+esktop
+…</p>
+<ol start="12">
+<li>typesafe-mario
+让 Jev 玩《超级马里奥》。不看截图，直接读模拟器 RAM 里的结构化状态，再决定跑、跳、躲。</li>
+</ol>
+<p>https://
+github.com/fhshaik/typesa
+fe-mario
+…</p>
+<ol start="13">
+<li>jev-drone
+拿 Jev 控无人机。底层飞控继续负责稳定和安全，Jev 只做爬升、刹车、穿越障碍这类上层判断。</li>
+</ol>
+<p>https://
+github.com/RomanSlack/jev
+-drone
+…</p>
+<ol start="14">
+<li>OneVOneJev
+浏览器里的 1v1 FPS。每个决策 tick 都要判断走位、视角、瞄准、开火和跳跃。</li>
+</ol>
+<p>https://
+github.com/emrickgarrett/
+OneVOneJev
+…</p>
+<ol start="15">
+<li>jev-trader
+Monad 测试网上做高频做市。Jev 根据价差和成交方向判断下一步买还是卖，模型延迟大约 81ms。</li>
+</ol>
+<p>https://
+github.com/jarrodwatts/je
+v-trader
+…</p>
+<ol start="16">
+<li>Prism
+不直接让 Jev 下单。它判断 toxic flow、市场压力、均值回归之类的状态，再交给原来的策略。</li>
+</ol>
+<p>https://
+github.com/irfndi/prism-l
+iquidity-agent
+…</p>
+<ol start="17">
+<li>neo4jev
+把 Jev 塞进知识图谱。每走到一个节点，判断下一条最值得走的边，再一路找下去。</li>
+</ol>
+<p>https://
+github.com/jexp/neo4jev</p>
+<ol start="18">
+<li>jev-curate
+拿 Jev 筛训练数据。JSONL / Parquet 先做质量、相关性和风险判断，再决定哪些进后面的训练。</li>
+</ol>
+<p>https://
+github.com/AkashPriyadars
+hii/jev-curate
+…</p>
+<ol start="19">
+<li>Canny
+防 Coding Agent 嘴硬说自己做完了。看工具输出、代码 diff 和测试结果，再判断完成声明靠不靠谱。</li>
+</ol>
+<p>https://
+github.com/qkal/Canny</p>
+<ol start="20">
+<li>killmyidea
+输入一个创业点子，Jev 从多个维度打分，最后给你 KILL、FIX 或 SHIP。</li>
+</ol>
+<p>https://
+github.com/monteduro/kill
+myidea
+…</p></div><a class="source" href="https://x.com/Pluvio9yte/status/2101831273224311035" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>
