@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="人人都是深度学习工程师：autoresearch如何改变训练方法论">
+  <title>人人都是深度学习工程师：autoresearch如何改变训练方法论 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">WquGuru @wquguru · 2026-03-31</div><div class="prose"><h1>人人都是深度学习工程师：autoresearch如何改变训练方法论</h1>
+<p>凌晨三点，你盯着 TensorBoard 上那条不肯下降的损失曲线，眼皮开始打架。你知道应该再试试调整学习率，或者改改模型架构，但大脑已经罢工了。你想：要是有人能替我盯着这些实验就好了。</p>
+<p>现在，这个“人”真的出现了。</p>
+<p>2026 年 3 月，Andrej Karpathy 在 GitHub 上扔出了一个叫 autoresearch 的项目。36 个 commit，三个核心文件，48 小时内 2 万颗星，现在已经 6 万了。这个项目干的事情很简单：你睡前给 AI 代理一个目标，比如“把验证损失降到最低”，然后去睡觉。第二天早上醒来，代理已经帮你跑完了一百个实验，试过你想都没想过的各种骚操作。</p>
+<h2>研究员的B面：只是个人肉计算机</h2>
+<p>说句实话，传统的深度学习训练流程有多蠢？</p>
+<p>你坐在电脑前，改一行代码，启动训练脚本，盯着屏幕等结果。损失降了？开心五秒钟，继续改。损失升了？骂一句，回滚代码，再试一遍。这个循环可能持续几天、几周，甚至几个月。你以为自己在做“研究”，但实际上你只是在充当一个执行器——一个会吃饭睡觉的执行器。</p>
+<p>autoresearch 的核心理念就是把这个角色交给 AI 代理。你负责提出问题和定义目标，代理负责执行和迭代。这听起来像是把工作外包出去了，但其实是把人类从低价值的重复劳动中解放出来，去做更有创造性的事情。</p>
+<p>想象一下：你睡前给代理一个任务，“在 5 分钟训练预算内，尽可能降低语言模型的验证损失”。然后你去睡觉。当你第二天早上醒来，代理已经完成了上百次实验——它改过 Transformer 的注意力机制，试过不同的优化器，调过学习率调度策略，甚至可能发明了一些你从没想过的架构变体。所有这些，都在你睡觉的时候自动完成。</p>
+<p>这就是 autoresearch 在做的事情：AI 代理接管了迭代实验的执行环节，持续自主优化模型。</p>
+<h2>三个文件，全新的方法论</h2>
+<p>autoresearch 的整个项目结构极其简洁，核心只有三个文件。这种极简设计不是为了炫技，而是深思熟虑的结果。</p>
+<p>prepare.py 是基础设施层，你运行一次就不用管了。它负责下载数据（默认是 HuggingFace 的 FineWeb-Edu 数据集，100M token），训练一个 BPE 分词器，然后提供 dataloader 和评估函数。这些东西存在 ~/.cache/autoresearch/ 目录下，成为所有实验共享的不可变资产。</p>
+<p>train.py 是代理的“实验沙盒”，也是唯一允许代理修改的文件。这个文件包含完整的训练流程：GPT 模型实现、优化器配置、训练循环、评估指标。代理可以修改这个文件中的任何内容——从模型层数、注意力头数量，到学习率调度、批量大小，甚至可以完全重写模型架构。但有一个硬约束：无论代理怎么改，每次实验都严格限定在 5 分钟 wall-clock 时间内。</p>
+<p>program.md 是人类与 AI 代理沟通的接口，用自然语言描述研究目标和工作流程。这个文件本质上是一个“超轻量级技能”，它指导代理如何进行自主研究。默认的 program.md 包含初始化阶段（创建实验分支、读取上下文文件）、实验循环（提出想法、修改代码、提交、运行、评估、保留或回滚），以及决策逻辑（从 Git 历史中学习、避免重复失败实验、平衡探索和利用）。</p>
+<p>这种设计体现了“约束带来聚焦”的思路。限制代理只能修改 train.py，避免了在无关紧要的地方浪费时间；同时 train.py 本身足够完整和灵活，代理可以在其中进行任何有意义的实验。</p>
+<p><img alt="Article image" src="/assets/2026-03-31-人人都是深度学习工程师：autoresearch如何改变训练方法论-f03a65577a/01.jpg"></p>
+<h2>棘轮式优化：只进不退的循环</h2>
+<p>autoresearch 的运行机制可以概括为一个“棘轮式”优化循环——只保留改进，丢弃退步，单向前进。</p>
+<p>流程是这样的：代理读取 program.md 和当前代码，提出一个实验假设，修改 train.py 实现这个假设，用 git commit 保存修改，运行 train.py（固定 5 分钟），评估 val_bpb（validation bits per byte，一个与词汇表大小无关的指标）。如果 val_bpb 降低了，说明改进了，保留这个 commit，更新基线；如果 val_bpb 上升了，说明退步了，git revert 回到上一个版本。然后回到步骤一，继续下一轮。</p>
+<p>这个循环的速度约为每小时 12 次实验，一夜之间可以完成约 100 次迭代。Git 在这里扮演了“记忆系统”的角色——每次实验都是一个 commit，代理可以查看分支历史来了解哪些策略有效，哪些已经尝试过但失败了。</p>
+<p>Karpathy 在自己已经精心调优的 nanochat 代码库上运行 autoresearch，一夜之间代理找到了 20 处改进。这些改进包括调整 Transformer 层数和注意力头配置、优化学习率调度策略、改进权重初始化方法、调整 dropout 和层归一化的位置、实验不同的激活函数。更重要的是，代理发现的一些改进是人类研究者可能不会想到的细节优化，因为它们需要大量的试错才能发现。这正是 AI 代理的优势——它不知疲倦，可以系统性地探索解决方案空间。</p>
+<p><img alt="Article image" src="/assets/2026-03-31-人人都是深度学习工程师：autoresearch如何改变训练方法论-f03a65577a/02.jpg"></p>
+<h2>超越超参数调优：代理工程的本质区别</h2>
+<p>很多人第一次听说 autoresearch 时，会觉得这和 Optuna、Ray Tune 这些超参数调优工具差不多。</p>
+<p>但两者有本质区别。autoresearch 中的 AI 代理可以修改任意代码。搜索空间不再由人类预先定义，而是取决于 LLM 的想象力和创造力。代理可能会重新设计注意力机制，尝试局部注意力或滑动窗口；可能会修改激活函数，从 ReLU 切换到 GELU 或 SwiGLU；可能会调整层归一化的位置，从 Post-LN 改为 Pre-LN；可能会实验不同的优化器，从 AdamW 切换到 Lion 或 Sophia；可能会改变学习率调度策略，尝试余弦退火或线性预热。</p>
+<p>此外，代理会从每次实验中学习。如果某个修改带来了改进，代理会保留它并在此基础上继续探索。如果结果变差，代理会回滚到之前的版本。这种“修改-评估-保留/回滚”的循环，正是人类研究者日常工作的自动化版本。</p>
+<p>这种新范式就是Agentic Engineering（或者换个更时髦的词，Harness Engineering，其实都是一样）。在这个新范式中，工程师不再直接编写 99% 的代码，而是编排代理并充当监督者。你的角色从执行者变成了战略制定者。</p>
+<h2>有哪些有趣有用的社区fork版本？</h2>
+<p>autoresearch 发布后，社区的反应速度非常快。短短几周内，数十个 fork 项目涌现，每个都在不同维度上扩展和改进原始设计。</p>
+<p>autoresearch-mlx 是社区最重要的贡献之一。原始 autoresearch 依赖 NVIDIA GPU（Karpathy 在 H100 上测试），这对很多开发者来说是一个门槛。autoresearch-mlx 将整个项目移植到 Apple 的 MLX 框架，完全移除了 PyTorch 和 CUDA 依赖。</p>
+<p>基准测试显示，在 M1 Pro 上单次 5 分钟运行可达 2.371 BPB，而在 M4 Max 上经过通宵迭代后可达到 1.295 BPB。虽然相比 H100 慢约 96 倍，但关键是它能正常工作。对于学习和原型验证来说，一台 MacBook 足以在 overnight 时间内完成约 100 次实验探索。</p>
+<p>autoresearch-at-home 更激进。如果说原始 autoresearch 模拟的是一个独立的博士生，那么 autoresearch-at-home 模拟的就是一个研究社区。这个 fork 实现了 Karpathy 设想的 SETI @home 式协作研究模式——多个运行在不同 GPU 上的代理通过共享空间同步结果，避免重复工作，集体推动 val_bpb 下降。</p>
+<p>autoresearch-anything 将 autoresearch 的理念推向极致——它不再局限于 ML 训练，而是泛化到任何可度量的指标。只要你能定义清晰的评估指标和固定的时间预算，AI 代理就能自主探索解决方案空间。</p>
+<p>应用场景包括：系统提示词优化（让代理自动迭代和改进 LLM 的系统提示，以提高输出质量）、API 性能调优（自动调整 API 配置参数，优化响应时间和吞吐量）、Landing page 测试（自动修改网页元素，通过 A/B 测试优化转化率）、SQL 查询优化（自动重写查询语句，降低执行时间）。</p>
+<p>除了 MLX 移植，社区还推出了针对各种硬件平台的适配版本：jsegov/autoresearch-win-rtx（针对 Windows RTX 显卡优化）、andyluo7/autoresearch（支持 AMD GPU）、miolini/autoresearch-macos（专为 macOS MPS 后端设计）。这些 fork 确保了无论使用什么硬件，开发者都能参与 AI 自主研究。</p>
+<h2>人人都是深度学习工程师</h2>
+<p>autoresearch 最重要的价值在于它对未来的预示。</p>
+<p>当 AI 代理可以自主进行研究，当一台 MacBook 就能运行通宵的实验，当全球的计算资源可以协作优化同一个目标——深度学习的门槛正在降低。</p>
+<p>你不需要博士学位，不需要昂贵的 GPU 集群，甚至不需要深入理解每一个技术细节。你只需要有好的问题、清晰的目标，以及一台能运行代码的电脑。AI 代理会帮你完成剩下的工作。</p>
+<p>这就是 Karpathy 用 autoresearch 传递的信息：在 AI 时代，人人都可以是深度学习工程师。不是因为每个人都掌握了所有技术细节，而是因为 AI 降低了参与的门槛，让创造力和好奇心成为唯一的限制。</p>
+<p>当年 Karpathy 喊出“Vibe Coding 吞噬世界”时，很多人觉得这只是一个口号。但今天，当我们看到 autoresearch 及其数十个 fork 在全球开发者的机器上运行，我们意识到——这个未来已经到来。</p>
+<p>睡一觉，AI 帮你跑了一百个实验。这个场景已经在真实发生。</p></div><a class="source" href="https://x.com/wquguru/status/2038266751881015768" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>
