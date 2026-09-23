@@ -124,5 +124,11 @@
     "title": "Portal by Spotify cut my Claude Code token usage by 90%",
     "source": "iphone_shortcut",
     "chars": 9930
+  },
+  {
+    "url": "https://claude.dev/blog/how-we-made-claude-ai-faster",
+    "title": "How we made claude.ai 3x faster in two weeks",
+    "source": "iphone_shortcut",
+    "chars": 28300
   }
 ]
