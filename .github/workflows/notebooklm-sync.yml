@@ -25,8 +25,6 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    env:
-      NOTEBOOKLM_HOME: ${{ runner.temp }}/notebooklm
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -53,7 +51,8 @@ jobs:
           NOTEBOOKLM_STORAGE_STATE: ${{ secrets.NOTEBOOKLM_STORAGE_STATE }}
           NOTEBOOKLM_MASTER_TOKEN: ${{ secrets.NOTEBOOKLM_MASTER_TOKEN }}
         run: |
-          profile="$NOTEBOOKLM_HOME/profiles/default"
+          echo "NOTEBOOKLM_HOME=$RUNNER_TEMP/notebooklm" >> "$GITHUB_ENV"
+          profile="$RUNNER_TEMP/notebooklm/profiles/default"
           mkdir -p "$profile"
           printf '%s' "$NOTEBOOKLM_STORAGE_STATE" > "$profile/storage_state.json"
           printf '%s' "$NOTEBOOKLM_MASTER_TOKEN" > "$profile/master_token.json"
