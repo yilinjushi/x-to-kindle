@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="i made 10+ motion videos with opus 5.5 in 3 days. here&#x27;s the whole pipeline (open source)">
+  <title>i made 10+ motion videos with opus 5.5 in 3 days. here&#x27;s the whole pipeline (open source) · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Raphael aubry @RaphaelAubryy · 2026-09-28</div><div class="prose"><h1>i made 10+ motion videos with opus 5.5 in 3 days. here&#x27;s the whole pipeline (open source)</h1>
+<p>Most people trying motion design with Opus 5.5 hit the same wall:</p>
+<p>↳ the first render is &quot;mid&quot;: centered text, a gradient, everything fading in</p>
+<p>↳ the music and the picture live separate lives</p>
+<p>↳ one fix breaks three other scenes</p>
+<p>↳ the caption says &quot;one prompt&quot;, their prompt gets them nowhere near it</p>
+<p>I spent the last 3 days making motion videos with Opus 5.5 in Claude Code. A 60-second voiced ad, an Apple-keynote film, a food-app launch, a baguette launched like an iPhone, a K-pop paper-zine remake, a showreel, and the launch video for my own SaaS.</p>
+<p>Here&#x27;s what I learned: the prompt is maybe 10% of the video. The other 90% is the harness around it.</p>
+<p>So I packaged the harness as a Claude Code skill and open-sourced it: github.com/howseen-ai/claude-motion-design</p>
+<p>This article is the whole pipeline, with the real numbers, the real code and the mistakes.</p>
+<h2>Full disclosure first</h2>
+<p>↳ &quot;One prompt&quot; is half true. Some of my videos came out usable on the first render. The launch video for my SaaS took 5 versions. The Crave remake took a few fixes after the stills.</p>
+<p>↳ Every number in this article is from my own renders and my own posts.</p>
+<p>↳ Nothing here uses After Effects, Remotion, a video model or a paid tool. Chromium, ffmpeg, Python, free music and free SFX.</p>
+<h2>1. Opus doesn&#x27;t make videos. It writes a program that paints frames.</h2>
+<p>Opus 5.5 outputs text. It can&#x27;t emit an MP4. Every video in this trend is code that something else turns into frames.</p>
+<p>The trick is one function: seek(t). Give it a time, it paints the exact frame for that moment. No timers, no CSS transitions, no state carried between frames.</p>
+<p>window.seek = async (t) =&gt; {
+  // every style is computed from t, nothing else
+  const u = P(t, 2.0, 0.5, E.inOut);         // eased progress of a move
+  box(card, 70, lerp(620, 420, u), 940, 440); // position = pure function of t
+  rise(title, t, 2.1);                         // masked word-by-word rise
+  return true;
+};</p>
+<p>A headless browser calls it for every frame, takes a screenshot, and ffmpeg stitches them. Same input, same frames, every time. A fix is a one-line edit plus a re-render of the seconds that changed.</p>
+<h2>2. The flow that stopped the &quot;mid&quot; first renders</h2>
+<p>The one-liner gets you a clip. A flow gets you a film. Mine is always the same, in this order:</p>
+<ol>
+<li>
+<p>Inputs: brand, photos, song, format. If the brief lists them, ask for them.</p>
+</li>
+<li>
+<p>Beat map: every scene starts on a beat, and the music drop lands on the key visual moment.</p>
+</li>
+<li>
+<p>4 stills, reviewed before anything else.</p>
+</li>
+<li>
+<p>Full render, then a frame-by-frame check, then audio.</p>
+</li>
+</ol>
+<p>Step 3 saved me hours. On the Crave remake, the stills showed the message text going blurry during the send animation. Fixed in 2 minutes on a still. Found on a full render, that&#x27;s a 10-minute re-render for nothing.</p>
+<p>Here&#x27;s the one I&#x27;m proudest of. A baguette, launched like a new Apple product. Same flow, white background, classical music, real crunch sounds.</p>
+<p>https://x.com/RaphaelAubryy/status/2104178266990858739</p>
+<h2>3. Springs: why some motion looks expensive</h2>
+<p>Cheap motion goes from A to B on a fixed curve. Expensive motion has mass: it accelerates, overshoots a hair, settles.</p>
+<p>The catch: it has to stay a pure function of time. So no physics simulation. A closed-form spring:</p>
+<p>function step(tau, f = 3, z = 0.6) {         // damped spring, 0 -&gt; 1
+  if (tau &lt;= 0) return 0;
+  const w = 2 * Math.PI * f, wd = w * Math.sqrt(1 - z * z);
+  return 1 - Math.exp(-z * w * tau) * (Math.cos(wd * tau) + (z * w / wd) * Math.sin(wd * tau));
+}</p>
+<p>// a value that changes target several times = one spring per change, summed
+function S(t, base, changes, f, z) {
+  let v = base, prev = base;
+  for (const [t0, to] of changes) { v += (to - prev) * step(t - t0, f, z); prev = to; }
+  return v;
+}</p>
+<p>You can render frame 812 without simulating frames 0 to 811. That&#x27;s what makes a 60 fps render deterministic.</p>
+<h2>4. Motion blur for free: render more frames than you keep</h2>
+<p>The render step that makes it look like a real film:</p>
+<h1>8 subframes per output frame, averaged by ffmpeg, then keep 1 in 8</h1>
+<p>ffmpeg -framerate 480 -i sub/s_%05d.jpg \
+  -vf &quot;tmix=frames=8,select=&#x27;eq(mod(n\,8)\,7)&#x27;,setpts=N/60/TB&quot; \
+  -r 60 -c:v libx264 -crf 14 -pix_fmt yuv420p out/video.mp4</p>
+<p>The real cost: about 1 to 1.5 minutes of rendering per second of film at 8 subframes. My 15-second Crave remake is 886 frames, so 7,088 screenshots. Run it in the background and go do something else.</p>
+<p>4 subframes is faster but leaves ghost copies on fast moves. I learned that on the first launch film.</p>
+<h2>5. Sound is where &quot;AI video&quot; starts feeling like a film</h2>
+<p>This is the part most posts skip, and it&#x27;s where I spent the most time.</p>
+<p>Never trust an automatic beat grid. On one of my tracks, the detected bar was 2 beats off. The drop landed on nothing. Now I find the drop by energy: measure the bass band bar by bar, find the jump, then zoom to 20 ms windows.</p>
+<p>for t in np.arange(drop - 0.3, drop + 0.3, 0.02):
+    seg = lowpassed[int(t * SR):int((t + 0.02) * SR)]
+    print(f&quot;{t:6.2f}&quot;, 10 * np.log10((seg ** 2).mean() + 1e-12))</p>
+<h1>the jump is your drop. start the song at: drop_in_song - drop_in_film</h1>
+<p>Then every sound effect goes on its measured peak, not on the start of the file:</p>
+<p>s = sfx / np.abs(sfx).max() * gain
+start = int(t * SR) - int(np.abs(s).sum(1).argmax())   # the peak lands exactly on t
+mix[start:start + len(s)] += s</p>
+<p>Two-pass loudnorm to -14 LUFS at the end, because that&#x27;s what X and LinkedIn normalize to anyway.</p>
+<p>On the baguette film, the four crunches are real recordings cut from one &quot;biting crunchy food&quot; file, each placed on its peak. That&#x27;s the detail people commented on.</p>
+<h2>6. Start from something real</h2>
+<p>Opus defaults to its own taste when you give it nothing. The fix is a reference.</p>
+<p>My first viral one wasn&#x27;t original at all. I remade the first 35 seconds of a music video as a paper-zine K-pop comeback, every lyric a cut-paper ransom note stamped on the beat. Built on an open-source starter kit, 0 video model, just JavaScript.</p>
+<p>https://x.com/RaphaelAubryy/status/2103500173909356632</p>
+<p>What worked: take the grammar of the reference (pacing, type, transitions), never its content.</p>
+<h2>7. Point it at your product</h2>
+<p>This is the part that pays.</p>
+<p>I used the same pipeline for the launch video of my own SaaS, Howseen (howseen.ai). It tracks whether ChatGPT, Gemini and Perplexity recommend your brand, so the video had to explain that in 24 seconds: buyers ask AI, your prompts run on 5 engines, the answers come back, your score, your sources, the article that fixes the gap.</p>
+<p>https://x.com/RaphaelAubryy/status/2104300246268571733</p>
+<p>Two rules I&#x27;d never break again:</p>
+<p>↳ Real data or a label. Anything illustrative on screen says &quot;Example data&quot;. One fake number spotted in the replies kills the whole video.</p>
+<p>↳ Real integrations only. My first draft showed 9 CMS logos as &quot;native&quot;. Only 4 are. The final version says &quot;Native: WordPress, Shopify, Ghost, BigCommerce. Anything else via webhook.&quot;</p>
+<p>And the iteration was real: v1 was too static, v2 didn&#x27;t explain the product, v3 added animated beams, v4 better prompts and colour logos, v5 a faster track and beat-synced camera punches. 5 versions, each one a few minutes of feedback.</p>
+<h2>8. Make it watch its own frames</h2>
+<p>Opus reads images. That&#x27;s the single habit that separates the clips that go viral from the ones posted with &quot;it&#x27;s a bit mid&quot;.</p>
+<p>Render a contact sheet (2 frames per second), a strip of 12 frames around
+each fast move, and a phone-size sheet at 360 px wide. Look at them properly.
+Be a harsh motion director, not a proud author.</p>
+<p>Score 1-10: hook in the first 2s, readability at phone size, motion quality,
+variety (something new every 2-4s), composition, data accuracy, sound sync.
+List the 3 biggest problems with timestamps. Fix them. Re-render only the
+affected seconds. Repeat until every score is 8+.</p>
+<p>Things it caught for me: letters overlapping in an intro, a headline clipped by a blob, question chips stacked on top of each other, text blurring during a handoff, a flood so fast it read as a flash.</p>
+<h2>9. The mistakes I expect you to make first</h2>
+<p>↳ trusting &quot;one prompt&quot; and quitting after the first render</p>
+<p>↳ skipping the stills and paying for it in re-renders</p>
+<p>↳ letting an auto beat grid decide where the drop is</p>
+<p>↳ 4 subframes on fast moves (ghosting)</p>
+<p>↳ captions that aren&#x27;t true (&quot;made in 10 minutes&quot;) when the replies can check</p>
+<h2>The honest caveats</h2>
+<p>A few things worth saying before the replies do.</p>
+<p>↳ It&#x27;s not free of effort. It&#x27;s free of software. You still direct.</p>
+<p>↳ The videos still &quot;look AI&quot; when you don&#x27;t give a reference or a real product.</p>
+<p>↳ Rendering is slow. Plan for it.</p>
+<p>↳ I&#x27;ve done 3 days of this, not 3 years of motion design. A great motion designer with this pipeline will beat me easily. That&#x27;s the point.</p>
+<h2>Grab the skill</h2>
+<p>Everything above is in the repo, packaged as a Claude Code skill: the flow, the engine rules, the render and audio scripts, the critique loop, free asset sources, and the full source of my launch video as an example.</p>
+<p>github.com/howseen-ai/claude-motion-design</p>
+<p>Copy the folder into ~/.claude/skills/, ask Claude Code for a video, and it runs the whole pipeline.</p>
+<h2>The takeaway</h2>
+<p>The one-liner gets you a clip. The harness gets you a film.</p>
+<p>Beat map first, stills before renders, springs instead of curves, sound on measured peaks, and make it watch its own frames until every score is 8.</p>
+<p>And if you make something with it, tag me. I want to see it.</p>
+<p>PS: I built all of this while building Howseen. If you want to know whether ChatGPT recommends your brand or your competitor, the scan is free: howseen.ai</p></div><a class="source" href="https://x.com/RaphaelAubryy/status/2104502744010629269" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

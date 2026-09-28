@@ -1,0 +1,921 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="How to build motion design studio with Opus 5.5 ( Full-course )">
+  <title>How to build motion design studio with Opus 5.5 ( Full-course ) · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Movez @0xMovez · 2026-09-28</div><div class="prose"><h1>How to build motion design studio with Opus 5.5 ( Full-course )</h1>
+<p>Most people who try motion design with Opus 5.5 end up with the same video: centered text on a gradient, everything fading in, a logo at the end.</p>
+<p>They don&#x27;t give it a reference, don&#x27;t give it a render engine, don&#x27;t ask it to look at its own frames.</p>
+<p>This is the 12-step course that turns that mess into a repeatable studio pipeline. The prompt is 10% of the video. The other 90% is the harness.</p>
+<p>Follow my Substack to get fresh AI alpha: movez.substack.com</p>
+<p>Claude
+@claudeai
+·
+Sep 22
+Introducing Claude Opus 5.5, the first model in our new Claude 5.5 family.</p>
+<p>It performs at the level of Claude Fable 5.1 for most tasks, and costs 40% less to run than Opus 5.
+3.3K
+15K
+96K
+27M</p>
+<p>On September 22, 2026 Anthropic shipped Claude Opus 5.5.</p>
+<p>Within hours the timeline filled with showreels, launch videos, music videos and five-minute history films, all of them rendered from code.</p>
+<p>Captions said &quot;one prompt&quot;. Replies said &quot;motion designers are cooked&quot;.</p>
+<p>Both are half true. Some clips really came from a 30-word prompt. </p>
+<p>Others came from a 9,500-character director&#x27;s brief, a folder of skills, two API keys and a 12-hour autonomous run.</p>
+<p>Thariq from the Claude Code team summed up the gap in one line: the post says one-shot, the prompt is 10k characters with skills, examples, keys.</p>
+<p>Thariq
+@trq212
+·
+Sep 23
+the post: &quot;Claude one-shot this&quot;</p>
+<p>the prompt: 10k characters with good takes plus skills, examples and API keys
+Quote
+donald
+@donaldjewkes
+·
+Sep 23
+Replying to @donaldjewkes
+I&#x27;ve included an MP4 file and an original link to a video that is called &quot;Claude Pop.&quot; It&#x27;s a pop song that is about increasing rate of progress and the experience of the singularity approaching.</p>
+<p>I want you to independently do an end-to-end complete pass on making an updated x.com/other__reality…
+75
+55
+2.2K
+259K</p>
+<p>This course shows you both ends and everything in between.</p>
+<p>You&#x27;ll read every one of the 9 posts that defined the trend, copy the prompt pattern each one used, and then build the engine yourself.</p>
+<p>![Article image](/assets/2026-09-28-how-to-build-motion-design-studio-with-opus-5.5-(-full-cours-8affdd7aef/01.png)</p>
+<p>A seek(t) renderer, closed-form springs, a beat grid, synthesized sound, and a critique loop that makes Opus fix its own frames.</p>
+<ul>
+<li>Part 1 ·  What is actually happening</li>
+</ul>
+<h2>01. Pixels - model writes a program, not a video</h2>
+<p>Opus 5.5 takes text and images in and puts text out. It cannot emit an MP4. Every video in this trend is a program that Opus wrote, and something else turned that program into frames.</p>
+<p>The core trick is determinism. Opus writes a single function, draw(t) or seek(t), that paints the exact frame for any moment in time.</p>
+<p>A headless browser calls it 900 times for 15 seconds at 60 fps, screenshots each frame, and ffmpeg stitches them.</p>
+<p>Nothing depends on a timer, so the render is identical every run and a change is a one-line edit plus a re-render.</p>
+<p>![Article image](/assets/2026-09-28-how-to-build-motion-design-studio-with-opus-5.5-(-full-cours-8affdd7aef/02.png)</p>
+<p>Tommy Rossi dug into the one-shot output and found Opus prefers route A with zero dependencies: one index.html, a seek function called through eval, Playwright capturing frame by frame, ffmpeg encoding.</p>
+<p>![Article image](/assets/2026-09-28-how-to-build-motion-design-studio-with-opus-5.5-(-full-cours-8affdd7aef/03.png)</p>
+<p>It skipped Remotion and HyperFrames even when available. If you want a framework, say so explicitly.</p>
+<p>Tommy D. Rossi
+@__morse
+·
+Sep 25
+tried using the same prompt and asked to make the video more colorful. opus 5.5 is really amazing</p>
+<p>one shot, it put all the code in a single index.html file and rendered it using playwright frame by frame in a headless window, then ffmpeg to generate the mp4. it used a seek
+Show more
+Quote
+zero
+@twoclipping
+·
+Sep 24
+0:14
+opus 5.5 is f*cking cracked at motion design</p>
+<p>this entire video is code, 0 after effects</p>
+<p>im open sourcing the prompt template for these motion designs</p>
+<p>steal it to recreate these ↓</p>
+<p>&lt;inputs&gt;
+Ask me for: 8 to 12 UI states I want the shape to become (e.g. button, loader, player,
+6
+9
+195
+23K</p>
+<p>![Article image](/assets/2026-09-28-how-to-build-motion-design-studio-with-opus-5.5-(-full-cours-8affdd7aef/04.jpg)</p>
+<h2>02. Setup - install the studio in 10 minutes</h2>
+<p>The chat app can write an animation, but only Claude Code (or any agent with a shell) can render it, listen to it and look at its own frames.</p>
+<p>That feedback loop is the whole difference between the &quot;mid&quot; first try people complain about and the viral ones.</p>
+<p>python</p>
+<h1>1. Runtime: Node 22+, ffmpeg, Python for audio analysis</h1>
+<p>brew install node ffmpeg python          # macOS; apt install on Linux
+pip install numpy librosa soundfile</p>
+<h1>2. A clean project and a headless browser</h1>
+<p>mkdir motion-studio &amp;&amp; cd motion-studio &amp;&amp; npm init -y
+npm i -D playwright &amp;&amp; npx playwright install chromium</p>
+<h1>3. Framework skills (optional, route B)</h1>
+<p>npx skills add remotion-dev/skills       # /remotion-create, /remotion-render ...
+npx skills add heygen-com/hyperframes    # /hyperframes router + GSAP skills</p>
+<h1>4. Hand-drawn look (optional): Node canvas rigs, pens, synthesized sound</h1>
+<p>claude plugin marketplace add buildwithhanif/claude-animation-skill
+claude plugin install claude-animation@claude-animation-skill</p>
+<h1>5. Start Claude Code on Opus 5.5 at high effort</h1>
+<p>claude --model claude-opus-5-5
+&gt; /model   # pick Opus 5.5, then set effort to xhigh for one-shots, max for flagship pieces</p>
+<p>Then drop a house-rules file in the project root. Claude Code reads CLAUDE.md on every run, so these rules apply to every video you make here without repeating them.</p>
+<p>python</p>
+<h1>Motion studio rules</h1>
+<h2>Render contract</h2>
+<ul>
+<li>Every film is a pure function of time: <code>window.seek(t)</code> paints frame t.</li>
+<li>No CSS transitions, no setTimeout, no requestAnimationFrame in render mode,
+  no state carried between frames. Seeded noise only (mulberry32), never Math.random.</li>
+<li>Render with <code>node render.mjs</code>, encode H.264 yuv420p, CRF 16.</li>
+</ul>
+<h2>Look</h2>
+<ul>
+<li>Banned defaults: centered title on gradient, everything fading in,
+  corner labels and frame borders, glow on UI chrome, generic particle bursts.</li>
+<li>One display face, one UI face. One accent color unless the brief says otherwise.</li>
+<li>Every 2 to 4 seconds something new must happen on screen.</li>
+</ul>
+<h2>Sound</h2>
+<ul>
+<li>Score and SFX are synthesized in code unless a track is supplied.</li>
+<li>Place hits on the measured beat grid (beats.json). Loudness -14 LUFS.</li>
+</ul>
+<h2>Loop before you show me anything</h2>
+<ol>
+<li>Render one frame per beat as a contact sheet and LOOK at it.</li>
+<li>Score it 1-10 on: hook in first 2s, readability at phone size,
+   motion quality, variety, brand accuracy, sound sync.</li>
+<li>Fix the 3 worst problems. Repeat until every score is 8+.</li>
+<li>Only then do the full render.</li>
+</ol>
+<p>Opus 5.5 defaults to medium effort and always thinks before answering. Every viral one-shot in the list ran on xhigh or max.</p>
+<p>Use medium for small fixes and re-renders, xhigh for new films, max when the first 3 seconds have to carry a launch.</p>
+<ul>
+<li>Part 2 · Prompting like a director</li>
+</ul>
+<h2>03. One-liner - showreel prompt and why it works</h2>
+<p>Four of the nine posts used the same sentence. It&#x27;s worth understanding why a single line produced 15 seconds of camera moves, kinetic type and audio.</p>
+<p>python
+make a dynamic 15-second motion graphics video that shows what an 
+incredible motion designer you are, like it&#x27;s your showreel for a résumé. 
+go all out.</p>
+<ul>
+<li>
+<p>&quot;showreel for a résumé&quot; sets a genre with known rules: fast cuts, a new technique every shot, the best work first. Opus already knows what a reel looks like.</p>
+</li>
+<li>
+<p>&quot;what an incredible motion designer you are&quot; makes the model the subject, so it shows techniques instead of explaining a product. No content to get wrong.</p>
+</li>
+<li>
+<p>&quot;15-second&quot; is short enough to finish in one pass and long enough for 6 to 8 shots.</p>
+</li>
+<li>
+<p>&quot;go all out&quot; works as an effort multiplier on top of xhigh or max.</p>
+</li>
+</ul>
+<p>![Article image](/assets/2026-09-28-how-to-build-motion-design-studio-with-opus-5.5-(-full-cours-8affdd7aef/05.png)</p>
+<p>The original 15-second résumé reel on Max effort. The source of the prompt. Put it directly under the anatomy diagram.</p>
+<p>Stephan Livera
+@stephanlivera
+·
+Sep 25
+Opus 5.5 on Max effort - &quot;make a dynamic 15-second motion graphics video that shows what an incredible motion designer you are, like it&#x27;s your showreel for a résumé. go all out.&quot;
+353
+832
+16K
+1.9M</p>
+<p>Same prompt on xhigh, one-shot including audio. Shows xhigh is enough, and that the sound was not added in post.</p>
+<p>Rob Hallam
+@robj3d3
+·
+Sep 26
+I didn&#x27;t believe it but this was actually one-shot.</p>
+<p>Opus 5.5 on xhigh effort: &quot;make a dynamic 15-second motion graphics video that shows what an incredible motion designer you are, like it&#x27;s your showreel for a résumé. go all out.&quot;
+Quote
+Stephan Livera
+@stephanlivera
+·
+Sep 25
+0:15
+Opus 5.5 on Max effort - &quot;make a dynamic 15-second motion graphics video that shows what an incredible motion designer you are, like it&#x27;s your showreel for a résumé. go all out.&quot;
+125
+55
+768
+126K</p>
+<p>![Article image](/assets/2026-09-28-how-to-build-motion-design-studio-with-opus-5.5-(-full-cours-8affdd7aef/06.jpg)</p>
+<p>The weakness: the athemeroy dataset calls it &quot;brief contagion&quot;. Hundreds of identical prompts produced reels that rhyme with each other. Use it to test your setup, then move on. Variants that shipped and worked:</p>
+<p>python</p>
+<h1>Longer, with a sound bar (pattern from @kloss_xyz&#x27;s 90-second piano reel)</h1>
+<p>make a dynamic 16:9, 60-second motion graphics showreel that shows your real creative limits.
+S-tier sound design, no generic synth pads. Compose an original piano score and sync every
+cut to it. Export 1080p MP4.</p>
+<h1>Anti-slop guardrail (pattern from @1littlecoder)</h1>
+<p>make a dynamic 10-second motion graphics video that introduces who you are as Opus 5.5.
+Avoid frames and text in the corners, the usual giveaways of AI-made video.</p>
+<h1>Story instead of techniques (pattern from @sonnylazuardi)</h1>
+<p>use your showreel energy, but tell a story: the history of [TOPIC] from [START] to today,
+surprise me with the storyboard. 45 seconds, vertical 9:16.</p>
+<h1>Agency persona</h1>
+<p>make a 30-second showreel as if you were a niche branding studio for startup founders.
+Create every graphic from scratch. One accent color. Every shot is a different technique.</p>
+<p>Himanshu
+@himanshutwtxs
+·
+Sep 25
+This is INSANE!!  </p>
+<p>Opus 5.5 on MAX, motion designing in one prompt (sound ON)</p>
+<p>prompt- &#x27;make a dynamic 15-second motion graphics video that shows what an incredible motion designer you are, like it&#x27;s your showreel for a résumé. go all out&#x27;
+74
+80
+1.4K
+276K</p>
+<p>A one-liner tests the engine. It never tests the idea, because it doesn&#x27;t contain one.</p>
+<h2>04. Brand - point the reel at your product</h2>
+<p>Tony Dinh&#x27;s post is the most useful for anyone selling something. He paid over $1,000 for a similar launch video a year ago; this took under 30 minutes.</p>
+<p>Three extra lines did it: the product URL, &quot;use actual product screenshot, logo, assets&quot;, and &quot;must have music&quot;. Opus went to the site and gathered the assets itself.</p>
+<p>Rob Hallam proved the second half: after his first reel, he asked for a product ad in the same chat, and it came out faster because the renderer, audio synth and export pipeline already existed.</p>
+<p>Keep one session per brand.</p>
+<p>python
+Make a dynamic 20-second motion graphics video for [PRODUCT] ([URL]), with the energy
+of a motion designer&#x27;s showreel. Go all out.</p>
+<p>Assets
+- Visit the site. Use real screenshots (Playwright), the real logo, real colors and fonts.
+  Save everything to ./assets and list what you found before you animate.
+- Never redraw the product UI from imagination. Crop and animate the real thing.</p>
+<p>Story (one beat each, 2 to 4 seconds)
+1. Hook: the problem in 5 words of huge kinetic type.
+2. The product appears, the UI assembles itself piece by piece.
+3. Three features, each as a UI moment with a cursor doing a real action.
+4. One number that proves it works: [METRIC].
+5. Logo lockup + [CTA].</p>
+<p>Sound
+- Original music, 120 BPM, synthesized in code. UI clicks and whooshes on the beat.</p>
+<p>Format: 1080x1920 (9:16) first, then 1:1 and 16:9 from the same timeline.
+Before the full render, show me a contact sheet of one frame per beat.</p>
+<ul>
+<li>Shows: TypingMind reel in under 30 minutes, replacing a $1,000+ agency video. Full prompt is in the second reply.</li>
+</ul>
+<p>Tony Dinh
+@tdinh_me
+·
+Sep 26
+Holy shit.</p>
+<p>Just 1 year ago, I paid ~$1,000+ for a video like this.</p>
+<p>Now I made this with Opus 5.5 in less than 30 minutes 
+89
+40
+957
+187K</p>
+<ul>
+<li>
+<p>Why here: Place under the brand prompt so readers can compare his 3 extra lines with the template.</p>
+</li>
+<li>
+<p>Shows: Pocketsflow reel with a talking character voiced through ElevenLabs.</p>
+</li>
+</ul>
+<p>Chain
+@achxvi
+·
+Sep 26
+Opus 5.5 did this in 15 minutes</p>
+<p>This is INSANE 
+248
+465
+8.3K
+823K</p>
+<ul>
+<li>Why here: Illustrates the voice + mascot upgrade in the next paragraph.</li>
+</ul>
+<p>achxvi took the same idea further with a talking character: the Pocketsflow version passed an ElevenLabs key and asked for a character who explains the product. Voice plus mascot is what he now sells as a service.</p>
+<p>Put API keys in .env and write &quot;the ElevenLabs key is ELEVENLABS_API_KEY in .env&quot;. Never paste a real key into a prompt you&#x27;ll screenshot. achxvi&#x27;s public prompt used a joke placeholder for exactly this reason.</p>
+<h2>05. Reference - name a look, feed a frame</h2>
+<p>Without a reference, Opus falls back to its default: centered text, gradient background, everything fading in.</p>
+<p>Rexan Wong went through dozens of viral clips and found the same thing: naming a style beats describing one, and a reference video or frame gives the model pacing, type and transitions to copy.</p>
+<p>Pleometric&#x27;s two posts show the ladder. The pure-code TikTok piece started from a single frame of another viral animation.</p>
+<p>The Donald-style piece pointed Opus at his own PC-98 image gallery. Your own library is a reference nobody else can copy.</p>
+<ul>
+<li>
+<p>A frame: screenshot one frame of a video you love, attach it, say what to take (palette, type, grain) and what not to take (subject).</p>
+</li>
+<li>
+<p>A video: give Opus the file or link and ask it to extract frames with ffmpeg and describe pacing shot by shot before writing code.</p>
+</li>
+<li>
+<p>A library: a folder of your images or past work. Ask Opus to write a style_guide.md from it first.</p>
+</li>
+<li>
+<p>Sources: whatships.com (launch videos), Dribbble motion, your competitors&#x27; launch films.</p>
+</li>
+</ul>
+<p>![Article image](/assets/2026-09-28-how-to-build-motion-design-studio-with-opus-5.5-(-full-cours-8affdd7aef/07.png)</p>
+<p>python
+Reference: ./refs/launch.mp4 (and ./refs/frames/*.png)</p>
+<ol>
+<li>Extract one frame every 0.5s with ffmpeg. Study them.</li>
+<li>Write ./docs/style_guide.md: palette (hex), type (family, weight, tracking),
+   shot lengths, transition types, camera moves, texture/grain, how text enters and exits.</li>
+<li>Write ./docs/shotlist.md for a [DURATION]s video about [SUBJECT] in THAT style.
+   Take the grammar of the reference, never its content, logos or characters.</li>
+<li>Show me both files. Wait for my OK before any code.</li>
+</ol>
+<p>Pleometric suggested p5.js and Opus chose to write its own paper renderer. When you give a reference, let the model pick the technique.</p>
+<p>Specify the look and the constraints, not the library, unless you need a specific framework for reuse.</p>
+<p>Shows: Why most &quot;one prompt&quot; videos look the same, and the reference + framework + components fix.</p>
+<p>Rexan Wong
+@rexan_wong
+·
+Sep 26
+everyone&#x27;s sharing motion graphic videos that Opus 5.5 made, and it&#x27;s genuinely insane</p>
+<p>everyone says they created it with &quot;one prompt&quot;, but my one prompt video looked mid</p>
+<p>so i went through a bunch of these videos to see how they were actually made, and found the workflow that
+Show more
+134
+596
+6.6K
+588K</p>
+<p>&quot;Its TikTok feed&quot; animation, pure code, started from one frame of another viral piece. The single-frame reference in action.</p>
+<p>Pleometric
+@pleometric
+·
+Sep 23
+I asked Opus 5.5 to make an animation of what its TikTok feed looked like 
+102
+273
+3.7K
+406K</p>
+<h2>06. Spec  - write the state list, not the vibe</h2>
+<p>The most-bookmarked prompt of the week wasn&#x27;t a one-liner.</p>
+<p>@twoclipping&#x27;s UI morph (907K views, 19K bookmarks) and @verbove&#x27;s MakerMap film both used an XML spec: inputs to ask for, direction, a beat-by-beat state list, build rules, and gotchas. NFT_Chen&#x27;s editor film is the same idea as a story: a fake UI is a set where every element has a known state.</p>
+<p>![Article image](/assets/2026-09-28-how-to-build-motion-design-studio-with-opus-5.5-(-full-cours-8affdd7aef/08.png)</p>
+<p>The concept behind them: one shape, never cut. A single element morphs size, radius and color from state to state (button, loader, player, slider, chart, command palette), a cursor drives each change with real clicks, and the last frame equals the first so it loops.</p>
+<p>Here is my own template built on that structure; the originals are linked in the resources.</p>
+<p>python
+&lt;inputs&gt;
+Ask me for: my product + URL, 8 to 12 UI states that tell its story, the real data shown in
+each state, brand colors + fonts + one accent, a royalty-free track near 120 BPM, formats.
+&lt;/inputs&gt;</p>
+<p>&lt;direction&gt;
+Product-film UI motion. One container never cuts: every state is the same element changing
+size, radius and fill while its content swaps behind a short blur. A cursor drives every change.
+Warm neutral canvas, one accent. Springs with at most a tiny overshoot.
+Banned: bouncy easing, glows, gradients on UI chrome, particle bursts, dead time.
+&lt;/direction&gt;</p>
+<p>&lt;structure&gt;
+120 BPM, 8 bars, something happens on every beat.
+logo → CTA button → email field (typed) → loader → success check → dashboard card
+→ chart draws itself → tooltip on hover → ⌘K palette → toast → logo.
+&lt;/structure&gt;</p>
+<p>&lt;build&gt;
+1. One HTML file, one canvas, window.seek(t). No CSS transitions, no timers, no carried state.
+2. Closed-form springs. A value with many targets = sum of one spring per change.
+3. Text inside a morphing container enters after the morph starts, leaves before the next one.
+4. Tab indicators: leading and trailing edges on different springs so they stretch.
+5. Beat grid from the track (numpy/librosa). Start on a downbeat. UI sounds on measured peaks.
+6. Render in headless Chrome at 60 fps, 4 subframes per frame, blended for motion blur.
+&lt;/build&gt;</p>
+<p>&lt;gotchas&gt;
+Never use will-change on anything the camera scales (blurry text).
+The last frame must equal the first, cursor position and velocity included.
+&lt;/gotchas&gt;</p>
+<p>&lt;start&gt;
+Ask for the inputs, then show me the state list on the beat grid before writing code.
+&lt;/start&gt;</p>
+<p>![Article image](/assets/2026-09-28-how-to-build-motion-design-studio-with-opus-5.5-(-full-cours-8affdd7aef/09.png)</p>
+<p>The UI morph loop (907K views) with the open-sourced XML template in the thread. The original of the spec pattern. Put it right after Fig 2.</p>
+<p>zero
+@twoclipping
+·
+Sep 24
+opus 5.5 is f*cking cracked at motion design</p>
+<p>this entire video is code, 0 after effects</p>
+<p>im open sourcing the prompt template for these motion designs</p>
+<p>steal it to recreate these ↓</p>
+<p>&lt;inputs&gt;
+Ask me for: 8 to 12 UI states I want the shape to become (e.g. button, loader, player,
+Show more
+256
+755
+11K
+971K</p>
+<p>MakerMap: one shape morphing through the whole product, real data, one HTML file. Shows the same spec applied to a real product.</p>
+<p>Martijn Verbove
+@verbove
+·
+Sep 25
+Opus 5.5 is absolutely cracked at motion design</p>
+<p>this entire video is code</p>
+<p>0 After Effects
+0 manual animation</p>
+<p>I showed it one viral motion post and said:</p>
+<p>“explain MakerMap, but make it insane”</p>
+<p>it came back with 20 seconds of one shape morphing through the entire product:
+Show more
+8
+15
+214
+16K</p>
+<p>Opus codes a cartoon video editor and edits inside it: timeline, waveform, export button, all drawn.</p>
+<p>SuSu_酥酥
+@NFT_Chen
+·
+Sep 23
+无敌了！Opus 5.5 自己写了一套卡通剪辑软件，然后钻进去剪完了！</p>
+<p>不走视频模型，纯程序，code2video！</p>
+<p>Claude 小人站在时间轴上：</p>
+<p>日出 → 热咖啡 → 三只猫 → 自己跳舞。</p>
+<p>伸手把 Sparkle 拉到 70%，咔一声 SNIP!，音轨lyric_track.wav 还在下面抖。</p>
+<p>文件名已经是
+Show more
+Quote
+SuSu_酥酥
+@NFT_Chen
+·
+Sep 23
+1:44
+惊了！Claude Opus 5.5 盖出的雨夜街角便利店，细节密到像能走进去买关东煮！</p>
+<p>亮眼表现：
+雨夜氛围一次成型：湿路面反光、路灯光锥、电线杆、凸面镜、屋檐滴水全对上</p>
+<p>街角空间逻辑清楚：自动门、分类垃圾桶、自行车、招牌、人行道指示一次铺齐  x.com/nft_chen/statu…
+46
+155
+1.4K
+435K</p>
+<p>![Article image](/assets/2026-09-28-how-to-build-motion-design-studio-with-opus-5.5-(-full-cours-8affdd7aef/10.jpg)</p>
+<p>UI as a film set, the story version of the spec approach.</p>
+<ul>
+<li>Part 3 · Build the engine</li>
+</ul>
+<h2>07. Engine - build the seek(t) renderer</h2>
+<p>This is route A, the one Opus picks by default, written out cleanly. Two files. The page paints any moment on demand, the renderer walks time and pipes frames into ffmpeg.</p>
+<p>![Article image](/assets/2026-09-28-how-to-build-motion-design-studio-with-opus-5.5-(-full-cours-8affdd7aef/11.png)</p>
+<p>python
+&lt;style&gt;html,body{margin:0;background:#141413}canvas{display:block}&lt;/style&gt;
+&lt;canvas id=&quot;c&quot; width=&quot;1080&quot; height=&quot;1920&quot;&gt;&lt;/canvas&gt;
+&lt;script&gt;
+const W = 1080, H = 1920, DUR = 15;
+const g = document.getElementById(&#x27;c&#x27;).getContext(&#x27;2d&#x27;);
+const clamp = (x, a = 0, b = 1) =&gt; Math.min(b, Math.max(a, x));</p>
+<p>// Closed-form damped spring, 0 → 1. Pure function of time (step 08 explains it).
+function spring(t, k = 170, d = 26) {
+  if (t &lt;= 0) return 0;
+  const w0 = Math.sqrt(k), z = d / (2 * w0);
+  if (z &lt; 1) {
+    const wd = w0 * Math.sqrt(1 - z * z);
+    return 1 - Math.exp(-z * w0 * t) * (Math.cos(wd * t) + (z * w0 / wd) * Math.sin(wd * t));
+  }
+  return 1 - Math.exp(-w0 * t) * (1 + w0 * t);      // z &gt;= 1 treated as critical
+}</p>
+<p>// Seeded noise, never Math.random: the render must be identical every run
+function rng(seed) { return () =&gt; { seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+  let t = Math.imul(seed ^ seed &gt;&gt;&gt; 15, 1 | seed);
+  t = t + Math.imul(t ^ t &gt;&gt;&gt; 7, 61 | t) ^ t; return ((t ^ t &gt;&gt;&gt; 14) &gt;&gt;&gt; 0) / 4294967296; }; }</p>
+<p>const SCENES = [
+  { from: 0, to: 3, draw(t) {                        // kinetic title
+      const s = spring(t - 0.1, 220, 22);
+      g.save(); g.translate(W / 2, H / 2); g.scale(0.6 + 0.4 * s, 0.6 + 0.4 * s);
+      g.globalAlpha = clamp(t * 4);
+      g.fillStyle = &#x27;#F0EEE6&#x27;; g.font = &#x27;700 190px &quot;Source Serif 4&quot;, serif&#x27;;
+      g.textAlign = &#x27;center&#x27;; g.fillText(&#x27;MOTION&#x27;, 0, 0);
+      g.fillStyle = &#x27;#D97757&#x27;; g.fillRect(-320 * s, 50, 640 * s, 18);
+      g.restore();
+  }},
+  { from: 3, to: 6, draw(t) {                        // grid of squares on a stagger
+      const r = rng(7);
+      for (let i = 0; i &lt; 48; i++) {
+        const x = (i % 6) * 170 + 115, y = Math.floor(i / 6) * 170 + 360;
+        const s = spring(t - i * 0.03 - r() * 0.1, 260, 20);
+        g.fillStyle = i % 7 ? &#x27;#F0EEE6&#x27; : &#x27;#D97757&#x27;;
+        g.fillRect(x - 60 * s, y - 60 * s, 120 * s, 120 * s);
+      }
+  }},
+  // ... more scenes: Opus appends here, one object per shot
+];</p>
+<p>function draw(t) {
+  g.fillStyle = &#x27;#141413&#x27;; g.fillRect(0, 0, W, H);
+  for (const s of SCENES) if (t &gt;= s.from &amp;&amp; t &lt; s.to) s.draw(t - s.from);
+}
+window.seek = (t) =&gt; { draw(t); return true; };</p>
+<p>// Live preview in a normal browser, off during headless render
+if (!navigator.webdriver) {
+  const t0 = performance.now();
+  (function loop() { draw(((performance.now() - t0) / 1000) % DUR); requestAnimationFrame(loop); })();
+}
+&lt;/script&gt;</p>
+<p>python
+// node render.mjs --fps 60 --dur 15 --sub 4
+import { chromium } from &#x27;playwright&#x27;;
+import { spawn } from &#x27;node:child_process&#x27;;
+import { mkdirSync } from &#x27;node:fs&#x27;;</p>
+<p>const arg = (k, d) =&gt; { const i = process.argv.indexOf(&#x27;--&#x27; + k); return i &gt; 0 ? Number(process.argv[i + 1]) : d; };
+const FPS = arg(&#x27;fps&#x27;, 60), DUR = arg(&#x27;dur&#x27;, 15), SUB = arg(&#x27;sub&#x27;, 4);
+mkdirSync(&#x27;out&#x27;, { recursive: true });</p>
+<p>const browser = await chromium.launch();
+const page = await browser.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: 1 });
+await page.goto(&#x27;file://&#x27; + process.cwd() + &#x27;/index.html&#x27;);
+await page.evaluate(() =&gt; document.fonts.ready);       // canvas text needs loaded fonts</p>
+<p>// tmix averages SUB consecutive subframes; select keeps the last of each group
+const vf = <code>tmix=frames=${SUB},select=&amp;#x27;eq(mod(n\\,${SUB})\\,${SUB - 1})&amp;#x27;,setpts=N/${FPS}/TB</code>;
+const ff = spawn(&#x27;ffmpeg&#x27;, [&#x27;-y&#x27;, &#x27;-f&#x27;, &#x27;image2pipe&#x27;, &#x27;-framerate&#x27;, String(FPS * SUB), &#x27;-i&#x27;, &#x27;-&#x27;,
+  &#x27;-vf&#x27;, vf, &#x27;-r&#x27;, String(FPS), &#x27;-c:v&#x27;, &#x27;libx264&#x27;, &#x27;-crf&#x27;, &#x27;16&#x27;, &#x27;-pix_fmt&#x27;, &#x27;yuv420p&#x27;, &#x27;out/silent.mp4&#x27;],
+  { stdio: [&#x27;pipe&#x27;, &#x27;inherit&#x27;, &#x27;inherit&#x27;] });</p>
+<p>const total = Math.round(DUR * FPS * SUB);
+for (let i = 0; i &lt; total; i++) {
+  await page.evaluate((t) =&gt; window.seek(t), i / (FPS * SUB));
+  const png = await page.locator(&#x27;#c&#x27;).screenshot({ type: &#x27;png&#x27; });
+  if (!ff.stdin.write(png)) await new Promise((r) =&gt; ff.stdin.once(&#x27;drain&#x27;, r));
+  if (i % (FPS * SUB) === 0) console.log(<code>rendered ${i / (FPS * SUB)}s / ${DUR}s</code>);
+}
+ff.stdin.end();
+await new Promise((r) =&gt; ff.on(&#x27;close&#x27;, r));
+await browser.close();</p>
+<h2>Prefer a framework? Same prompt, route B</h2>
+<p>python</p>
+<h1>Remotion (React): best for series, templates, data-driven videos</h1>
+<p>npx create-video@latest launch-film &amp;&amp; cd launch-film
+npx skills add remotion-dev/skills
+claude
+&gt; /remotion-create a 20s 9:16 launch film for [PRODUCT], springs only, one accent color
+npx remotion studio                 # live timeline preview
+npx remotion render Main out/launch.mp4</p>
+<h1>HyperFrames (HTML + GSAP): best when you think in web pages</h1>
+<p>npx hyperframes init my-video &amp;&amp; cd my-video
+npx hyperframes skills update
+claude
+&gt; Using /hyperframes, turn ./notes.md into a 45-second pitch video with kinetic captions
+npx hyperframes preview &amp;&amp; npx hyperframes render</p>
+<h2>08. Springs - make motion feel expensive</h2>
+<p>Cheap motion eases from A to B on a fixed curve. Expensive motion has mass: it accelerates, overshoots a hair, settles.</p>
+<p>The morph films all specify closed-form springs because they stay a pure function of time, which keeps seek(t) deterministic.</p>
+<p>The trick that most people miss: when a value changes target several times (a cursor, a container&#x27;s width), you don&#x27;t restart the spring.</p>
+<p>You add one spring per change, each starting at its own time. The motion stays continuous, and you can still render frame 812 without simulating frames 0 to 811.</p>
+<p>python
+// keys: [[time, value], ...] sorted by time. Returns the value at t.
+export function track(t, keys, k = 170, d = 26) {
+  let v = keys[0][1];
+  for (let i = 1; i &lt; keys.length; i++)
+    v += (keys[i][1] - keys[i - 1][1]) * spring(t - keys[i][0], k, d);
+  return v;
+}</p>
+<p>// A tab indicator that stretches: leading edge is stiffer than trailing edge
+export function indicator(t, stops) {             // stops: [[time, x], ...]
+  const lead  = track(t, stops, 320, 30);
+  const trail = track(t, stops, 140, 22);
+  return { left: Math.min(lead, trail), right: Math.max(lead, trail) + 120 };
+}</p>
+<p>// Text inside a morphing box: in after the morph starts, out before the next one
+export function swapAlpha(t, tIn, tOut) {
+  return Math.min(clamp((t - tIn - 0.08) / 0.12), clamp((tOut - 0.1 - t) / 0.1));
+}</p>
+<p>// Seamless loop: pin the last frame to the first
+export const loopT = (t, dur) =&gt; ((t % dur) + dur) % dur;</p>
+<ul>
+<li>
+<p>Snappy UI: buttons, toggles, leading edges</p>
+</li>
+<li>
+<p>Default: cards, containers, camera</p>
+</li>
+<li>
+<p>Heavy: big type, 3D objects, logo lockups</p>
+</li>
+<li>
+<p>Playful: mascots, stickers (visible overshoot)&quot;</p>
+</li>
+</ul>
+<p>![Article image](/assets/2026-09-28-how-to-build-motion-design-studio-with-opus-5.5-(-full-cours-8affdd7aef/12.png)</p>
+<p>Replace every easing curve with closed-form springs from lib/motion.js. Tiny overshoot on UI, none on type. Any value with more than one target uses track().&quot; Opus refactors the whole file in one pass.</p>
+<h2>09. Sound - score it to the beat</h2>
+<p>Rob Hallam thought the audio was added in post. It wasn&#x27;t.</p>
+<p>@oozn&#x27;s Steve Jobs film synthesized its soundtrack in Node with every cut locked to 120 BPM</p>
+<p>Vox&#x27;s &quot;small print&quot; piece synthesized music in Python and then polished the render second by second against it. Sound is where &quot;AI video&quot; starts feeling like a film.</p>
+<p>![Article image](/assets/2026-09-28-how-to-build-motion-design-studio-with-opus-5.5-(-full-cours-8affdd7aef/13.png)</p>
+<p>Two paths. If you supply a track, measure it. If you don&#x27;t, synthesize it on the same timeline as the picture.</p>
+<p>python</p>
+<h1>python beats.py song.wav &gt; beats.json   (the animation reads this file)</h1>
+<p>import sys, json, numpy as np, librosa</p>
+<p>y, sr = librosa.load(sys.argv[1], sr=None, mono=True)
+tempo, frames = librosa.beat.beat_track(y=y, sr=sr, units=&quot;frames&quot;)
+beats = librosa.frames_to_time(frames, sr=sr).round(3).tolist()</p>
+<p>onset = librosa.onset.onset_strength(y=y, sr=sr)
+peaks = librosa.util.peak_pick(onset, pre_max=3, post_max=3, pre_avg=3,
+                               post_avg=5, delta=0.5, wait=10)
+json.dump({
+    &quot;bpm&quot;: float(np.atleast_1d(tempo)[0]),
+    &quot;beats&quot;: beats,                                   # state changes go here
+    &quot;downbeats&quot;: beats[::4],                          # big moments go here
+    &quot;hits&quot;: librosa.frames_to_time(peaks, sr=sr).round(3).tolist(),  # SFX go here
+}, sys.stdout, indent=1)</p>
+<p>python
+// node sfx.mjs cues.json out/sfx.wav     cues: [{&quot;t&quot;:0.5,&quot;type&quot;:&quot;click&quot;}, ...]
+import { readFileSync, writeFileSync } from &#x27;node:fs&#x27;;
+const SR = 48000, cues = JSON.parse(readFileSync(process.argv[2], &#x27;utf8&#x27;));
+const buf = new Float32Array(Math.ceil((Math.max(...cues.map(c =&gt; c.t)) + 2) * SR));</p>
+<p>let s = 42; const noise = () =&gt; (s = (s * 1664525 + 1013904223) &gt;&gt;&gt; 0) / 2147483648 - 1;
+const VOICES = {
+  click:  [0.05, t =&gt; Math.sin(2 * Math.PI * 1800 * t) * Math.exp(-t * 90) * 0.5],
+  pop:    [0.15, t =&gt; Math.sin(2 * Math.PI * (600 + 900 * t) * t) * Math.exp(-t * 30) * 0.4],
+  thump:  [0.50, t =&gt; Math.sin(2 * Math.PI * (90 - 60 * t) * t) * Math.exp(-t * 9) * 0.9],
+  whoosh: [0.35, t =&gt; noise() * Math.sin(Math.PI * Math.min(1, t / 0.35)) * 0.25],
+};
+for (const c of cues) {
+  const [len, fn] = VOICES[c.type], start = Math.floor(c.t * SR);
+  for (let i = 0; i &lt; len * SR &amp;&amp; start + i &lt; buf.length; i++) buf[start + i] += fn(i / SR);
+}</p>
+<p>const n = buf.length, b = Buffer.alloc(44 + n * 2);      // 16-bit mono WAV
+b.write(&#x27;RIFF&#x27;, 0); b.writeUInt32LE(36 + n * 2, 4); b.write(&#x27;WAVEfmt &#x27;, 8);
+b.writeUInt32LE(16, 16); b.writeUInt16LE(1, 20); b.writeUInt16LE(1, 22);
+b.writeUInt32LE(SR, 24); b.writeUInt32LE(SR * 2, 28); b.writeUInt16LE(2, 32); b.writeUInt16LE(16, 34);
+b.write(&#x27;data&#x27;, 36); b.writeUInt32LE(n * 2, 40);
+for (let i = 0; i &lt; n; i++) b.writeInt16LE(Math.round(Math.max(-1, Math.min(1, buf[i])) * 32767), 44 + i * 2);
+writeFileSync(process.argv[3], b);</p>
+<p>Steve Jobs biopic: Remotion + SVG, 23 transitions, soundtrack synthesized in Node, cuts on 120 BPM.</p>
+<p>Proof that code-synthesized music can carry a 2-minute film.</p>
+<p>onur ozcan
+@oozn
+·
+Sep 25
+opus 5.5 one shotted this animation of steve jobs life</p>
+<p>after seeing its animating capabilities i got curious and asked it to tell the story of steve jobs as an animation. </p>
+<p>2 minutes, one prompt, built entirely in code:</p>
+<p>→ remotion + react + svg, ~8.7k lines
+→ jointed
+Show more
+6
+13
+204
+18K</p>
+<p>&quot;Small print&quot;: story, frames and music all by Opus, rendered with HyperFrames. Python-synthesized music, then a second-by-second polish pass.</p>
+<p>Vox
+@Voxyz_ai
+·
+Sep 22
+holy shit, opus 5.5 is kind of insane at animation.
+i didn&#x27;t write a single line of code. it wrote the story, drew every frame, and made the music. no image assets at all, it&#x27;s all JS.</p>
+<p>the story is called &quot;small print&quot;: claude gets a pile of requests every day. it circles the
+Show more
+Quote
+Vox
+@Voxyz_ai
+·
+Sep 22
+bro opus is so back.</p>
+<p>i still remember when opus 4.5 was my favorite model to talk to in openclaw, and opus 4.6 was my favorite for writing.</p>
+<p>then everything changed.</p>
+<p>until today. opus 5.5 is the most comfortable model i&#x27;ve written with since 4.6. not even fable gave me that.
+28
+70
+948
+123K</p>
+<ul>
+<li>Part 4 · From one clip to a studio</li>
+</ul>
+<h2>10. Overnight - write the director&#x27;s brief</h2>
+<p>Donald dictated for five minutes, went to sleep, and woke up to a 142-second music video with 2.1M views.</p>
+<p>His public prompt runs about 9,500 characters. @pradeepXkapoor&#x27;s &quot;Pip&quot; robot film used a 19,000-character brief. Read either and you see the same skeleton: they don&#x27;t describe a video, they hire a crew.</p>
+<ul>
+<li>
+<p>Film in one line. The logline and the joke, so every decision can be checked against it.</p>
+</li>
+<li>
+<p>References. Source video, song, image library, a GitHub repo of prior work. What to keep, what to push.</p>
+</li>
+<li>
+<p>Tools &amp; keys. Skills to load, APIs available (image, video, voice), budget, where docs live. &quot;Spend it economically.&quot;</p>
+</li>
+<li>
+<p>Character bible. Proportions, palette sampled from a sheet, expressions, an identity lock that survives every style change.</p>
+</li>
+<li>
+<p>Beat sheet. Acts with timestamps, a visual payoff every 3 to 5 seconds, a hook in the first 2.</p>
+</li>
+<li>
+<p>Text on screen. When lyrics or captions go huge, when they sit like subtitles. Composition leaves room for them.</p>
+</li>
+<li>
+<p>Workflow gates. Plan → rig → stills → animatic → full pass → polish → audio → render. Don&#x27;t skip gates.</p>
+</li>
+<li>
+<p>Critique loop. Render stills, score them, write the 3 worst problems, fix, repeat until every score is 8+.</p>
+</li>
+<li>
+<p>Deliverables. Final MP4, loop check, poster frame, contact sheet, clean source with a README</p>
+</li>
+</ul>
+<p>![Article image](/assets/2026-09-28-how-to-build-motion-design-studio-with-opus-5.5-(-full-cours-8affdd7aef/14.png)</p>
+<p>The key move in Donald&#x27;s brief is generate-then-trace. Seedance 2.5 renders base shots with characters and physics, then Opus redraws the whole video in JavaScript on top, so the viewer only sees the code-drawn layer.</p>
+<p>Video models give motion that&#x27;s hard to hand-code; the JS layer gives a consistent, ownable look. Pleometric re-ran the same brief with his own gallery and got a completely different film.</p>
+<p>Spoke to my computer for 5 mins, Claude worked for 12 hours.&quot; The Claude Pop music video, 2.1M views. The headline example of L4.</p>
+<p>donald
+@donaldjewkes
+·
+Sep 23
+I made this with one prompt using Opus 5.5</p>
+<p>I spoke to my computer for 5mins, claude worked for 12 hours, and I woke up to this</p>
+<p>full prompt:
+Quote
+NotinReality
+@other__reality
+·
+Sep 22
+2:36
+Claude Opus 5.5 has the best visual design of any model I have tested so far  x.com/slimer48484/st…
+433
+1.2K
+10K
+3.5M</p>
+<p>![Article image](/assets/2026-09-28-how-to-build-motion-design-studio-with-opus-5.5-(-full-cours-8affdd7aef/15.jpg)</p>
+<p>The full ~9,500-character dictated brief. Readers compare it against the director-brief template below.</p>
+<p>donald
+@donaldjewkes
+·
+Sep 23
+Replying to 
+@donaldjewkes
+I&#x27;ve included an MP4 file and an original link to a video that is called &quot;Claude Pop.&quot; It&#x27;s a pop song that is about increasing rate of progress and the experience of the singularity approaching.</p>
+<p>I want you to independently do an end-to-end complete pass on making an updated
+Show more
+Quote
+NotinReality
+@other__reality
+·
+Sep 22
+Claude Opus 5.5 has the best visual design of any model I have tested so far  x.com/slimer48484/st…
+64
+158
+2K
+546K</p>
+<p>Donald&#x27;s brief re-run with a PC-98 gallery; a mixed flow with bugs left in to keep it one-pass.</p>
+<p>Pleometric
+@pleometric
+·
+Sep 24
+This video inspired me to really push Opus 5.5 and test its limits. </p>
+<p>I followed the general workflow Donald described here and the results are great
+Quote
+donald
+@donaldjewkes
+·
+Sep 23
+2:21
+I made this with one prompt using Opus 5.5</p>
+<p>I spoke to my computer for 5mins, claude worked for 12 hours, and I woke up to this</p>
+<p>full prompt:  x.com/other__reality…
+163
+537
+4.6K
+620K</p>
+<p>![Article image](/assets/2026-09-28-how-to-build-motion-design-studio-with-opus-5.5-(-full-cours-8affdd7aef/16.jpg)</p>
+<p>python
+You are the director, animator, sound designer and render engineer for a [DURATION] film
+made in code. Treat this as a multi-session production. Don&#x27;t rush to a final render.</p>
+<h2>The film in one line</h2>
+<p>[LOGLINE. What the viewer should feel at the end.]</p>
+<h2>References and inputs</h2>
+<ul>
+<li>./refs/ : [video / frames / image library]. Take the grammar, never the content.</li>
+<li>./audio/track.wav : use it unchanged. Measure beats with beats.py first.</li>
+<li>Skills available: [/remotion-best-practices | /hyperframes | /claude-animation].</li>
+<li>APIs in .env: [ELEVENLABS_API_KEY, FAL_KEY]. Budget: [$X]. Be economical.</li>
+</ul>
+<h2>Look</h2>
+<p>[3-5 lines: palette, type, texture, camera language. Banned looks.]</p>
+<h2>Beat sheet</h2>
+<p>0:00-0:02  hook: [the single most striking image]
+0:02-0:10  [act 1]
+...        a new visual payoff every 3-5 seconds
+[END]      the last frame sets up the first frame (loop)</p>
+<h2>Workflow, with gates</h2>
+<ol>
+<li>Write docs/style_guide.md and docs/shotlist.md (every shot: frames, camera, text, SFX).
+   Show me the shot list. Then continue without waiting if I don&#x27;t answer in 10 minutes.</li>
+<li>Build stills for every shot. Contact sheet. Critique.</li>
+<li>Animatic at 960x540 with placeholder audio. Fix pacing before polish.</li>
+<li>Full animation, polish pass, sound pass, final render.</li>
+<li>Split work across subagents per chapter. Write docs/ANIMATION_GUIDE.md first
+   so every subagent codes in the same style.</li>
+</ol>
+<h2>Critique loop (every shot, at least 3 rounds)</h2>
+<p>Render 3-5 stills, score 1-10 on: hook, readability at 360px wide, motion, composition,
+depth, sound sync, polish. Log scores + 3 biggest problems in docs/review_log.md. Fix. Repeat
+until all are 8+.</p>
+<h2>Deliverables</h2>
+<p>out/final.mp4 · out/loop_check.mp4 · out/poster.png · out/contact.png · README.md</p>
+<p>John Heibel&#x27;s PDoom repo (1.1K stars) shows the subagent pattern for real: Opus wrote ANIMATION_GUIDE.md to brief the subagents it ran in parallel and STORYBOARD.md after the first generation, with nine chapters in src/ch/. Ask for both files by name.</p>
+<p>![Article image](/assets/2026-09-28-how-to-build-motion-design-studio-with-opus-5.5-(-full-cours-8affdd7aef/17.png)</p>
+<h2>11. Critique - make Opus watch its own frames</h2>
+<p>Opus 5.5 reads images. That means it can look at what it rendered, and this single habit separates the clips that went viral from the ones posted with &quot;it&#x27;s a bit mid&quot;.</p>
+<p>@mablesjoseph&#x27;s watercolor short was upfront about it: 163 model calls and nearly seven hours, not one shot. Drew&#x27;s launch-day piece had visible cleanup rounds too. Iteration is the method, not a failure.</p>
+<p>![Article image](/assets/2026-09-28-how-to-build-motion-design-studio-with-opus-5.5-(-full-cours-8affdd7aef/18.png)</p>
+<p>python</p>
+<h1>Contact sheet: 2 frames per second, 6 across</h1>
+<p>ffmpeg -i out/final.mp4 -vf &quot;fps=2,scale=270:-1,tile=6x5&quot; -frames:v 1 out/contact.png</p>
+<h1>Strip: 12 consecutive frames around a fast action at 4.2s (catch pops and overlaps)</h1>
+<p>ffmpeg -ss 4.1 -i out/final.mp4 -vf &quot;scale=320:-1,tile=12x1&quot; -frames:v 1 out/strip.png</p>
+<h1>Phone test: how it reads at 360 px wide</h1>
+<p>ffmpeg -i out/final.mp4 -vf &quot;fps=1,scale=360:-1,tile=5x3&quot; -frames:v 1 out/phone.png</p>
+<h1>Loop check: play it twice back to back and watch the seam</h1>
+<p>ffmpeg -stream_loop 1 -i out/final.mp4 -c copy out/loop_check.mp4</p>
+<h1>Determinism check: frame 300 rendered twice must hash the same</h1>
+<p>node render.mjs --dur 5 --fps 60 --sub 1 &amp;&amp; md5 out/silent.mp4   # run twice, compare</p>
+<p>python
+Open out/contact.png, out/strip.png and out/phone.png and look at them properly.
+Be a harsh motion director, not a proud author.</p>
+<p>Score 1-10: hook in first 2s · readability at phone size · motion quality (springs,
+no dead frames) · variety (new thing every 2-4s) · composition · brand accuracy · sound sync.</p>
+<p>List the 3 biggest problems with timestamps. Hunt specifically for: text overlapping during
+swaps, anything sliding instead of easing, corner labels and frame borders, centered-on-gradient
+shots, blurry scaled text, a dead beat with nothing happening, a stutter at the loop seam.</p>
+<p>Fix them, re-render only the affected seconds, show me the new contact sheet and new scores.</p>
+<p>Launch-day piece, 1.7M views, with visible cleanup rounds. Iteration is the method. Pair it with the next embed.</p>
+<p>DreW
+@devteamdrew
+·
+Sep 22
+Made with 
+@claudeai
+ Opus 5.5
+340
+543
+9.6K
+1.7M</p>
+<p>Watercolor short, openly not one-shot: 163 model calls, about 6¾ hours. The honest counterweight to &quot;one prompt&quot; claims.</p>
+<p>Mable Joseph
+@mablesjoseph
+·
+Sep 25
+I made a 45-second hand-painted animated short-film with Opus 5.5</p>
+<p>No animation software. Every brushstroke, watercolour wash and sound effect is generated in code.</p>
+<p>Does Opus 5.5 absolutely cook in one shot, not really ? It&#x27;s good but still needs a good supporting project. </p>
+<p>The
+Show more
+18
+14
+154
+11K</p>
+<h2>12. Ship - formats, a skill, and a service</h2>
+<p>Three last moves turn a good clip into a repeatable business. Export every format from one timeline. Package your pipeline as a skill so the next video is a sentence. And, if you want, do what achxvi did the same week: sell it.</p>
+<p>Every format from one timeline</p>
+<p>Write the scenes against a layout function, not fixed pixels, and ask Opus to render 9:16, 1:1 and 16:9 in parallel.</p>
+<p>The MakerMap spec asked for exactly this. Reframe type and UI per format, don&#x27;t crop a 16:9 render to vertical.</p>
+<p>![Article image](/assets/2026-09-28-how-to-build-motion-design-studio-with-opus-5.5-(-full-cours-8affdd7aef/19.png)</p>
+<p>Package it as a skill</p>
+<h2>python</h2>
+<p>name: motion-reel
+description: Make a product or showreel motion video rendered from code. Use when the
+  user asks for a launch video, showreel, product reel, animated explainer or motion ad.</p>
+<hr>
+<h1>Motion reel</h1>
+<h2>Inputs to collect first</h2>
+<p>Product + URL, duration, formats (9:16 / 1:1 / 16:9), brand colors + fonts,
+a reference (frame, video or image folder), music (file or &quot;synthesize&quot;).</p>
+<h2>Pipeline</h2>
+<ol>
+<li>Gather assets from the URL with Playwright into ./assets. List them.</li>
+<li>If a reference exists, write docs/style_guide.md from it.</li>
+<li>Measure or synthesize music. beats.py → beats.json.</li>
+<li>Write docs/shotlist.md on the beat grid. Show it and wait for OK.</li>
+<li>Build index.html with window.seek(t) using lib/motion.js springs. Follow CLAUDE.md.</li>
+<li>Contact sheet → critique-pass (see prompts/critique-pass.txt) → fix. 3 rounds minimum.</li>
+<li>node render.mjs → sfx.mjs → mix to -14 LUFS → out/final.mp4, all formats.</li>
+<li>Deliver final.mp4, contact.png, poster.png. Say what you&#x27;d improve next.</li>
+</ol>
+<h2>Hard rules</h2>
+<ul>
+<li>Real product UI only. Never invent screens.</li>
+<li>No Math.random, no timers, no CSS transitions in render mode.</li>
+<li>Banned: corner labels, centered title on gradient, everything fading in.</li>
+</ul>
+<p>Now the whole course collapses into /motion-reel for [URL], 20s, vertical, reference ./refs/frame.png. Share the skill folder with your team or publish it as a plugin like buildwithhanif did.</p>
+<p>Turn it into revenue</p>
+<p>achxvi&#x27;s offer is a good template: music, a mascot in any style, product features, an offer at the end, any language, up to 3 edits.</p>
+<p>Tony Dinh&#x27;s number anchors the price: people paid around $1,000 for this a year ago. A skill plus a critique loop lets you deliver in an afternoon.</p>
+<p>Chain
+@achxvi
+·
+Sep 27
+Opus 5.5 did this in 45 minutes</p>
+<p>It&#x27;s INSANE 
+35
+36
+647
+54K</p>
+<p>38-second vertical product film in 45 minutes, plus the reply offering it as a paid service. The &quot;turn it into revenue&quot; proof. Place directly under this paragraph.</p>
+<h1>Repos to clone</h1>
+<ul>
+<li>
+<p>Music video: https://github.com/JohnHeibel/PDoomVideo</p>
+</li>
+<li>
+<p>Starter: https://github.com/JohnHeibel/ClaudeAnimationBase</p>
+</li>
+<li>
+<p>Node canvas: https://github.com/buildwithhanif/claude-animation-skill</p>
+</li>
+<li>
+<p>Framework (html): https://github.com/heygen-com/hyperframes</p>
+</li>
+<li>
+<p>Framework (react): https://www.remotion.dev/docs/ai/skills</p>
+</li>
+<li>
+<p>Long form: https://github.com/WinterArc21/Battle-of-Austerlitz-Film</p>
+</li>
+<li>
+<p>Prompt library: https://github.com/guanmo-ai/awesome-ai-motion</p>
+</li>
+<li>
+<p>Dataset: https://github.com/athemeroy/awesome-opus-5-5-videos</p>
+</li>
+</ul>
+<h1>Conclusion:</h1>
+<p>The one-liner gets you a clip. The harness gets you a studio.</p>
+<p>Install the stack, steal a reference, write the state list, own the seek(t) engine, and make Opus watch its own frames until every score is 8.</p>
+<p>Then package it as a skill and never write the long prompt again.</p>
+<p>Follow my Substack to get the latest articles on AI, vibe-coding, and agentic systems.</p></div><a class="source" href="https://x.com/0xMovez/status/2104216919033192746" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>
