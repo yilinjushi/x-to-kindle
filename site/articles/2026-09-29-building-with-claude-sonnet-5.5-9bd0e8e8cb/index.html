@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Building with Claude Sonnet 5.5">
+  <title>Building with Claude Sonnet 5.5 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">2026-09-29</div><div class="prose"><h1>Building with Claude Sonnet 5.5</h1>
+<p>Claude Sonnet 5.5 is our second model in the Claude 5.5 family after Opus 5.5. It&#x27;s a clear upgrade over Sonnet 5 and is smarter, more efficient and 30% faster. The per-token price is unchanged and because Sonnet 5.5 typically needs far fewer tokens to do the same work, it costs up to 30% less for most work.</p>
+<p>Credit to @jkeatn for ideas related to code-to-painting and @IceSolst for the reference image.</p>
+<p>This guide is about building with the model. To try it, run this request as written:</p>
+<p>The loop reads each block by type because Sonnet 5.5 thinks by default, so a response can begin with a thinking block, and code that reads content[0].text breaks.</p>
+<p>CHOOSING BETWEEN SONNET 5.5 AND OPUS 5.5</p>
+<p>In the Claude 5.5 family, Opus 5.5 is built for complex work requiring careful judgment. Use Sonnet 5.5 for well-scoped everyday tasks like fixing bugs and quickly iterating on features. It also creates polished documents, slides and spreadsheets, and it has a strong eye for design. Its speed makes it well suited to fast iteration. Claude Haiku 5.5 will join the family in the coming weeks for high-volume, low-latency workflows.</p>
+<p>&quot;In Epic&#x27;s early testing, Claude Sonnet 5.5 cleared the same quality bar you&#x27;d expect from a higher-tier model, holding up on a system design audit and a data-flow review. The new model managed tens of thousands of lines of code for gameplay system architecture, kept responses snappy, handled multi-hour tasks, and delivered with less prescriptive prompting.&quot; (Daniel Vogel, COO, Epic Games)</p>
+<p>&quot;In Epic&#x27;s early testing, Claude Sonnet 5.5 cleared the same quality bar you&#x27;d expect from a higher-tier model, holding up on a system design audit and a data-flow review. The new model managed tens of thousands of lines of code for gameplay system architecture, kept responses snappy, handled multi-hour tasks, and delivered with less prescriptive prompting.&quot; (Daniel Vogel, COO, Epic Games)</p>
+<p>Sonnet 5.5 fits best when the task has a clear spec and a way to check the result. As the prompting guide puts it, &quot;for the hardest long-horizon work, an Opus model is the better choice.&quot;</p>
+<p>All Sonnet 5.5 prices, including batch processing and prompt caching, match Sonnet 5&#x27;s, so swapping the model ID doesn&#x27;t change your per-token bill. US-only inference ( inference_geo: &quot;us&quot; ) costs 1.1 times the standard price.</p>
+<p>While the per-token price doesn&#x27;t change, the overall bill will change because, as previously mentioned, Sonnet 5.5 typically uses fewer tokens per task than Sonnet 5.</p>
+<p>Note that surfaces can ship with different default efforts for Sonnet, such as high on Claude Platform and medium in Claude Code.</p>
+<p>Sonnet 5.5 uses the high-resolution image tier, up to 2576 pixels on the long edge, and a 2000Ã1500 image costs about 2.5 times as many tokens as on Sonnet 4.6, Sonnet 4.5 or Haiku 4.5. If you don&#x27;t need the detail, downscale before you send.</p>
+<p>The Claude API defaults to high so you start from strong results. Start there, evaluate, and then pick the effort level your workload needs. If you&#x27;re tempted to use xhigh or max effort, keep in mind that Sonnet 5.5 will think longer and cost more. On some tasks, you may lose some of what makes Sonnet useful: its balance of quality, speed, and cost. In that case, consider Opus 5.5.</p>
+<p>MIGRATING FROM SONNET 5</p>
+<p>Thinking is on by default. If you ran Sonnet 5 with thinking off, you can use between_tools to turn off upfront thinking. Step 1 below shows how.</p>
+<p>Change the model ID to claude-sonnet-5-5 , then work through five breaking changes and one change to the response shape. The Sonnet 5.5 migration guide covers each one in full.</p>
+<p>Claude Code can also do the migration for you. Run /claude-api migrate this project to claude-sonnet-5-5 to invoke the bundled Claude API skill , which applies the model ID swap and the breaking parameter changes across your code base.</p>
+<p>On Sonnet 5.5, a request with no thinking field runs with adaptive thinking, and thinking: {&quot;type&quot;: &quot;disabled&quot;} returns a 400 error. Send the new between_tools setting instead. With between_tools , thinking only happens between tool calls, and total response time is the same or faster.</p>
+<p>The example also drops effort from xhigh to high , because between_tools has these limits:</p>
+<p>between_tools works at low , medium and high effort. At xhigh or max it returns a 400 error; to run there, use adaptive thinking.</p>
+<p>It takes no other field. Sending display , budget_tokens or block_binding with it returns a 400 error.</p>
+<p>With between_tools , effort can&#x27;t change mid-conversation. To vary effort per turn, use adaptive thinking.</p>
+<p>The short progress updates the model writes between tool calls still come back as thinking blocks, with summary text. Read content blocks by type, and pass these blocks back unchanged with the rest of the assistant turn. Without tools, the response contains only text.</p>
+<p>It works on every platform that offers Sonnet 5.5, with no beta header. If your SDK version doesn&#x27;t define between_tools , update it.</p>
+<p>If you turn upfront thinking off with between_tools , use adaptive thinking instead for requests without tools that need a few steps of working out.</p>
+<p>tool_choice of type any or tool returns a 400 error, including on the token counting endpoint. Send auto , mark the tool strict: true so its input matches the schema, and say in the prompt when to use it:</p>
+<p>Strict tool use needs additionalProperties: false on every object.</p>
+<ol start="3">
+<li>Keep conversations append-only</li>
+</ol>
+<p>Sonnet 5.5 thinking blocks are tied to the model and the conversation. Sonnet 5.5 reads Sonnet 5&#x27;s thinking blocks, so a conversation you switch from Sonnet 5 to Sonnet 5.5 keeps its reasoning. No other model reads Sonnet 5.5&#x27;s blocks.</p>
+<p>On the Claude API and Google Cloud, Sonnet 5.5 supports computer use only through {&quot;type&quot;: &quot;computer_toolset_20260801&quot;} ; a request that declares computer_20251124 returns a 400 error. Drop the anthropic-beta: computer-use-2025-11-24 header from your requests, and in the SDKs, remove the betas parameter and call the Messages API through the standard client rather than the beta namespace. Replace the tools entry, and update your agent loop for member tool_use blocks, batch actions and toolset_name on results. If you send the fine-grained-tool-streaming-2025-05-14 beta header, remove it too, because alongside a toolset entry it returns a 400 error; set eager_input_streaming: true on each tool that needs it instead. Amazon Bedrock still accepts computer_20251124 .</p>
+<ol start="5">
+<li>Check your advisor pairing</li>
+</ol>
+<p>With the advisor tool, a Sonnet 5.5 executor rejects Opus 4.8, Opus 4.7 and Sonnet 5 as advisors. Accepted advisors include Opus 5.5, Opus 5 and Sonnet 5.5 itself. Advice from every accepted advisor comes back encrypted, as an advisor_redacted_result block, so your code can&#x27;t read the advice text.</p>
+<ol start="6">
+<li>Read text between tool calls from thinking blocks</li>
+</ol>
+<p>This change causes no errors, but a UI can stop showing the model&#x27;s notes between tool calls. Those notes, when longer than a sentence or two, come back as progress-update thinking blocks, which are empty at the default display .</p>
+<p>With adaptive thinking, set thinking.display to &quot;updates&quot; (beta, with the thinking-display-updates-2026-08-18 header) or &quot;summarized&quot; , and render each non-empty thinking block before the tool_use block that follows it. With between_tools , the text comes back without display .</p>
+<p>Sonnet 5.5 also adds per-message effort (beta), mid-conversation system messages and mid-conversation tool changes (beta). If you&#x27;re moving from Sonnet 4.6 or earlier, or from Haiku 4.5, the migration guide has a checklist for each starting model.</p>
+<p>Re-run your effort sweep</p>
+<p>Effort levels are recalibrated, so a level doesn&#x27;t produce the same amount of thinking as it did on Sonnet 5, and your old setting won&#x27;t carry over. Start with high unless your workload is agentic or latency-sensitive. For agentic coding and multistep tool use, start with medium for well-specified tasks and move to high for harder or longer ones. For chat and other latency-sensitive work, start with medium or low . Use xhigh or max only where your evals show a quality gain.</p>
+<p>Thinking counts toward max_tokens , so leave room. For agentic coding, set max_tokens to 128,000, the model&#x27;s maximum, and stream the response. To get less thinking, lower the effort level, because asking the model in the system prompt to think less doesn&#x27;t reliably reduce it.</p>
+<p>Remove Sonnet 5 workarounds</p>
+<p>Existing Sonnet 5 prompts should perform well without changes. If your prompts carry workarounds such as refusal steering, tool-call retry shims, or &quot;do not be lazy,&quot; remove them and re-run your evals before tuning anything else.</p>
+<p>Ask for real checks at low effort</p>
+<p>Sonnet 5.5 generally checks its work before reporting a change as done, but at low effort it sometimes skips a check that exercises the change. If you see changes reported as done without test or build output, the prompting guide recommends this system-prompt paragraph:</p>
+<p>Use thinking.display for progress</p>
+<p>Don&#x27;t ask the model to write out its reasoning in the response, because that invites reasoning_extraction declines. Read summarized thinking instead:</p>
+<p>For user-facing progress notes on their own, use display: &quot;updates&quot; (beta). If you want updates at predictable points, such as a line before the first tool call and a short recap at the end, say so in the system prompt.</p>
+<p>Cache more of your prompt</p>
+<p>The minimum cacheable prompt drops to 512 tokens, so shorter system prompts and tool definitions now qualify. A cache read costs a tenth of the input price. Changing the top-level effort between requests invalidates the cache; to run one turn at a different level, use per-message effort (beta), which keeps the cache.</p>
+<p>REFUSALS AND FALLBACK</p>
+<p>On our automated behavioral audit, Sonnet 5.5 improves on or matches Sonnet 5 on most measures of alignment and honesty. It&#x27;s also the first Sonnet model with cybersecurity safeguards similar to those on our most capable models. Most routine software development is unaffected.</p>
+<p>A declined request returns HTTP 200 with stop_reason: &quot;refusal&quot; , and stop_details names one of five categories: cyber , bio , frontier_llm , reasoning_extraction or general_harms . Server-side fallback ( fallbacks: &quot;default&quot; , beta, Claude API) retries cyber and frontier_llm declines on Sonnet 5. It doesn&#x27;t retry the other three. You can also use the SDK middleware or your own retry.</p>
+<p>For legitimate security work, the Cyber Verification Program will soon expand to include Sonnet 5.5.</p>
+<p>Claude Sonnet 5.5 is available today on the platforms below. On the developer platforms, use these model IDs:</p>
+<p>Claude API, as claude-sonnet-5-5</p>
+<p>Amazon Bedrock, as anthropic.claude-sonnet-5-5</p>
+<p>Claude Platform on AWS, as claude-sonnet-5-5</p>
+<p>Google Cloud, as claude-sonnet-5-5</p>
+<p>Microsoft Foundry, as claude-sonnet-5-5 , on Global Standard deployments only</p>
+<p>From Claude Code v2.1.284 (Agent SDK for TypeScript v0.3.284 or later), the sonnet alias resolves to Sonnet 5.5 on the Claude API. It runs at medium effort by default, with the 1M context window native. You can&#x27;t turn thinking off for Sonnet 5.5 in Claude Code, and effort sets how much the model thinks. Sonnet 5.5 has no fast mode. The default model stays Opus 5.5, so switch with /model sonnet for well-scoped tasks.</p>
+<p>We hope you&#x27;ll enjoy trying out Sonnet 5.5 and as always feel free to share feedback.</p>
+<p><img alt="Article image" src="/assets/2026-09-29-building-with-claude-sonnet-5.5-9bd0e8e8cb/01.jpg"></p></div><a class="source" href="https://claude.dev/blog/building-with-claude-sonnet-5-5" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>
