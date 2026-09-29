@@ -130,5 +130,11 @@
     "title": "How we made claude.ai 3x faster in two weeks",
     "source": "iphone_shortcut",
     "chars": 28300
+  },
+  {
+    "url": "https://claude.dev/blog/automating-eval-design-and-hillclimbing",
+    "title": "Automating eval design and hillclimbing with Claude",
+    "source": "iphone_shortcut",
+    "chars": 15968
   }
 ]
