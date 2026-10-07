@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="我的VPN架构，本来是不能公开的秘密">
+  <title>我的VPN架构，本来是不能公开的秘密 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">MATH FOURNITY @math_fournity · 2026-10-07</div><div class="prose"><h1>我的VPN架构，本来是不能公开的秘密</h1>
+<p>看到大家被Claude大量、反复地封号，而且无法拿到退款，我决定公开我的VPN架构。</p>
+<p>这个架构适合不想折腾VPS的普通用户，由两层构成：</p>
+<p>1、第一层VPN确保网速，这方面你不用操心，这是你用微信和支付宝买到的VPN供应商会帮你默认处理好的事。这个VPN软件我们称之为VPN-X，所有的VPN-X都是和公安合作的，会扫描和记录你的流量，会拦截你的“非法”访问请求，甚至有些糟粕还会干扰你的GPT访问。所以，我们需要第二层VPN。</p>
+<p>2、第二层VPN确保全链路（含DNS）安全，不记录网络访问日志，不扫描用户流量，隐私合规，这是你用微信和支付宝能买到的VPN供应商无法提供的。第二层的VPN没有别名，就是它的产品名：ProtonVPN。</p>
+<p>需要两台二手Pixel手机，我自用的是Pixel 4和Pixel 5，我们假设是A和B，都需要刷机成LineageOS，这个操作系统比较特殊，可以将进入手机热点的流量导向VPN（需要开启选项，如下图所示）。</p>
+<p>A手机作为面向国内网络的第一台手机，负责对B手机的流量进行向外网外转发。</p>
+<p>两台手机，都需要开启热点，并且B需要把WiFi连接到A的热点上。</p>
+<p>在开启热点的界面上，都需要开启如图所示的选项，这个选项就是确保热点进入手机流量会流经你启动的VPN。</p>
+<p><img alt="Article image" src="/assets/2026-10-07-我的vpn架构，本来是不能公开的秘密-3eaed4b96f/01.jpg"></p>
+<p>在B手机上，安装上ProtonVPN，两台手机都需要开启：</p>
+<p>1、Always ON，让操作系统自动确保永远开启 VPN 。</p>
+<p>2、Block 不辣不辣，确保没有一丝流量不是通过 VPN 流出手机的。</p>
+<p><img alt="Article image" src="/assets/2026-10-07-我的vpn架构，本来是不能公开的秘密-3eaed4b96f/02.jpg"></p>
+<p>ProtonVPN连接成功示意图：</p>
+<p><img alt="Article image" src="/assets/2026-10-07-我的vpn架构，本来是不能公开的秘密-3eaed4b96f/03.jpg"></p>
+<p>这样的一个架构结果是：</p>
+<p>你的B手机开启热点，作为WiFi信号给你的电脑和其他的手机使用。</p>
+<p>B手机中的 ProtonVPN 会加密你的流量，确保不会被VPN-X干扰。</p>
+<p>A手机中的VPN-X是用来转发ProtonVPN的流量的，在国内连接不上ProtonVPN的服务器，所以需要第一台手机的VPN-X来转发它的流量。</p>
+<p>ProtonVPN免费版已经很够用了，只需要注册一个Proton的账户就可以用了。</p>
+<p>看到最后的用户，你应该去看看你被Clash客户端污染过的本地DNS配置，这个位置是不是写了：114.114.114.114</p>
+<p>方法：点开Details，点开DNS，看看右边的DNS Servers。</p>
+<p><img alt="Article image" src="/assets/2026-10-07-我的vpn架构，本来是不能公开的秘密-3eaed4b96f/04.jpg"></p>
+<p><img alt="Article image" src="/assets/2026-10-07-我的vpn架构，本来是不能公开的秘密-3eaed4b96f/05.jpg"></p>
+<p>解决方法：删除 114.114.114.114后，安装CloudFlare的WARP，确保永远开启并选择Traffic and DNS（UDP），即同时保护你的操作系统的DNS和流量。</p>
+<p><img alt="Article image" src="/assets/2026-10-07-我的vpn架构，本来是不能公开的秘密-3eaed4b96f/06.jpg"></p>
+<p>其实在这里有一个需要说明的地方，如果你使用了我的双Pixel手机的VPN架构，你是可以在WARP中只开启DNS保护的，实际上我也是推荐这样用的。因为如果再开启流量保护，那么你的流量就套了三层VPN，速度可能并不理想，两层就可以了。</p>
+<p>有人会问，为什么我不直接只用一台Pixel手机，连接VPN-X，然后用CloudFlare 的WARP开启流量保护呢？这样不是省了一台手机？</p>
+<p>这个想法，不完全是错误的，可是坑儿在那里呢？你的VPN-X供应商，可能拦截WARP的连接，也就是说，你可能无法连通WARP。</p>
+<p>但是ProtonVPN除了提供两种WireGuard（也就是WARP）的连接方式，还提供Stealth的连接方法，往往可以穿透VPN-X，如果ProtonVPN三种方式、切换服务器之后，都无法穿透你的VPN-X，欢迎留言，让我涨涨见识（我当然还有其他的方案，但是在这里不方便继续聊下去，毕竟只是为了让大家可以用AI不封号）。</p>
+<p><img alt="Article image" src="/assets/2026-10-07-我的vpn架构，本来是不能公开的秘密-3eaed4b96f/07.jpg"></p>
+<p>最后，其实在国内，是可以直接开启WARP访问外网的，但是你的IP会显示为中国。</p>
+<p>对于不需要用GPT或者Claude的用户，就不需要这个双手机双VPN的架构了，直接开启WARP的DNS+流量保护，就可以访问外网了（这事好像我不应该告诉你们，不过既然已经告诉你们了，那就多告诉你们一点吧，WARP是免费的）。</p></div><a class="source" href="https://x.com/math_fournity/status/2107493047319802364" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>
