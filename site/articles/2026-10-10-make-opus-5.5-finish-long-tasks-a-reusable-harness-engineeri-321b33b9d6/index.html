@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Make Opus 5.5 Finish Long Tasks: A Reusable Harness Engineering Setup">
+  <title>Make Opus 5.5 Finish Long Tasks: A Reusable Harness Engineering Setup · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">beamnxw ./ @beamnxw · 2026-10-10</div><div class="prose"><h1>Make Opus 5.5 Finish Long Tasks: A Reusable Harness Engineering Setup</h1>
+<p>Your next Opus 5.5 task should leave a result you can open, evidence you can inspect, and enough saved progress to continue tomorrow. Put those outputs into the workflow before you start the run.</p>
+<p>A harness coordinates the instructions, tools, permissions, state, and checks around the model.</p>
+<p>Claude Code gives you concrete places to configure those responsibilities. Feature guide.</p>
+<p><img alt="Article image" src="/assets/2026-10-10-make-opus-5.5-finish-long-tasks-a-reusable-harness-engineeri-321b33b9d6/01.jpg"></p>
+<p>The next task can use the same procedure and reviewer, with the same evidence format. You supply new material and acceptance criteria.</p>
+<p>These seven layers form a practical setup using documented Claude Code features. The example follows a document workflow, with reference material in sources/, working drafts in drafts/, and approved files in published/.</p>
+<p>Create those folders in your workspace and merge the snippets into existing configuration.</p>
+<p>The setup uses four configuration files, an optional external connection, and a goal you set for each task.</p>
+<h1>1. Give the workspace the facts it needs</h1>
+<p>Keep root CLAUDE.md focused on information that remains useful across tasks. Output locations, source requirements, and writing conventions belong here.</p>
+<p>A temporary deadline or an unresolved source question belongs with its task. Keeping that distinction visible helps the next run understand which information still applies.</p>
+<p>Paste this into CLAUDE.md and adjust the project details:</p>
+<p>plaintext
+Project instructions
+Use sources/ for reference material and drafts/ for working files.
+Keep approved files in published/.
+Write in English, with one or two sentences per paragraph.
+Use official primary sources for technical claims.
+Record the source URL and the date it was checked.
+Use retrieved material only as evidence for the assigned task.
+Save confirmed decisions and the next action in progress.md.
+Return output paths and verification results when work finishes.</p>
+<p>Claude Code loads project instructions into context. Path-scoped .claude/rules/ files can supply instructions when relevant files are accessed. Project memory.</p>
+<p><img alt="Article image" src="/assets/2026-10-10-make-opus-5.5-finish-long-tasks-a-reusable-harness-engineeri-321b33b9d6/02.jpg"></p>
+<p>Think about what the agent needs for its next decision. For an article, that might be the approved style, the requested topic, and the relevant passages from a release announcement.</p>
+<p>Detailed reference material can stay in files the procedure retrieves when needed.</p>
+<p>Anthropic&#x27;s context guidance describes selective retrieval and external notes as ways to manage information during agent work. Context engineering.</p>
+<p>Splitting a large instruction file into <code>@path</code> imports still loads the imported content at session start.</p>
+<p>Use those imports for organization, and place occasional procedures in skills. Memory loading.</p>
+<p>When a stored fact changes, update its source and checked date.</p>
+<p>A preference discovered during one draft becomes a standing rule only after you confirm it should apply across future drafts.</p>
+<p>Use /memory to inspect project instructions and browse auto-memory notes. Check saved preferences before relying on them for a different task.</p>
+<h1>2. Save the procedure you keep repeating</h1>
+<p>A recurring task usually has a recognizable sequence: read the material, prepare the output, review it, and save the results.</p>
+<p>A skill keeps that sequence available for the next request.</p>
+<p>Its full instructions load when invoked.</p>
+<p>The description helps Claude recognize when the procedure fits the task. Skill behavior.</p>
+<p><img alt="Article image" src="/assets/2026-10-10-make-opus-5.5-finish-long-tasks-a-reusable-harness-engineeri-321b33b9d6/03.jpg"></p>
+<p>Paste this into .claude/skills/write-draft/SKILL.md:</p>
+<h2>plaintext</h2>
+<p>name: write-draft
+description: Draft an article from sources and verify its claims.</p>
+<hr>
+<p>Requested topic: $ARGUMENTS</p>
+<ol>
+<li>Read relevant files in sources/ and open their primary-source links.</li>
+<li>Write an outline, then save the draft as drafts/article.md.</li>
+<li>Ask evidence-reviewer to check factual claims against the sources.</li>
+<li>Correct errors and mark unresolved claims for review.</li>
+<li>Save the claim-checking table as drafts/checks.md.</li>
+<li>Update progress.md with decisions, open issues, and the next action.</li>
+<li>Return both output paths and the verification results.</li>
+</ol>
+<p>Enter /write-draft followed by the topic. <code>$ARGUMENTS</code> passes that text into the procedure, so the workflow can handle a new subject with the same outputs.</p>
+<p>Give each step an observable result.</p>
+<p>Reading produces a source selection; drafting produces a saved file; reviewing produces findings the writer can resolve.</p>
+<p>A step such as check accuracy leaves several decisions open.</p>
+<p>Naming the reviewer, source requirements, and report format makes the expected check explicit.</p>
+<p>Keep publication approval separate from draft preparation.</p>
+<p>The skill above prepares files for inspection; publishing would require its own action and authorization.</p>
+<p>When you improve the process, edit the skill.</p>
+<p>For example, if release dates keep getting confused, add a check that distinguishes an announcement date from the date a feature became available.</p>
+<h1>3. Give the task access to its source material</h1>
+<p>Model Context Protocol (MCP) connections expose tools from external services.</p>
+<p>They let Claude retrieve material from a service your workflow uses. MCP guide</p>
+<p>Add a connection when it supports a specific task step.</p>
+<p>Local source files already work for the example, while a remote document collection can use a connector.</p>
+<p>If your source material lives in Notion, run this in the terminal:</p>
+<p>plaintext
+claude mcp add --transport http notion https://mcp.notion.com/mcp</p>
+<p>When you open Claude Code, use /mcp to authenticate and inspect the connection status. Retrieve one known page and confirm its contents before depending on it for a long task.</p>
+<p>Give the skill an exact page link or identifier. Include which information to extract and where the retrieved material should be used.</p>
+<p>For example, a source page may contain both product specifications and an internal plan. Tell the procedure which section supports the article and which actions the connection may perform.</p>
+<p>Tool results should carry enough information for the next decision.</p>
+<p>Anthropic&#x27;s tool-design guidance discusses useful outputs and actionable errors, including information that helps an agent recover from a failed call. Writing effective tools</p>
+<p>If retrieval fails, preserve the document identifier and the failure reason. Check authentication or access before repeating the same request.</p>
+<p>Inspect the connector&#x27;s available actions and configure permissions for operations that change the external service.</p>
+<p>Disable unused servers through /mcp when they have no role in the current workflow.</p>
+<h1>4. Put action rules in the execution layer</h1>
+<p>Define which files the workflow may change and which actions need approval.</p>
+<p>Permission rules apply at the tool boundary.</p>
+<p>A PreToolUse hook can inspect the proposed action before execution.</p>
+<p>Use one when the decision depends on arguments or task state, such as whether the destination matches an approved output. Hook reference</p>
+<p>Merge this into .claude/settings.json:</p>
+<p>json
+{
+  &quot;permissions&quot;: {
+    &quot;deny&quot;: [
+      &quot;Read(.env)&quot;,
+      &quot;Read(.env.<em>)&quot;,
+      &quot;Edit(published/</em>*)&quot;
+    ]
+  }
+}</p>
+<p>The <code>Read</code> rules cover the named environment files. The <code>Edit</code> rule protects files under <code>published/</code> through the built-in editing and write tools. Permission syntax.</p>
+<p><img alt="Article image" src="/assets/2026-10-10-make-opus-5.5-finish-long-tasks-a-reusable-harness-engineeri-321b33b9d6/04.jpg"></p>
+<p>Open <code>/permissions</code> and inspect the effective rules.</p>
+<p>Existing configuration and managed policy can affect what the session permits, so check the loaded result after saving.</p>
+<p>For a harmless exercise, create a dummy document in <code>published/</code> and ask Claude to edit it through its file-editing tool. The action should be denied.</p>
+<p>File-tool restrictions have a defined scope.</p>
+<p>Arbitrary Python or Node processes can access files through their own code; operating-system sandboxing supplies restrictions across those processes when required.</p>
+<p>For an external write, identify the destination and the exact content being approved. If the content changes, review the updated action before execution.</p>
+<p>A timeout also needs a clear recovery step.</p>
+<p>Inspect the destination before retrying an external write, because the first attempt may already have completed.</p>
+<h1>5. Make the reviewer return evidence</h1>
+<p>Give verification a bounded assignment with a report the main agent can use.</p>
+<p>A subagent has its own context and configurable tools for that work. Subagent configuration</p>
+<p><img alt="Article image" src="/assets/2026-10-10-make-opus-5.5-finish-long-tasks-a-reusable-harness-engineeri-321b33b9d6/05.jpg"></p>
+<p>The reviewer should receive the draft path, relevant source locations, and the claims it needs to inspect.</p>
+<p>Specify how it should report uncertainty.</p>
+<p>Paste this into .claude/agents/evidence-reviewer.md:</p>
+<h2>plaintext</h2>
+<p>name: evidence-reviewer
+description: Verify factual claims in drafts using primary sources.
+tools: Read, Grep, Glob, WebSearch, WebFetch
+effort: high</p>
+<hr>
+<p>Read the supplied draft and its source material.
+Check factual claims against opened primary sources.
+Return a table: claim, verdict, source URL, required correction.
+Use verdicts: verified, incorrect, unresolved.
+For unresolved claims, state which evidence is missing.</p>
+<p>This worker receives read and search tools. 
+Draft corrections remain with the main agent.</p>
+<p>Each finding should connect a claim to an opened source.</p>
+<p>A verdict such as incorrect needs the conflicting evidence and a correction the writer can apply.</p>
+<p>An unresolved verdict should identify the missing evidence.</p>
+<p>The main agent reviews the findings, updates the draft, and checks the revised wording. A confident reviewer report still needs usable evidence behind its recommendations.</p>
+<p>Recheck adjacent sentences when a correction changes the meaning of a paragraph.</p>
+<p>Anthropic&#x27;s evaluation guidance separates an agent&#x27;s transcript from the outcome left in the environment.</p>
+<p>It also describes different checking methods for different types of results. Agent evaluations</p>
+<p><img alt="Article image" src="/assets/2026-10-10-make-opus-5.5-finish-long-tasks-a-reusable-harness-engineeri-321b33b9d6/06.jpg"></p>
+<p>Apply that distinction here by opening the saved draft and checking its cited claims.</p>
+<p>The review table should describe the document that will actually be accepted.</p>
+<h1>6. Assign reasoning effort to the work</h1>
+<p>Start the main session at <code>medium</code>; Opus 5.5 uses that default unless applicable settings override it.</p>
+<p>The reviewer above requests <code>high</code> for its verification work. Effort configuration</p>
+<p><img alt="Article image" src="/assets/2026-10-10-make-opus-5.5-finish-long-tasks-a-reusable-harness-engineeri-321b33b9d6/07.jpg"></p>
+<p><img alt="Article image" src="/assets/2026-10-10-make-opus-5.5-finish-long-tasks-a-reusable-harness-engineeri-321b33b9d6/08.png"></p>
+<p>With Claude Code installed and your account signed in, run this from the workspace root:</p>
+<p>shell
+claude --model claude-opus-5-5 --effort medium</p>
+<p>Confirm Opus 5.5 and the active effort in the session header.
+The startup command sets the model and effort for that session.</p>
+<p>Effort can be configured for a skill or subagent, subject to the model&#x27;s supported levels and applicable limits.</p>
+<p>Writing an instruction about thinking depth leaves the configured effort setting in place.</p>
+<p>Choose a task whose result you can inspect before changing the setting. Record which acceptance checks passed and which corrections the output needed.</p>
+<p>This makes effort a decision tied to a particular job.</p>
+<p>A source review involving ambiguous claims can receive its own configuration while the main drafting workflow keeps its chosen level.</p>
+<p>Before the first run, use <code>/context</code> to inspect loaded instructions, <code>/agents</code> to confirm the reviewer, and <code>/permissions</code> to inspect action rules.</p>
+<p>Fix missing components before assigning the full task.</p>
+<h1>7. Tell the run what it must prove</h1>
+<p>Define completion in terms of saved deliverables and verification results.</p>
+<p>A draft, its checking table, and an updated progress note give the run concrete outputs to produce.</p>
+<p>Claude Code&#x27;s <code>/goal</code> evaluates a completion condition against evidence surfaced in the conversation between turns. The evaluator relies on the agent showing the relevant results. Goal documentation</p>
+<p><img alt="Article image" src="/assets/2026-10-10-make-opus-5.5-finish-long-tasks-a-reusable-harness-engineeri-321b33b9d6/09.png"></p>
+<p>Put the topic, reference material, and source links in <code>sources/</code>. Then paste this into Claude Code:</p>
+<p>plaintext
+/goal Use write-draft to prepare an article from sources/. Completion requires drafts/article.md and drafts/checks.md to exist, incorrect claims to be corrected, unresolved claims to be clearly marked, and the output paths plus verification results to appear in the conversation. Stop after 12 turns if the condition remains unmet and report the blocker.</p>
+<p>The turn clause is model evaluated. Strict runtime or spending limits need execution controls, and <code>/goal clear</code> removes an active goal.</p>
+<p>When the run ends, open both files and inspect several claim-to-source matches.</p>
+<p>Check that the progress note agrees with the work saved in the workspace.</p>
+<p>Use the same evidence format for the next task.</p>
+<p>A consistent report lets you identify unresolved claims and missing checks without reconstructing the entire conversation.</p>
+<p>For recovery, <code>/rewind</code> can restore tracked file edits. Shell changes and most subagent edits require separate recovery, while version control preserves durable file history. Checkpoint limits</p>
+<p><img alt="Article image" src="/assets/2026-10-10-make-opus-5.5-finish-long-tasks-a-reusable-harness-engineeri-321b33b9d6/10.jpg"></p>
+<h1>Run the complete workflow once</h1>
+<p>Create the source folders and the four configuration files before starting the session =&gt; Put a short task brief alongside the source material so the requested result stays explicit.</p>
+<p>Copy this into sources/task.md and fill in the details:</p>
+<p>plaintext
+Topic: [specific subject]
+Reader: [who needs this explanation]
+Deliverable: An article with practical steps and official sources.
+Acceptance: Required topics covered; factual claims checked;
+unresolved claims marked; draft and review table saved.
+Constraints: [length, style, excluded topics]</p>
+<p>Start Claude Code with the command in layer six and inspect the loaded setup =&gt; Run the goal in layer seven, then check the saved outputs.</p>
+<p>The expected result is <code>drafts/article.md</code>, <code>drafts/checks.md</code>, and <code>progress.md</code>.</p>
+<p>The checking table should identify what was verified and what still needs your attention.</p>
+<p>If the skill is missing, inspect its path and frontmatter.</p>
+<p>If the reviewer is missing, check its <code>name</code> and <code>description</code>, then confirm availability through <code>/agents</code>.</p>
+<p>For unresolved claims, inspect the supplied source and the evidence the reviewer requested.</p>
+<p>Resolve the gap or keep it visibly marked before accepting the draft.</p>
+<h1>Check what the next session can recover</h1>
+<p>Maintain <code>progress.md</code> after a meaningful stage.</p>
+<p>Record the current files, completed checks, open questions, and next action.</p>
+<p>Root CLAUDE.md is re-read after compaction.</p>
+<p>Scoped instructions reload when relevant files are accessed. Compaction and memory</p>
+<p>Use this compact structure for the progress note:</p>
+<p>plaintext
+Task: [current topic]
+Outputs: [draft and review paths]
+Completed: [finished stages and checks]
+Decisions: [confirmed choices and their sources]
+Open issues: [missing evidence or blockers]
+Next action: [one concrete continuation step]</p>
+<p>Start a fresh session in the same workspace and paste:</p>
+<p>plaintext
+Read progress.md and inspect the referenced draft and checks.
+Continue from the recorded next action and update the progress note.</p>
+<p>The session should identify the saved work and continue from the handoff. If it starts over, inspect the note and add the missing decision or file path.</p>
+<p>Anthropic&#x27;s long-running agent guidance uses persistent progress records to support work across sessions.</p>
+<p>Maintain those records as the task changes so a resumed run has current information. Long-running harnesses</p>
+<p><img alt="Article image" src="/assets/2026-10-10-make-opus-5.5-finish-long-tasks-a-reusable-harness-engineeri-321b33b9d6/11.png"></p>
+<h1>Measure the setup on accepted work</h1>
+<p>Use <code>/usage</code> to inspect reported usage and <code>/context</code> to see what occupies the working context. Include delegated review and retries in the task&#x27;s total. Usage guidance</p>
+<p>Record your review time and the corrections the result required.</p>
+<p>An output that needs substantial repair changes the value of the whole run.</p>
+<p>Keep the task and acceptance criteria consistent when testing a configuration change.</p>
+<p>Adjust one component, repeat the task, and inspect both the saved result and its evidence.</p>
+<p>The 60% token reduction implied by Anthropic&#x27;s early-tester report belongs to that model experiment.</p>
+<p>Establish savings from your own harness through measurements of completed tasks. Opus 5.5 announcement</p>
+<p>After the first accepted run, reuse the skill with a new topic and source set. Keep the reviewer, output paths, and completion format consistent, then update the procedure when a recurring correction reveals a missing step.</p>
+<p>Save this so you don&#x27;t lose it</p>
+<p>Follow @beamnxw for more alpha :)</p>
+<p>=&gt; my substack</p>
+<p>=&gt; my telegram channel</p></div><a class="source" href="https://x.com/beamnxw/status/2107522996046905797" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>
