@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="How to create motion graphics with Claude Opus 5.5 (Full Course)">
+  <title>How to create motion graphics with Claude Opus 5.5 (Full Course) · Reading Archive</title><link rel="stylesheet" href="/style.css">
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Hamza Khalid @humzaakhalid · 2026-10-31</div><div class="prose"><h1>How to create motion graphics with Claude Opus 5.5 (Full Course)</h1>
+<p>i&#x27;m going to walk you through the setup i used to make a full brand film with Claude Opus 5.5, from an empty folder to a rendered video with music, voiceover and a logo lockup...</p>
+<p>this is the first video i created with opus 5.5 (prompt below)</p>
+<p>The media could not be played.
+Reload
+video with opus 5.5</p>
+<p>every frame in that film is code, every sound is code, and i never opened After Effects once</p>
+<p>you don&#x27;t need a design background for this, you need one picture of your brand or the URL where you sell your product, and one prompt</p>
+<p>the reason this is worth your weekend is that video got cheap very fast</p>
+<p>a year ago, Tony Dinh paid over $1,000 for a launch video, and last week he made one with Claude in under 30 minutes</p>
+<p>Anthropic shipped Opus 5.5 on September 22, and within hours my timeline was full of showreels, launch videos and music videos, all rendered from code, most of them captioned &quot;one prompt&quot;</p>
+<p>before we touch a single tool, you need to hear the rule that decides whether your video looks like those or like a rough draft</p>
+<p>the prompt is 10% of the result, and the setup is the other 90%</p>
+<p>Thariq from the Claude Code team said it better than i can, pointing out that the post says one-shot while the prompt behind it is 10k characters with skills, examples and API keys</p>
+<p>Thariq
+@trq212
+·
+Sep 23
+the post: &quot;Claude one-shot this&quot;</p>
+<p>the prompt: 10k characters with good takes plus skills, examples and API keys
+Quote
+donald
+@donaldjewkes
+·
+Sep 23
+Replying to @donaldjewkes
+I&#x27;ve included an MP4 file and an original link to a video that is called &quot;Claude Pop.&quot; It&#x27;s a pop song that is about increasing rate of progress and the experience of the singularity approaching.</p>
+<p>I want you to independently do an end-to-end complete pass on making an updated x.com/other__reality…
+76
+59
+2.2K
+266K</p>
+<p>i wanted to see this for myself, so i took one of those viral prompts, ran it as-is, and got this:</p>
+<p>The media could not be played.
+Reload
+Sparks of AGI</p>
+<p>and it looked like this without code:</p>
+<p>video by opus 5.5</p>
+<p>![Article image](/assets/2026-10-31-how-to-create-motion-graphics-with-claude-opus-5.5-(full-cou-820c54838c/01.jpg)</p>
+<p>it&#x27;s decent, but the head floats because there&#x27;s no neck or body under it, and the text color fights the background so hard you can barely read it</p>
+<p>nothing in the prompt was broken, Claude just had no brand, no references and no rules to work from, so it filled the gaps with guesses</p>
+<p>so i built the setup first, and the film at the top of this article is what came out</p>
+<p>here&#x27;s what we&#x27;ll cover, in the order you&#x27;d actually build it:</p>
+<ul>
+<li>
+<p>the brand folder that becomes your studio</p>
+</li>
+<li>
+<p>the 8 repos that show Claude how video gets made in code</p>
+</li>
+<li>
+<p>the skills that stop Claude from guessing</p>
+</li>
+<li>
+<p>the brand brief and the CLAUDE.md file</p>
+</li>
+<li>
+<p>the exact prompt behind the film</p>
+</li>
+<li>
+<p>rendering the first cut and fixing what breaks</p>
+</li>
+</ul>
+<p>quick note before we build. This guide is one of 50+ i&#x27;ve written on running real work with AI, and every one comes with the prompts behind it, 1,200+ so far</p>
+<p>now, back to the motion studio</p>
+<p>by the end, you&#x27;ll have a motion studio on your own laptop, a brand film with music, voiceover and your logo, and a setup you reuse for every video after this one</p>
+<p>that last part matters more than the first film, because this is a skill clients already pay agencies four figures for</p>
+<p>and as a bonus, you get the ready-to-install repos plus the exact prompt i pasted into Claude Code to make this film, so you can swap in your brand and render your own</p>
+<h2>create the brand folder:</h2>
+<p>this folder is your studio, and every video you make from here on starts inside it</p>
+<p>it looks like a small step, but Claude Code works from whatever folder you open, so keeping the repos, skills, brand files and renders in one place is what lets every new video build on the last one</p>
+<p>open Claude Code</p>
+<p>![Article image](/assets/2026-10-31-how-to-create-motion-graphics-with-claude-opus-5.5-(full-cou-820c54838c/02.jpg)</p>
+<p>click on No Folder (or the name of whatever folder is already selected)</p>
+<p>![Article image](/assets/2026-10-31-how-to-create-motion-graphics-with-claude-opus-5.5-(full-cou-820c54838c/03.jpg)</p>
+<p>click Open folder</p>
+<p>![Article image](/assets/2026-10-31-how-to-create-motion-graphics-with-claude-opus-5.5-(full-cou-820c54838c/04.jpg)</p>
+<p>click New Folder</p>
+<p>![Article image](/assets/2026-10-31-how-to-create-motion-graphics-with-claude-opus-5.5-(full-cou-820c54838c/05.jpg)</p>
+<p>name it after your brand... mine is video-motion-lab</p>
+<p>click Create</p>
+<p>![Article image](/assets/2026-10-31-how-to-create-motion-graphics-with-claude-opus-5.5-(full-cou-820c54838c/06.jpg)</p>
+<p>your folder is now selected in Claude Code</p>
+<p>![Article image](/assets/2026-10-31-how-to-create-motion-graphics-with-claude-opus-5.5-(full-cou-820c54838c/07.jpg)</p>
+<p>that&#x27;s the studio, and it takes about a minute.</p>
+<h2>Clone the 8 repos:</h2>
+<p>next, Claude needs to see how motion graphics actually get built in code, because a model working from memory alone reaches for the most average animation it has seen</p>
+<p>these repos are the reference library, and each one covers a different piece of the job:</p>
+<ul>
+<li>Music video:</li>
+</ul>
+<p>https://github.com/JohnHeibel/PDoomVideo</p>
+<ol start="2">
+<li>Starter:</li>
+</ol>
+<p>https://github.com/JohnHeibel/ClaudeAnimationBase</p>
+<ol start="3">
+<li>Node canvas:</li>
+</ol>
+<p>https://github.com/buildwithhanif/claude-animation-skill</p>
+<ol start="4">
+<li>Framework (HTML):</li>
+</ol>
+<p>https://github.com/heygen-com/hyperframes</p>
+<ol start="5">
+<li>Framework (React):</li>
+</ol>
+<p>https://www.remotion.dev/docs/ai/skills</p>
+<ol start="6">
+<li>Long form:</li>
+</ol>
+<p>https://github.com/WinterArc21/Battle-of-Austerlitz-Film</p>
+<ol start="7">
+<li>Prompt library:</li>
+</ol>
+<p>https://github.com/guanmo-ai/awesome-ai-motion</p>
+<ol start="8">
+<li>Dataset:</li>
+</ol>
+<p>https://github.com/athemeroy/awesome-opus-5-5-videos</p>
+<p>![Article image](/assets/2026-10-31-how-to-create-motion-graphics-with-claude-opus-5.5-(full-cou-820c54838c/08.jpg)</p>
+<p>one heads-up, Remotion is a docs page and you can&#x27;t clone it, so we install it with the skills in the next step</p>
+<p>you don&#x27;t need to clone these one by one either, i already did it and turned the whole thing into a prompt, so Claude handles it for you</p>
+<p>copy this and paste it into Claude Code:</p>
+<p>Inside this folder, create a subfolder called &quot;repos&quot;.</p>
+<p>Clone these repos into it:
+https://github.com/JohnHeibel/PDoomVideo
+https://github.com/JohnHeibel/ClaudeAnimationBase
+https://github.com/buildwithhanif/claude-animation-skill
+https://github.com/heygen-com/hyperframes
+https://github.com/WinterArc21/Battle-of-Austerlitz-Film
+https://github.com/guanmo-ai/awesome-ai-motion
+https://github.com/athemeroy/awesome-opus-5-5-videos</p>
+<p>For HyperFrames, skip the large test videos (use GIT_LFS_SKIP_SMUDGE=1).</p>
+<p>Before cloning, check if Node.js 22+, git and ffmpeg are installed.
+If anything is missing, install it.</p>
+<p>When done, list every repo with one line on what it&#x27;s for.</p>
+<h2>install the skills</h2>
+<p>skills are instruction packs, and they&#x27;re the part that stops Claude from guessing</p>
+<p>the repos show Claude what good output looks like, while the skills hand it the working rules for each framework, so it builds the way the framework expects</p>
+<p>paste these into your terminal, one at a time:</p>
+<p>npx skills add remotion-dev/skills
+claude plugin marketplace add heygen-com/hyperframes
+claude plugin install hyperframes@hyperframes
+claude plugin marketplace add buildwithhanif/claude-animation-skill
+claude plugin install claude-animation@claude-animation-skill</p>
+<h2>Test 1: The Writing Test</h2>
+<p>What it checks: Anthropic’s biggest claim, that Opus 5.5 follows your writing rules.</p>
+<p>The Tests: Opus 5.5 vs Fable 5.1</p>
+<p>..................................................</p>
+<p>the rest of the build (brand brief, CLAUDE.md, the exact prompt, and the fixes) lives in the newsletter</p>
+<p>i write a guide like this for every major AI release, 50+ so far with 1,200+ prompts you can copy into your setup</p>
+<p>subscribe to AI in Public to get the rest → https://aiinpublic.com</p>
+<p>Make yourself irreplaceable with AI</p>
+<p>_ Hamza 💙</p></div><a class="source" href="https://x.com/humzaakhalid/status/2105203643758895454" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>
