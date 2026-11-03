@@ -11,6 +11,7 @@ Every extracted article is also preserved as Markdown with locally downloaded im
 - Published output: plain HTML and CSS under `site/`
 - Rebuild locally: `python build_site.py`
 - Cloudflare Pages output directory: `site`
+- Access is password-protected by the Pages middleware `functions/_middleware.js`. Set the password as an encrypted Pages variable `SITE_PASSWORD` (Settings → Variables and Secrets, Production and Preview). Without it the site returns 503 (fail closed). Login sets a 30-day HttpOnly cookie; changing the secret logs everyone out.
 - No build command is required because the delivery workflows regenerate the HTML before committing.
 - To publish recent bookmarks without sending them to Kindle, run the `Publish Bookmarks To Blog` workflow.
 - Blog synchronization also runs every 3 days at 10:30 UTC (same cadence as Kindle delivery, starting 2026-09-25), scanning the latest 50 bookmarks. GitHub scheduling and Pages deployment can add delay; saving a bookmark does not instantly update the site.
