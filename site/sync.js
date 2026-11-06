@@ -34,11 +34,22 @@
     }
   };
 
+  const KEY = "sync-password";
+  const stored = () => { try { return localStorage.getItem(KEY) || ""; } catch { return ""; } };
+  const remember = (v) => { try { v ? localStorage.setItem(KEY, v) : localStorage.removeItem(KEY); } catch {} };
+
   button.addEventListener("click", async () => {
+    const password = stored() || window.prompt("同步密码") || "";
+    if (!password) return;
     show("正在触发…", true);
     try {
-      const res = await fetch("/api/sync", { method: "POST" });
+      const res = await fetch("/api/sync", { method: "POST", headers: { "X-Sync-Password": password } });
       const data = await res.json();
+      if (res.status === 401) {
+        remember("");
+        return show("密码错误", false);
+      }
+      remember(password);
       if (res.status === 202) {
         show("同步中…", true);
         timer = setTimeout(poll, 10000);

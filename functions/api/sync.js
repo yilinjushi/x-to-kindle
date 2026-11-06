@@ -3,6 +3,7 @@
 // GET  /api/sync  -> status of the most recent run
 // Requires the Pages secret GITHUB_TOKEN: a fine-grained token limited to
 // yilinjushi/x-to-kindle with "Actions: Read and write".
+// POST also requires the Pages secret SYNC_PASSWORD, sent in the X-Sync-Password header.
 
 const REPO = "yilinjushi/x-to-kindle";
 const WORKFLOW = "publish-bookmarks.yml";
@@ -13,6 +14,19 @@ function json(body, status = 200) {
     status,
     headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" },
   });
+}
+
+const enc = new TextEncoder();
+
+async function safeEqual(a, b) {
+  const [da, db] = await Promise.all([
+    crypto.subtle.digest("SHA-256", enc.encode(a)),
+    crypto.subtle.digest("SHA-256", enc.encode(b)),
+  ]);
+  const x = new Uint8Array(da), y = new Uint8Array(db);
+  let diff = 0;
+  for (let i = 0; i < x.length; i++) diff |= x[i] ^ y[i];
+  return diff === 0;
 }
 
 async function gh(env, path, init = {}) {
@@ -51,7 +65,10 @@ export async function onRequestGet({ env }) {
 }
 
 export async function onRequestPost({ env, request }) {
-  if (!env.GITHUB_TOKEN) return json({ error: "not_configured" }, 503);
+  if (!env.GITHUB_TOKEN || !env.SYNC_PASSWORD) return json({ error: "not_configured" }, 503);
+  if (!(await safeEqual(request.headers.get("X-Sync-Password") || "", env.SYNC_PASSWORD))) {
+    return json({ error: "bad_password" }, 401);
+  }
   // Only accept same-origin button presses.
   const origin = request.headers.get("Origin");
   if (origin && origin !== new URL(request.url).origin) return json({ error: "forbidden" }, 403);
