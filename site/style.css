@@ -37,3 +37,9 @@ footer { padding: 2rem 0 3rem; border-top: 1px solid var(--line); color: var(--m
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
 @media (max-width: 520px) { html { font-size: 16px; } .masthead, main, footer { width: min(100% - 1.4rem, 760px); } }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+/* Mobile: never scroll sideways. Break long words/URLs everywhere; wide blocks scroll inside themselves. */
+main { overflow-wrap: anywhere; }
+html, body { overflow-x: clip; }
+.prose table { display: block; max-width: 100%; overflow-x: auto; }
+.prose img, .prose video, .prose iframe { max-width: 100%; }
+.prose code { overflow-wrap: anywhere; }
