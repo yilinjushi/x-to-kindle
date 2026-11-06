@@ -21,7 +21,7 @@ concurrency:
 
 jobs:
   backfill:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 180
     env:
       ARCHIVE_DIR: ${{ github.workspace }}/archive-repo/archive

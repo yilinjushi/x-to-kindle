@@ -28,7 +28,7 @@ concurrency:
 
 jobs:
   send-web-article:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       KINDLE_EMAIL: ${{ secrets.KINDLE_EMAIL }}
       GMAIL_USER: ${{ secrets.GMAIL_USER }}

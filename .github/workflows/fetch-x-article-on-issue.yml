@@ -17,7 +17,7 @@ concurrency:
 jobs:
   fetch-article:
     if: startsWith(github.event.issue.title, '[x-fetch]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       ARTICLE_URL: ${{ github.event.issue.body }}
       ISSUE_NUMBER: ${{ github.event.issue.number }}
