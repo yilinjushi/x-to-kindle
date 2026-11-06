@@ -142,5 +142,11 @@
     "title": "Building with Claude Sonnet 5.5",
     "source": "iphone_shortcut",
     "chars": 11236
+  },
+  {
+    "url": "https://platform.claude.com/cookbook/managed-agents-cma-dreaming-with-a-dynamic-workflow",
+    "title": "Dreaming with a dynamic workflow",
+    "source": "iphone_shortcut",
+    "chars": 21387
   }
 ]
