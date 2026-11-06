@@ -2,9 +2,9 @@
 <html lang="zh-Hant"><head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Claude Code 动态工作流： 每个任务都可以有自己的 Harness【译】">
-  <title>Claude Code 动态工作流： 每个任务都可以有自己的 Harness【译】 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+  <title>Claude Code 动态工作流： 每个任务都可以有自己的 Harness【译】 · Reading Archive</title><link rel="stylesheet" href="/style.css"><script src="/sync.js" defer></script>
 </head><body>
-  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">实践哥 Li @MinLiBuilds · 2026-06-06</div><div class="prose"><h1>Claude Code 动态工作流： 每个任务都可以有自己的 Harness【译】</h1>
+  <header class="masthead"><a href="/">Reading Archive</a><span class="sync"><span id="sync-status" role="status"></span><button id="sync-button" type="button">同步</button></span></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">实践哥 Li @MinLiBuilds · 2026-06-06</div><div class="prose"><h1>Claude Code 动态工作流： 每个任务都可以有自己的 Harness【译】</h1>
 <p>Claude Code 现在能即时写出属于它自己的 harness，为手头的任务量身定制。这套能力就叫 dynamic workflow：它会动态地编写编排脚本，在单个会话里运行数十到数百个并行的 subagents，并在任何结果送到你面前之前先自行检查一遍。</p>
 <p>默认的 Claude Code harness 用来写代码很好，但研究、安全分析、agent teams、代码审查这类更专门的任务，过去需要在 Claude Code 之上搭一套定制 harness 才能达到最佳表现。</p>
 <p>workflow 让你可以动态地创建这些定制 harness，它们可复用、可分享，能让 Claude 以比默认方式更原生的姿态去解决问题。</p>

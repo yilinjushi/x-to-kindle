@@ -2,9 +2,9 @@
 <html lang="zh-Hant"><head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="ClaudeCode 你想知道的所有秘密，源码深度研究报告">
-  <title>ClaudeCode 你想知道的所有秘密，源码深度研究报告 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+  <title>ClaudeCode 你想知道的所有秘密，源码深度研究报告 · Reading Archive</title><link rel="stylesheet" href="/style.css"><script src="/sync.js" defer></script>
 </head><body>
-  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Xiao Tan @tvytlx · 2026-04-01</div><div class="prose"><h1>ClaudeCode 你想知道的所有秘密，源码深度研究报告</h1>
+  <header class="masthead"><a href="/">Reading Archive</a><span class="sync"><span id="sync-status" role="status"></span><button id="sync-button" type="button">同步</button></span></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Xiao Tan @tvytlx · 2026-04-01</div><div class="prose"><h1>ClaudeCode 你想知道的所有秘密，源码深度研究报告</h1>
 <p><img alt="Article image" src="/assets/2026-04-01-claudecode-你想知道的所有秘密，源码深度研究报告-16321ac43a/01.jpg"></p>
 <p>最近 Claude Code 泄露了 map 文件，导致泄露了源码文件，于是我下载了 npm 包里的 cli.js.map，从里面提取出 4756 个源码文件，沿着入口、提示词、工具、权限、Agent 调度、插件、Hook 一路拆下去，我发现其实 Claude Code 的system prompt 只是冰山露出水面的一小块。</p>
 <p>这篇文章会把冰山下面的部分摊开。你不需要是做 Agent 产品的工程师，也能从里面看到一套通用的系统设计思路。看完之后，你再去看市面上任何一个 AI Agent 产品，会比之前多一层判断力。</p>

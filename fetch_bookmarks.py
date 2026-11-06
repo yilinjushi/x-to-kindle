@@ -139,6 +139,7 @@ def main():
         sys.exit(1)
 
     target_count = TARGET_COUNT
+    max_new = 0
     send_to = KINDLE_EMAIL or None
     outdir = OUTDIR
     archive_only = "--archive-only" in sys.argv[1:]
@@ -151,12 +152,15 @@ def main():
             send_to = args[i + 1]
         elif arg == "--outdir" and i + 1 < len(args):
             outdir = args[i + 1]
+        elif arg == "--max-new" and i + 1 < len(args):
+            max_new = int(args[i + 1])
 
     Path(outdir).mkdir(parents=True, exist_ok=True)
     sent_history = load_sent_history()
     archived_urls = load_archived_urls()
     failures = 0
     unavailable = 0
+    newly_archived = 0
 
     with sync_playwright() as p:
         launch_kwargs = {
@@ -243,9 +247,13 @@ def main():
                     )
                     print(f"  Archived: {archive_path}")
                     archived_urls.add(url)
+                    newly_archived += 1
 
                 if archive_only:
                     results.append((title, str(archive_path), n_images))
+                    if max_new and newly_archived >= max_new:
+                        print(f"  Reached --max-new {max_new}; stopping.")
+                        break
                     continue
 
                 filename = f"{title_to_filename(title)}-{status_id_from_url(url)}.docx"

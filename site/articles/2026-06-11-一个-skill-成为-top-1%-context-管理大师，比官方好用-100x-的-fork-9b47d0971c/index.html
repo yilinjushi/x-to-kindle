@@ -2,9 +2,9 @@
 <html lang="zh-Hant"><head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="一个 skill 成为 TOP 1% Context 管理大师，比官方好用 100x 的 /fork">
-  <title>一个 skill 成为 TOP 1% Context 管理大师，比官方好用 100x 的 /fork · Reading Archive</title><link rel="stylesheet" href="/style.css">
+  <title>一个 skill 成为 TOP 1% Context 管理大师，比官方好用 100x 的 /fork · Reading Archive</title><link rel="stylesheet" href="/style.css"><script src="/sync.js" defer></script>
 </head><body>
-  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">实践哥 Li @MinLiBuilds · 2026-06-11</div><div class="prose"><h1>一个 skill 成为 TOP 1% Context 管理大师，比官方好用 100x 的 /fork</h1>
+  <header class="masthead"><a href="/">Reading Archive</a><span class="sync"><span id="sync-status" role="status"></span><button id="sync-button" type="button">同步</button></span></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">实践哥 Li @MinLiBuilds · 2026-06-11</div><div class="prose"><h1>一个 skill 成为 TOP 1% Context 管理大师，比官方好用 100x 的 /fork</h1>
 <p>和 Claude Code 聊了半小时，调教好了上下文。偏偏这时你想试个更狠的改法，或者冒出个岔路问题想顺嘴问一句。非常难堪，当前窗口直接动手，主线被带跑、上下文越搅越乱；新开一个 claude，它干干净净啥都不知道，半小时的铺垫得从头再讲一遍。</p>
 <p>所以我写了一个比官方好用 100 倍的 /branchnew：在当前会话快捷键⌘F ，终端往右一裂，右边那格就是这场对话的一个 fork，往后两条线各跑各的，左边主线你碰都没碰。关键还100% 命中缓存。</p>
 <p>为什么能这么干？因为 Claude 是无状态的，每轮对话都要把整段历史重新发一遍给模型。管理context，本质是管理这块cache：历史前缀被缓存，命中一次省 90% 的钱。</p>

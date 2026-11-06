@@ -2,9 +2,9 @@
 <html lang="zh-Hant"><head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="OpenAI/Cursor/Anthropic 同时发了 Harness   Engineering，我用半年踩坑验证了他们说的每一条">
-  <title>OpenAI/Cursor/Anthropic 同时发了 Harness   Engineering，我用半年踩坑验证了他们说的每一条 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+  <title>OpenAI/Cursor/Anthropic 同时发了 Harness   Engineering，我用半年踩坑验证了他们说的每一条 · Reading Archive</title><link rel="stylesheet" href="/style.css"><script src="/sync.js" defer></script>
 </head><body>
-  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Leo｜LeoLabs.me @runes_leo · 2026-04-11</div><div class="prose"><h1>OpenAI/Cursor/Anthropic 同时发了 Harness   Engineering，我用半年踩坑验证了他们说的每一条</h1>
+  <header class="masthead"><a href="/">Reading Archive</a><span class="sync"><span id="sync-status" role="status"></span><button id="sync-button" type="button">同步</button></span></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Leo｜LeoLabs.me @runes_leo · 2026-04-11</div><div class="prose"><h1>OpenAI/Cursor/Anthropic 同时发了 Harness   Engineering，我用半年踩坑验证了他们说的每一条</h1>
 <p>OpenAI、Cursor、Anthropic 在同一个季度发了三篇实践报告，都叫 harness engineering，但讲的是三件完全不同的事。</p>
 <p>yage.ai 有一篇文章把这三篇拆清楚了：OpenAI 在讲怎么设计 agent 的工作环境（交互维度），Cursor 在讲几百个 agent 怎么并行不打架（空间维度），Anthropic 在讲一个 agent 跑几个小时怎么不跑偏（时间维度）。三个独立的 scaling 问题，没有人同时解了三个。</p>
 <p>我不是大厂，但这三个问题我全踩过。用 Claude Code 当全天候工作伙伴搞了半年多，踩坑的形状跟他们描述的一模一样。</p>

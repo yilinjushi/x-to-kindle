@@ -2,9 +2,9 @@
 <html lang="zh-Hant"><head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Multi-Agents: What&#x27;s Actually Working">
-  <title>Multi-Agents: What&#x27;s Actually Working · Reading Archive</title><link rel="stylesheet" href="/style.css">
+  <title>Multi-Agents: What&#x27;s Actually Working · Reading Archive</title><link rel="stylesheet" href="/style.css"><script src="/sync.js" defer></script>
 </head><body>
-  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Walden @walden_yan · 2026-04-24</div><div class="prose"><h1>Multi-Agents: What&#x27;s Actually Working</h1>
+  <header class="masthead"><a href="/">Reading Archive</a><span class="sync"><span id="sync-status" role="status"></span><button id="sync-button" type="button">同步</button></span></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Walden @walden_yan · 2026-04-24</div><div class="prose"><h1>Multi-Agents: What&#x27;s Actually Working</h1>
 <p>10 months ago, I wrote Don&#x27;t Build Multi-Agents, arguing that most people shouldn&#x27;t try to build multi-agent systems [1]. Parallel agents make implicit choices about style, edge cases, and code patterns. At the time, these decisions often conflicted with each other, leading to fragile products. A lot has changed since then.</p>
 <p>At Cognition, we&#x27;ve begun to deploy multi-agent systems that actually work in practice. Our original observations still hold today for parallel-writer swarms: most of the sexy ideas in that space still don’t see meaningful adoption. But we&#x27;ve found a narrower class of patterns that do: setups where multiple agents contribute intelligence to a task while writes stay single-threaded. In this post, I&#x27;ll summarize what we&#x27;ve learned building them.</p>
 <p>A Refresher on Context Engineering</p>

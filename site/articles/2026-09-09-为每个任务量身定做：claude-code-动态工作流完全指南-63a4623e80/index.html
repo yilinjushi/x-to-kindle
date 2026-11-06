@@ -2,9 +2,9 @@
 <html lang="zh-Hant"><head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="为每个任务量身定做：Claude Code 动态工作流完全指南">
-  <title>为每个任务量身定做：Claude Code 动态工作流完全指南 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+  <title>为每个任务量身定做：Claude Code 动态工作流完全指南 · Reading Archive</title><link rel="stylesheet" href="/style.css"><script src="/sync.js" defer></script>
 </head><body>
-  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Mr Panda @PandaTalk8 · 2026-09-09</div><div class="prose"><h1>为每个任务量身定做：Claude Code 动态工作流完全指南</h1>
+  <header class="masthead"><a href="/">Reading Archive</a><span class="sync"><span id="sync-status" role="status"></span><button id="sync-button" type="button">同步</button></span></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Mr Panda @PandaTalk8 · 2026-09-09</div><div class="prose"><h1>为每个任务量身定做：Claude Code 动态工作流完全指南</h1>
 <p>Bun 团队把底层从 Zig 迁移到 Rust，几十万行代码要改。不是一个人坐那儿一行一行改——是用 Claude Code 的 Workflow 同时派出几十个 AI 代理，每个代理负责一个模块，在独立的 Git 分支里改完、跑通测试、交叉验证，最后合并。</p>
 <p>这个功能叫动态工作流（Dynamic Workflows）。它和你之前见过的任何&quot;自动化编排&quot;都不一样——不是预先定义好的固定流程，而是 Claude 根据你当前的具体任务，实时生成一套最适合的多代理协作方案。</p>
 <p>但问题是——大多数人要么不知道怎么触发它，要么给了一个模糊的指令然后对着一堆并发代理不知所措。这篇文章从&quot;为什么需要它&quot;讲起，把六种核心模式拆开讲透，最后给你十个即拿即用的场景。</p>

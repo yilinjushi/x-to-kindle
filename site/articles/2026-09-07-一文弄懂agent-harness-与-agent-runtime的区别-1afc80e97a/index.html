@@ -2,9 +2,9 @@
 <html lang="zh-Hant"><head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="一文弄懂Agent Harness 与 Agent Runtime的区别">
-  <title>一文弄懂Agent Harness 与 Agent Runtime的区别 · Reading Archive</title><link rel="stylesheet" href="/style.css">
+  <title>一文弄懂Agent Harness 与 Agent Runtime的区别 · Reading Archive</title><link rel="stylesheet" href="/style.css"><script src="/sync.js" defer></script>
 </head><body>
-  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Smartpig @Smartpigai · 2026-09-07</div><div class="prose"><h1>一文弄懂Agent Harness 与 Agent Runtime的区别</h1>
+  <header class="masthead"><a href="/">Reading Archive</a><span class="sync"><span id="sync-status" role="status"></span><button id="sync-button" type="button">同步</button></span></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Smartpig @Smartpigai · 2026-09-07</div><div class="prose"><h1>一文弄懂Agent Harness 与 Agent Runtime的区别</h1>
 <p>本文深入探讨了 AI 智能体 (Agent) 的两个关键组成层面：Agent Harness（智能体驱动程序）与 Agent Runtime（智能体运行时环境）的区别。简单来说，智能体 Harness 是位于基础模型（LLM）之上的应用层逻辑，它为模型提供多步规划、工具调用、状态管理、策略控制等功能；而 智能体 Runtime 则是承载并执行这些动作的基础设施层，类似于“Agent 专用的 Lambda”，负责提供安全隔离的执行环境、资源调度与限制、网络与凭证管理等。两者相辅相成：Harness 定义了智能体“思考”和“行动”的方式，Runtime 则负责在哪儿和怎样安全地执行这些动作。本文将从定义、职责、生命周期、接口、资源管理、安全隔离、可扩展性、可观察性、部署模型、性能、故障与恢复、典型用例等多个方面，逐一比较二者的差异，并给出示例和表格总结，以期提供全面的理解和实践指导。</p>
 <h2>定义</h2>
 <ul>

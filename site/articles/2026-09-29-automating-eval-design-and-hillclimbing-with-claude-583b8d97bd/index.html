@@ -2,9 +2,9 @@
 <html lang="zh-Hant"><head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Automating eval design and hillclimbing with Claude">
-  <title>Automating eval design and hillclimbing with Claude · Reading Archive</title><link rel="stylesheet" href="/style.css">
+  <title>Automating eval design and hillclimbing with Claude · Reading Archive</title><link rel="stylesheet" href="/style.css"><script src="/sync.js" defer></script>
 </head><body>
-  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">2026-09-29</div><div class="prose"><h1>Automating eval design and hillclimbing with Claude</h1>
+  <header class="masthead"><a href="/">Reading Archive</a><span class="sync"><span id="sync-status" role="status"></span><button id="sync-button" type="button">同步</button></span></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">2026-09-29</div><div class="prose"><h1>Automating eval design and hillclimbing with Claude</h1>
 <p>Evaluations provide a signal on how your app or skill is performing on specific tasks. But designing evaluations, and improving performance on them without fooling yourself, is hard. We&#x27;ve added guidance for both to the claude-api skill .</p>
 <p>With the skill, you can run /claude-api build-eval to build an evaluation inside your codebase, and run /claude-api hillclimb to improve your application against it, one change at a time, with a held-out set of examples to catch overfitting.</p>
 <p>In this article, we highlight the principles of good eval design and hillclimbing first, then show how Claude Code with the claude-api skill applies those principles. Weâll close by showing a few examples of these commands.</p>

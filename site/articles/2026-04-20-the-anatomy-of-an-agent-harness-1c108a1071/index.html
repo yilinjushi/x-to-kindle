@@ -2,9 +2,9 @@
 <html lang="zh-Hant"><head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="The Anatomy of an Agent Harness">
-  <title>The Anatomy of an Agent Harness · Reading Archive</title><link rel="stylesheet" href="/style.css">
+  <title>The Anatomy of an Agent Harness · Reading Archive</title><link rel="stylesheet" href="/style.css"><script src="/sync.js" defer></script>
 </head><body>
-  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Akshay  @akshay_pachaar · 2026-04-20</div><div class="prose"><h1>The Anatomy of an Agent Harness</h1>
+  <header class="masthead"><a href="/">Reading Archive</a><span class="sync"><span id="sync-status" role="status"></span><button id="sync-button" type="button">同步</button></span></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Akshay  @akshay_pachaar · 2026-04-20</div><div class="prose"><h1>The Anatomy of an Agent Harness</h1>
 <p>A deep dive into what Anthropic, OpenAI, Perplexity and LangChain are actually building. Covering the orchestration loop, tools, memory, context management, and everything else that transforms a stateless LLM into a capable agent.</p>
 <p>You&#x27;ve built a chatbot. Maybe you&#x27;ve wired up a ReAct loop with a few tools. It works for demos. Then you try to build something production-grade, and the wheels come off: the model forgets what it did three steps ago, tool calls fail silently, and context windows fill up with garbage.</p>
 <p>The problem isn&#x27;t your model. It&#x27;s everything around your model.</p>

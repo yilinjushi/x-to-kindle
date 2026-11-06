@@ -173,6 +173,23 @@ class BookmarkSyncTests(unittest.TestCase):
         self.assertEqual(archive_mock.call_args.kwargs["url"], new_url)
         self.assertEqual(send_mock.call_count, 2)
 
+    def test_archive_only_stops_after_max_new_archives(self):
+        urls = [f"https://x.com/user/status/{n}" for n in (701, 702, 703)]
+        post = {"title": "T", "author": "W", "is_article": False, "items": [{"type": "para", "text": "body"}]}
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            with patch.object(fetch_bookmarks, "load_archived_urls", return_value=set()), patch.object(
+                fetch_bookmarks, "load_sent_history", return_value={}
+            ):
+                _, mocks = self._run_archive_only(
+                    root, urls, [post, post, post],
+                    argv=["fetch_bookmarks.py", "--archive-only", "--count", "3", "--max-new", "2"],
+                )
+                fetch_bookmarks.main()
+
+        self.assertEqual(mocks[6].call_count, 2)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -2,9 +2,9 @@
 <html lang="zh-Hant"><head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="怎么使用 Codex 和 Claude Code 重构前端 UI">
-  <title>怎么使用 Codex 和 Claude Code 重构前端 UI · Reading Archive</title><link rel="stylesheet" href="/style.css">
+  <title>怎么使用 Codex 和 Claude Code 重构前端 UI · Reading Archive</title><link rel="stylesheet" href="/style.css"><script src="/sync.js" defer></script>
 </head><body>
-  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">leon7hao @leon7hao · 2026-09-08</div><div class="prose"><h1>怎么使用 Codex 和 Claude Code 重构前端 UI</h1>
+  <header class="masthead"><a href="/">Reading Archive</a><span class="sync"><span id="sync-status" role="status"></span><button id="sync-button" type="button">同步</button></span></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">leon7hao @leon7hao · 2026-09-08</div><div class="prose"><h1>怎么使用 Codex 和 Claude Code 重构前端 UI</h1>
 <p>声明：我不是设计师，也不是专业的前端，重构之后的设计也存在各种 UI UX 问题，一切都还是以我个人的评价能力来做的，不存在专业向的意见，只是想分享如何通过 vibe coding 的方式来做比较大的 UI 和架构的重构。全文手打无AI，欢迎大家评论区讨论，提供更多建议。原文链接</p>
 <p>Lody 由于底层技术栈和人力的原因，完全使用 Web 来统一构建的网页端、桌面端和移动端。最开始只做了网页端，后续慢慢添加了桌面端和移动端，同时又是几乎在 vibe coding，所以 Lody 代码中移动端的 UI 几乎是到处使用 isMobile() 来判断，并且整体布局也就是直接将桌面端变窄并且添加一个 sidebar 。</p>
 <p>只能说是适配了移动端，但并没有专门为移动端做设计，不可避免地存在交互别扭、字体过小和按钮过小等问题。随着当前远程控制和多端同步的能力趋于稳定了，移动端优化的优先级就变高了。</p>

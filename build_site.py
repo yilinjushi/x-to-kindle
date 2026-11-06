@@ -31,9 +31,9 @@ def _page(title: str, content: str, description: str = "") -> str:
 <html lang="zh-Hant"><head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="{safe_description}">
-  <title>{safe_title} · Reading Archive</title><link rel="stylesheet" href="/style.css">
+  <title>{safe_title} · Reading Archive</title><link rel="stylesheet" href="/style.css"><script src="/sync.js" defer></script>
 </head><body>
-  <header class="masthead"><a href="/">Reading Archive</a></header><main>{content}</main>
+  <header class="masthead"><a href="/">Reading Archive</a><span class="sync"><span id="sync-status" role="status"></span><button id="sync-button" type="button">同步</button></span></header><main>{content}</main>
   <footer>Saved for thoughtful reading.</footer>
 </body></html>
 """

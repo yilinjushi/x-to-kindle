@@ -2,9 +2,9 @@
 <html lang="zh-Hant"><head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Reducing cost and improving performance with Claude Platform">
-  <title>Reducing cost and improving performance with Claude Platform · Reading Archive</title><link rel="stylesheet" href="/style.css">
+  <title>Reducing cost and improving performance with Claude Platform · Reading Archive</title><link rel="stylesheet" href="/style.css"><script src="/sync.js" defer></script>
 </head><body>
-  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">ClaudeDevs @ClaudeDevs · 2026-09-09</div><div class="prose"><h1>Reducing cost and improving performance with Claude Platform</h1>
+  <header class="masthead"><a href="/">Reading Archive</a><span class="sync"><span id="sync-status" role="status"></span><button id="sync-button" type="button">同步</button></span></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">ClaudeDevs @ClaudeDevs · 2026-09-09</div><div class="prose"><h1>Reducing cost and improving performance with Claude Platform</h1>
 <p>Tuning prompt caching, instructions, and effort can reduce Claude&#x27;s cost without sacrificing application performance.</p>
 <p>Performance and cost are often viewed as a trade-off: to spend less, you accept worse results. In practice, we&#x27;ve found that many applications using Claude Platform can cut cost without giving up performance with three fixes: maximize the prompt cache hit rate, remove anti-patterns from your prompts when upgrading to frontier Claude models, and calibrate effort to the task. We&#x27;ve put this guidance into the claude-api skill. In this article, we show how Claude Code with the claude-api skill can often find ways to reduce cost while maintaining or improving performance.</p>
 <h2>Prompt cache</h2>

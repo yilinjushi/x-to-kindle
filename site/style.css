@@ -5,6 +5,11 @@ body { margin: 0; background: var(--paper); color: var(--ink); font-family: Geor
 a { color: inherit; }
 .masthead, main, footer { width: min(100% - 2rem, 760px); margin-inline: auto; }
 .masthead { padding: 1.6rem 0; border-bottom: 1px solid var(--line); }
+.masthead { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.sync { display: flex; align-items: center; gap: .7rem; font: .72rem/1.4 system-ui, sans-serif; color: var(--muted); }
+.sync button { padding: .35rem .9rem; border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--accent); font: 700 .72rem/1.4 system-ui, sans-serif; letter-spacing: .08em; cursor: pointer; }
+.sync button:hover:not(:disabled) { border-color: var(--accent); }
+.sync button:disabled { opacity: .5; cursor: default; }
 .masthead a { font: 700 .78rem/1 system-ui, sans-serif; letter-spacing: .13em; text-decoration: none; text-transform: uppercase; }
 main { min-height: 75vh; }
 .intro { padding: clamp(4rem, 12vw, 8rem) 0 3rem; }

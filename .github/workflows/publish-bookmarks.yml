@@ -4,14 +4,16 @@ on:
   workflow_dispatch:
     inputs:
       count:
-        description: Number of recent bookmarks to publish
+        description: Number of recent bookmarks to scan
         required: true
-        default: "15"
+        default: "50"
         type: string
-  schedule:
-    # Poll X bookmarks every 15 minutes so new bookmarks reach the site quickly.
-    # Free for this public repository; already archived URLs are skipped.
-    - cron: "*/15 * * * *"
+      max_new:
+        description: Stop after archiving this many new bookmarks (0 = no limit)
+        required: true
+        default: "10"
+        type: string
+  # No schedule: triggered by the "同步" button on the site (functions/api/sync.js).
 
 permissions:
   contents: write
@@ -60,8 +62,9 @@ jobs:
 
       - name: Archive recent bookmarks without Kindle delivery
         env:
-          BOOKMARK_COUNT: ${{ inputs.count || '10' }}
-        run: python fetch_bookmarks.py --archive-only --count "$BOOKMARK_COUNT"
+          BOOKMARK_COUNT: ${{ inputs.count || '50' }}
+          MAX_NEW: ${{ inputs.max_new || '10' }}
+        run: python fetch_bookmarks.py --archive-only --count "$BOOKMARK_COUNT" --max-new "$MAX_NEW"
 
       - name: Commit archive updates to private archive
         if: ${{ !cancelled() }}

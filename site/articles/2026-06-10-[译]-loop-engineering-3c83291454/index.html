@@ -2,9 +2,9 @@
 <html lang="zh-Hant"><head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="[译] Loop Engineering">
-  <title>[译] Loop Engineering · Reading Archive</title><link rel="stylesheet" href="/style.css">
+  <title>[译] Loop Engineering · Reading Archive</title><link rel="stylesheet" href="/style.css"><script src="/sync.js" defer></script>
 </head><body>
-  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Cell 细胞 @cellinlab · 2026-06-10</div><div class="prose"><h1>[译] Loop Engineering</h1>
+  <header class="masthead"><a href="/">Reading Archive</a><span class="sync"><span id="sync-status" role="status"></span><button id="sync-button" type="button">同步</button></span></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Cell 细胞 @cellinlab · 2026-06-10</div><div class="prose"><h1>[译] Loop Engineering</h1>
 <p>Loop Engineering 正在取代“你亲自给 agent 写 prompt”这件事。它的核心是：你不再直接 prompt agent，而是设计一个系统，让这个系统去 prompt agent。</p>
 <p>这里的 loop，可以理解为一种递归目标：你定义一个目的，然后让 AI 不断迭代，直到任务完成。它大致由五个构建块组成，而 Claude Code 和 Codex 现在都已经具备了这五个能力。</p>
 <p>我认为，这可能是我们未来与 coding agent 协作的方式。不过，现在仍然很早期。我对此也保持怀疑，而且你必须非常注意 token 成本，因为不同使用模式下的消耗差异可能非常大，尤其取决于你是 token 富裕还是 token 紧张。你仍然需要某种方式来确保质量不会下降，对“AI slop”的担忧也完全合理。话虽如此，我们还是来看看它到底是什么。</p>

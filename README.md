@@ -13,7 +13,7 @@ Every extracted article is also preserved as Markdown with locally downloaded im
 - Cloudflare Pages output directory: `site`
 - No build command is required because the delivery workflows regenerate the HTML before committing.
 - To publish recent bookmarks without sending them to Kindle, run the `Publish Bookmarks To Blog` workflow.
-- Blog synchronization runs every 15 minutes (scheduled runs scan the latest 10 bookmarks), so a new bookmark usually appears on the site within about 15–30 minutes; GitHub can delay scheduled runs at busy times. Kindle delivery keeps its own 3-day cadence. Actions minutes are free because this repository is public.
+- Blog synchronization is on demand: the 同步 button in the site header calls the Pages Function `functions/api/sync.js`, which dispatches `Publish Bookmarks To Blog` (scan the latest 50 bookmarks, archive at most 10 new ones). It refuses while a run is in progress or within 3 minutes of the last one. The Pages project needs the encrypted variable `GITHUB_TOKEN`: a fine-grained token for `yilinjushi/x-to-kindle` with Actions: Read and write. Kindle delivery keeps its own 3-day cadence.
 - Blog sync includes short posts and skips URLs already present in the archive, independently of Kindle sent history. Manual runs default to 15 bookmarks; increase `count` for a larger backlog.
 - Failed extractions make the sync fail visibly; successful archives are still committed so the next run can retry only missing items.
 

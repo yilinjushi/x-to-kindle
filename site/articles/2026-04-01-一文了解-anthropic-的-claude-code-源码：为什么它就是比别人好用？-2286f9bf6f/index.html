@@ -2,9 +2,9 @@
 <html lang="zh-Hant"><head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="一文了解 Anthropic 的 Claude Code 源码：为什么它就是比别人好用？">
-  <title>一文了解 Anthropic 的 Claude Code 源码：为什么它就是比别人好用？ · Reading Archive</title><link rel="stylesheet" href="/style.css">
+  <title>一文了解 Anthropic 的 Claude Code 源码：为什么它就是比别人好用？ · Reading Archive</title><link rel="stylesheet" href="/style.css"><script src="/sync.js" defer></script>
 </head><body>
-  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Yuker @YukerX · 2026-04-01</div><div class="prose"><h1>一文了解 Anthropic 的 Claude Code 源码：为什么它就是比别人好用？</h1>
+  <header class="masthead"><a href="/">Reading Archive</a><span class="sync"><span id="sync-status" role="status"></span><button id="sync-button" type="button">同步</button></span></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Yuker @YukerX · 2026-04-01</div><div class="prose"><h1>一文了解 Anthropic 的 Claude Code 源码：为什么它就是比别人好用？</h1>
 <p>2026年3月31日，安全研究者 Chaofan Shou 发现 Anthropic 发布到 npm 的 Claude Code 包中，source map 文件没有被剥离。</p>
 <p>这意味着：Claude Code 的完整 TypeScript 源码，51.2万行，1903个文件，就这样暴露在了公网上。</p>
 <p>我当然不可能在短短数小时内看完这么多代码，因此，我带着三个问题去读这份源码：</p>

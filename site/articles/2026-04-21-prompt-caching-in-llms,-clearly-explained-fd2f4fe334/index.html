@@ -2,9 +2,9 @@
 <html lang="zh-Hant"><head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Prompt caching in LLMs, clearly explained">
-  <title>Prompt caching in LLMs, clearly explained · Reading Archive</title><link rel="stylesheet" href="/style.css">
+  <title>Prompt caching in LLMs, clearly explained · Reading Archive</title><link rel="stylesheet" href="/style.css"><script src="/sync.js" defer></script>
 </head><body>
-  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Avi Chawla @_avichawla · 2026-04-21</div><div class="prose"><h1>Prompt caching in LLMs, clearly explained</h1>
+  <header class="masthead"><a href="/">Reading Archive</a><span class="sync"><span id="sync-status" role="status"></span><button id="sync-button" type="button">同步</button></span></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Avi Chawla @_avichawla · 2026-04-21</div><div class="prose"><h1>Prompt caching in LLMs, clearly explained</h1>
 <p>A case study on how Claude achieves 92% cache hit-rate</p>
 <p>Every time an AI agent takes a step, it sends the entire conversation history back to the LLM.</p>
 <p>That includes the system instructions, the tool definitions, and the project context it already processed three turns ago. All of it gets re-read, re-processed, and re-billed on every single turn.</p>

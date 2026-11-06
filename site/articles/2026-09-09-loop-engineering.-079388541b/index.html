@@ -2,9 +2,9 @@
 <html lang="zh-Hant"><head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Loop Engineering.">
-  <title>Loop Engineering. · Reading Archive</title><link rel="stylesheet" href="/style.css">
+  <title>Loop Engineering. · Reading Archive</title><link rel="stylesheet" href="/style.css"><script src="/sync.js" defer></script>
 </head><body>
-  <header class="masthead"><a href="/">Reading Archive</a></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Addy Osmani @addyosmani · 2026-09-09</div><div class="prose"><h1>Loop Engineering.</h1>
+  <header class="masthead"><a href="/">Reading Archive</a><span class="sync"><span id="sync-status" role="status"></span><button id="sync-button" type="button">同步</button></span></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">Addy Osmani @addyosmani · 2026-09-09</div><div class="prose"><h1>Loop Engineering.</h1>
 <p>Loop engineering is replacing yourself as the person who prompts the agent. You design the system that does it instead. A loop here can be thought of a recursive goal where you define a purpose and the AI iterates until complete. It&#x27;s roughly five building blocks and Claude Code and Codex both have all five now.</p>
 <p>I believe this may be the future of how we work with coding agents. However, its still early, I&#x27;m skeptical and you absolutely have to be careful about token costs (usage patterns can vary wildly if you are token rich or poor). You also still need some way to ensure quality doesn&#x27;t drop and concerns re: slop are valid. That said, let&#x27;s explore what this is all about.</p>
 <p>@steipete recently said: “You shouldn&#x27;t be prompting coding agents anymore. You should be designing loops that prompt your agents.” Similarly, @bcherny, head of Claude Code at Anthropic, said “I don&#x27;t prompt Claude anymore. I have loops running that prompt Claude and figuring out what to do. My job is to write loops”.</p>
