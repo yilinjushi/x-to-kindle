@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="用 VS Code + Colab 自己部署破限模型">
+  <title>用 VS Code + Colab 自己部署破限模型 · Reading Archive</title><link rel="stylesheet" href="/style.css"><script src="/sync.js" defer></script>
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a><span class="sync"><span id="sync-status" role="status"></span><button id="sync-button" type="button">同步</button></span></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">muihbb @muihbb · 2026-11-09</div><div class="prose"><h1>用 VS Code + Colab 自己部署破限模型</h1>
+<p>最近很多人搞了土区的 Google AI Ultra 20x，刚好我也弄了一个账号。平时经常干坏事，需要用到模型破限，现在有了最大96 G 显存的羊毛，可以自己部署一个无审查的模型，干啥都行，速度还很快，我部署 G4 之后用这个可以跑出 73 tok/s，基本飞快了。 然后通过 magpie 自己接入之前的对话，美滋滋啊，不用破限了，10 积分/小时，送了 2500 积分，能用 250 小时。</p>
+<p>全部代码在仓库 crhywun/colab-llm 里。先把仓库克隆到本地：</p>
+<p>bash
+git clone https://github.com/crhywun/colab-llm.git</p>
+<h2>这套方案是怎么跑通的</h2>
+<p>┌──────── Colab GPU 机器 ────────┐
+ ┌───────────┐ 运行cell │  ┌──────────────────────────┐  │
+ │  VS Code  │────────▶│  │ llama-server             │  │
+ │（你的电脑）│         │  │ 端口 8000，需 API key     │  │
+ └───────────┘         │  └──────────────────────────┘  │       ┌─────────────────┐
+                       │  ┌──────────────────────────┐  │ 隧道  │   Cloudflare    │
+                       │  │ cloudflared（主动连出）   │──┼──────▶│ llm.example.com │
+                       │  └──────────────────────────┘  │       └─────────────────┘
+                       └───────────────▲────────────────┘                ▲
+                                       │ 启动时复制                       │ HTTPS + key
+ ┌──────────────┐ 首次下载 ┌───────────┴───────────┐             ┌──────┴──────────┐
+ │ Hugging Face │────────▶│     Google Drive       │             │   本地客户端     │
+ │ GGUF 模型仓库 │         │ 模型、编译好的程序      │             │ Magpie / chat.py │
+ └──────────────┘         │ secrets.json           │             │  （你的电脑）    │
+                          └────────────────────────┘             └─────────────────────────┘</p>
+<p>思路就是：模型从 Hugging Face 下载一次，存进 Google Drive；每次启动时把模型复制到 Colab 机器，由 llama-server 加载；cloudflared 从 Colab 内部主动连到 Cloudflare，所以即使 Colab 没有公网 IP，外面也能访问到。</p>
+<p>仓库里每个文件对应的每一个步骤：</p>
+<p>仓库文件</p>
+<p>在哪运行</p>
+<p>什么时候用</p>
+<p>notebooks/01_download_to_drive.ipynb</p>
+<p>Colab（CPU）</p>
+<p>第二步，只需一次</p>
+<p>scripts/setup_tunnel.sh</p>
+<p>Mac</p>
+<p>第五步，只需一次</p>
+<p>notebooks/02_serve.ipynb</p>
+<p>Colab（GPU）</p>
+<p>第四、五步，每次使用都运行</p>
+<p>chat.py</p>
+<p>Mac</p>
+<p>第六步</p>
+<h2>准备工作</h2>
+<p>后两项是可选的，没有也能跑通，只是地址每次会变。</p>
+<p>需要什么</p>
+<p>用来做什么</p>
+<p>说明</p>
+<p>Colab 付费额度（Pro / Pro+，或 Google AI Ultra 附带的 Colab）</p>
+<p>租用 A100、G4、H100 这类大显存 GPU</p>
+<p>按计算单元计费，开着就在扣</p>
+<p>VS Code + Google Colab 扩展</p>
+<p>在本地编辑器里写 notebook，代码在 Colab 的机器上运行</p>
+<p>也可以全程用网页版 Colab</p>
+<p>Google Drive，剩余空间 35GB 以上</p>
+<p>长期存放模型、编译好的程序和密钥文件</p>
+<p>必须和 Colab 用同一个 Google 账号</p>
+<p>Mac 上的 Homebrew</p>
+<p>安装 cloudflared</p>
+<p>Windows 用户可以去 Cloudflare 官网下载 cloudflared</p>
+<p>托管在 Cloudflare 的域名（可选）</p>
+<p>得到一个固定地址，比如 llm.example.com</p>
+<p>域名的 nameserver 要指向 Cloudflare，免费套餐就够用</p>
+<p>Google Drive 桌面版（可选）</p>
+<p>让脚本直接把密钥文件写进 Drive</p>
+<p>登录的账号要和 Colab 一致</p>
+<p>本教程以 <code>JonathanColetti/Qwen3.8-27B-Uncensored-GGUF</code> 的 Q8_0 版本（29GB）为例。换成其他 GGUF 模型，步骤也一样。</p>
+<h2>第一步：在 VS Code 里连上 Colab</h2>
+<p>代码都在 Colab 的云端机器上运行，VS Code 只负责编辑和显示输出，你的电脑不占显存，也不占网速。</p>
+<ul>
+<li>
+<p>在 VS Code 里安装 Google Colab 扩展，打开仓库里的 notebook。</p>
+</li>
+<li>
+<p>点右上角的 Select Kernel，选 Colab，用 Google 账号登录。</p>
+</li>
+<li>
+<p>选运行时类型：只下载模型时选 CPU，不消耗 GPU 额度；跑模型时选 GPU，选哪张卡看第三步。</p>
+</li>
+<li>
+<p>第一次运行时会弹出 Google Drive 授权，按提示完成。</p>
+</li>
+</ul>
+<p>如果在 VS Code 里挂载 Drive 失败，把 notebook 上传到网页版 Colab（colab.research.google.com）运行，效果一样。</p>
+<p>Colab 有3种类型的机器供你选择</p>
+<p><img alt="Article image" src="/assets/2026-11-09-用-vs-code-+-colab-自己部署破限模型-99ef2d229f/01.png"></p>
+<p><img alt="Article image" src="/assets/2026-11-09-用-vs-code-+-colab-自己部署破限模型-99ef2d229f/02.png"></p>
+<h2>第二步：把模型下载到 Google Drive</h2>
+<p>运行 <code>notebooks/01downloadto_drive.ipynb</code>，用 CPU 运行，节约一点计算点数，而且这个机器下载速度非常快。模型只需下载一次，可以存在 Drive 里反复使用。</p>
+<p><img alt="Article image" src="/assets/2026-11-09-用-vs-code-+-colab-自己部署破限模型-99ef2d229f/03.png"></p>
+<p>GGUF 仓库一般会放很多个量化版本，只下你要用的那一个文件，改 notebook 里的 <code>FILE</code> 即可。本例仓库的选项：</p>
+<p>文件后缀</p>
+<p>大小</p>
+<p>适合</p>
+<p>Q8_0</p>
+<p>29.1 GB</p>
+<p>40GB 及以上显存，几乎无损</p>
+<p>Q6_K</p>
+<p>22.4 GB</p>
+<p>32GB 显存</p>
+<p>Q4_K_M</p>
+<p>16.8 GB</p>
+<p>24GB 显存</p>
+<p>IQ2_M</p>
+<p>10.6 GB</p>
+<p>16GB 显存，质量损失明显</p>
+<p>文件名里带 <code>noMTP</code>、<code>draft</code> 的是给特殊用法准备的，<code>mmproj</code> 开头的是识图用的视觉模块，只做文字对话都不用下。</p>
+<p>为什么先下到「本地」再复制？这里的本地是 Colab 云端机器的硬盘 <code>/content</code>，不是你的电脑。挂载的 Drive 是网络盘，直接往里面并行写几十 GB 的大文件容易卡住或中断。下载断了也不用慌，重新运行同一个 cell，会接着下。</p>
+<h2>第三步：选 GPU</h2>
+<p>27B 的 Q8_0 模型选 G4 或 A100，哪个每小时消耗的计算单元少就选哪个。显存要放得下模型权重，还要留几 GB 给上下文。</p>
+<p>GPU</p>
+<p>显存</p>
+<p>能跑的版本</p>
+<p>建议</p>
+<p>H100</p>
+<p>80 GB</p>
+<p>Q8_0，32K 上下文</p>
+<p>追求速度时选</p>
+<p>G4（RTX PRO 6000）</p>
+<p>96 GB</p>
+<p>Q8_0，32K 上下文，很宽裕</p>
+<p>推荐</p>
+<p>A100</p>
+<p>40 GB</p>
+<p>Q8_0，16K 上下文</p>
+<p>推荐</p>
+<p>L4</p>
+<p>24 GB</p>
+<p>Q4_K_M</p>
+<p>能用，</p>
+<p>V100 / T4</p>
+<p>16 GB</p>
+<p>只有 IQ2_M</p>
+<p>不推荐</p>
+<p>速度是按显存带宽粗算的，没有实测。开启 MTP 投机解码后，模型作者实测还能再快约 1.2 倍。</p>
+<p>估算显存有个经验公式：参数量（B）× 每参数字节数 + 上下文占用 + 2–4 GB；Q8 约 1 字节，Q4 约 0.55 字节。</p>
+<h2>第四步：启动 llama-server</h2>
+<p>用 GPU 运行时打开 <code>notebooks/02_serve.ipynb</code>，依次运行第 1–4 步：</p>
+<ul>
+<li>
+<p>复制模型：从 Drive 复制到 Colab 机器硬盘，29GB 约几分钟。从本机硬盘加载比直接读 Drive 快得多。</p>
+</li>
+<li>
+<p>准备 llama.cpp：第一次编译约 5–10 分钟，编好后按显卡架构存进 Drive，下次用同型号显卡直接复用。要用较新的版本，旧版本会忽略模型自带的 MTP 加速模块。</p>
+</li>
+<li>
+<p>启动服务：只监听机器内部的 8000 端口，必须带 API key 才能访问。上下文长度按显存自动设置（70GB 以上 32K，否则 16K 并量化 KV cache）。</p>
+</li>
+<li>
+<p>测试：在 Colab 里发一句对话，显示生成速度。我这里用的是 G4 96G 显存，速度非常快，70 tok/s。</p>
+</li>
+</ul>
+<p><img alt="Article image" src="/assets/2026-11-09-用-vs-code-+-colab-自己部署破限模型-99ef2d229f/04.jpg"></p>
+<p>启动失败时，看日志最后几行，最常见的原因是显存不够。</p>
+<h2>第五步：用 Cloudflare 隧道把服务暴露到公网</h2>
+<p>Colab 机器没有公网 IP，外面连不进去。cloudflared 从 Colab 主动连到 Cloudflare，把你的域名转发到 llama-server。</p>
+<p>在 Mac 上配置一次（需要托管在 Cloudflare 的域名）：</p>
+<p>bash
+cd colab-llm
+./scripts/setup_tunnel.sh llm.example.com</p>
+<p>脚本会安装 cloudflared、打开浏览器让你授权域名、创建隧道并绑定子域名，然后生成两个文件：</p>
+<ul>
+<li>
+<p>Drive 里的 <code>models/secrets.json</code>：隧道 token 和固定 API key，Colab 启动时读取。</p>
+</li>
+<li>
+<p>仓库里的 <code>.env</code>：本地客户端用的地址和 key。</p>
+</li>
+</ul>
+<p>如果你的 Mac 上登录了多个 Google Drive 账号，脚本会让你用第二个参数指定 Colab 那个账号的 <code>models</code> 目录。没装 Drive 桌面版，就传一个本地目录，再手动把 <code>secrets.json</code> 上传到 Drive 的 <code>models/</code> 文件夹。</p>
+<p>每次在 Colab 上：运行 <code>02_serve.ipynb</code> 的第 5 步，它会读取 <code>secrets.json</code>，连上隧道，并从公网访问一次做自检，看到「公网自检: 200」就说明通了。</p>
+<p>没有域名也能跑：跳过上面的脚本，第 5 步会自动改用临时的 <code>https://xxx.trycloudflare.com</code> 地址，并打印要填进 <code>.env</code> 的内容。不用注册账号，但每次启动地址和 key 都会变。</p>
+<p>Colab 上跑隧道的始终是 cloudflared，所以直接用 cloudflared 更省事。</p>
+<h2>第六步：在本地调用</h2>
+<p>直接接入 magpie 开始调用 ，美滋滋啊 速度 70 tok/s 左右，而且这个是无审查版本的，干啥都行。我让他逆向，直接直白告诉他，还有写带颜色的小说都不带犹豫的。</p>
+<p><img alt="Article image" src="/assets/2026-11-09-用-vs-code-+-colab-自己部署破限模型-99ef2d229f/05.png"></p>
+<p><img alt="Article image" src="/assets/2026-11-09-用-vs-code-+-colab-自己部署破限模型-99ef2d229f/06.jpg"></p>
+<p><img alt="Article image" src="/assets/2026-11-09-用-vs-code-+-colab-自己部署破限模型-99ef2d229f/07.jpg"></p>
+<h2>用完关掉机器</h2>
+<p>关掉 VS Code 或 notebook 不等于释放机器，GPU 可能还会一直运行到空闲超时，期间一直扣计算单元。用完运行 <code>02_serve.ipynb</code> 最后一个 cell 里的：</p>
+<p>python
+from google.colab import runtime
+runtime.unassign()</p>
+<p>机器会立刻被回收，Drive 里的模型、程序和密钥不受影响。也可以在网页版 Colab 的「运行时 → 管理会话」里终止，顺便检查有没有忘记关的机器。</p>
+<p>下次再用：选 GPU 运行时，运行 <code>02_serve.ipynb</code> 的第 1–5 步。固定域名下客户端不用改。</p>
+<h2>常见问题</h2>
+<p>下面这些坑都是搭建过程中实际碰到过的，仓库代码里已经处理好了。</p>
+<p>现象</p>
+<p>原因</p>
+<p>解决办法</p>
+<p>访问域名返回 error code: 1033（HTTP 530）</p>
+<p>隧道另一头没有连接：Colab 没开、第 5 步没跑或报错</p>
+<p>重新运行第 3、5 步，看 cloudflared.log</p>
+<p>客户端识别不到模型</p>
+<p>同上，或 Base URL 多了一段 /v1</p>
+<p>先用 curl 测试，再调客户端</p>
+<p>返回 401</p>
+<p>API key 不对。没配固定 key 时，每次启动都会随机生成新 key</p>
+<p>用 setup_tunnel.sh 生成的固定 key</p>
+<p>FileNotFoundError: /content/cloudflared</p>
+<p>旧写法 !pkill -f cloudflared; wget ... 里，pkill 把执行这行的 shell 自己也杀了</p>
+<p>用仓库里的最新 notebook</p>
+<p>改过的 notebook 又变回旧版本</p>
+<p>VS Code 把内存里的旧版本存盘，覆盖了磁盘上的修改</p>
+<p>先运行「File: Revert File」，再保存</p>
+<p>Colab 读不到 secrets.json</p>
+<p>Drive 桌面版登录的账号和 Colab 不是同一个</p>
+<p>确认文件在 Colab 那个账号的 MyDrive/models/ 里</p>
+<p>本机 dig 查到 198.18.x.x</p>
+<p>代理软件（如 Clash）的 fake-ip 模式，不影响访问</p>
+<p>忽略；要查真实记录去 Cloudflare 后台看</p>
+<p>每次启动都要编译很久</p>
+<p>换了不同架构的显卡，或上次编译没存进 Drive</p>
+<p>固定用同一种 GPU</p>
+<p>启动报显存不足</p>
+<p>模型加上下文放不下</p>
+<p>换小一号的量化，或改小上下文</p>
+<p>据说还有更加高级的玩法，就是可以内存+显存 Colab的机器可以达到 200 多 G ，是不是可以自己部署一个 Deepseek flash 1017 玩玩。</p></div><a class="source" href="https://x.com/muihbb/status/2118681685189603540" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>
