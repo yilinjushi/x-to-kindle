@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="The Most Important Formula in AI">
+  <title>The Most Important Formula in AI · Reading Archive</title><link rel="stylesheet" href="/style.css"><script src="/sync.js" defer></script>
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a><span class="sync"><span id="sync-status" role="status"></span><button id="sync-button" type="button">同步</button></span></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">2026-11-15</div><div class="prose"><h1>The Most Important Formula in AI</h1>
+<p>Everyone in AI talks about personalization, but almost nobody has figured out how to teach a model your taste without making you hate the process.</p>
+<p>Try to train an AI on what good looks like—say, to help you find the next beat in a talk or edit in your voice—and it immediately turns you into a grader. Read these paragraphs. Pick a winner. Label 30 pairs. You close the tab, and the system learns nothing.</p>
+<p>The bottleneck used to be intelligence. Now it&#x27;s human attention: how do you get what&#x27;s in a person&#x27;s head into a model when their attention is limited and they hate doing grunt work?</p>
+<p>Mike Taylor, our head of evals at Every, and I worked out a formula for what that exchange actually has to optimize. I think it&#x27;s the most important formula in AI right now—and the formula that, if we get it right, makes a company like Every work.</p>
+<p>Here is the whole idea in one sentence: the value of any question an AI asks you equals the odds you&#x27;ll actually answer it, times how much your answer updates what the model knows about your taste.</p>
+<p>Written out, it looks like this:</p>
+<p>Because those two numbers are multiplied, getting only one half right breaks the whole thing. Easy thumbs-up clicks get answered, but they barely update the model. Long grading sessions would teach the model a lot, but you close the tab—so the odds you answer drop to zero. Either way, the value is zero.</p>
+<p>And there is only one real way to raise the odds you answer: to get value from you, the AI has to give value to you. What you get out of answering has to beat what it costs you to think:</p></div><a class="source" href="https://frontier.every.to/experiments/the-math-of-being-on-the-same-wavelength" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>
