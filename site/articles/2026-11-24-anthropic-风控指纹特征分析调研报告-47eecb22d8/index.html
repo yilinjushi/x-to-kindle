@@ -1,0 +1,907 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Anthropic 风控指纹特征分析调研报告">
+  <title>Anthropic 风控指纹特征分析调研报告 · Reading Archive</title><link rel="stylesheet" href="/style.css"><script src="/sync.js" defer></script>
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a><span class="sync"><span id="sync-status" role="status"></span><button id="sync-button" type="button">同步</button></span></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">riba2534 @riba2534 · 2026-11-24</div><div class="prose"><h1>Anthropic 风控指纹特征分析调研报告</h1>
+<p><img alt="Article image" src="/assets/2026-11-24-anthropic-风控指纹特征分析调研报告-47eecb22d8/01.jpg"></p>
+<p>Anthropic 在 claude.ai 与 platform.claude.com 全站加载的风控脚本 s-cdn.anthropic.com/s.js</p>
+<h1>1 项目介绍</h1>
+<p><img alt="Article image" src="/assets/2026-11-24-anthropic-风控指纹特征分析调研报告-47eecb22d8/02.jpg"></p>
+<p>_图 1　风控全链路：浏览器采集 → Sift 服务器评分 → Anthropic 处置</p>
+<p><code>s-cdn.anthropic.com/s.js</code> 是美国反欺诈公司 Sift（原名 Sift Science）的浏览器信标（beacon，嵌在页面里、把设备与环境信息回传服务器的脚本）。Anthropic 把它挂在自己的子域名下，claude.ai 和开发者平台 platform.claude.com 的每个页面都会加载。页面路径每变化一次，它就把约 79 项设备、浏览器与页面信息拼进一个 1×1 GIF 请求发出去。这个子域名通过 DNS 别名直接指向 Sift 的服务器，证书也归 Sift 所有，所以数据名义上发给 anthropic.com，实际直接落到 Sift。Sift 据此识别设备，把设备和账户连成关联图谱，再结合它在 3.4 万个客户站点积累的数据打分；Anthropic 按分数决定放行、要求验证还是封禁。</p>
+<h2>1.1 核心结论</h2>
+<p>上报什么：每次约 79 个字段、约 1.2 KB，分五类。
+身份标识：账户 UUID 明文、__ssid 设备 cookie、会话 ID 的 MD5。
+硬件派生信号：显卡型号哈希、canvas 指纹、音频指纹、CPU 核数、内存、屏幕、CPU 架构。
+浏览器与系统环境：UA、语言、时区、插件、存储能力。
+反自动化与反伪装：webdriver、无头浏览器痕迹、篡改检测、无痕检测、广告拦截。
+页面上下文：完整 URL、页面标题、来源页。
+不做什么：不监听键盘、鼠标，不读输入内容和剪贴板，不用 WebRTC 探测内网 IP，不读地理位置、摄像头、麦克风，不枚举字体，不加载远程代码。也没有把 ID 写进多个存储、清掉一处再从别处回填的 evercookie 做法。
+服务端能做什么：
+识别设备：Sift 官方称会“用多种方法计算多个设备指纹”，再叠加 IP，按概率匹配出设备 ID。
+建关联图谱：把设备、账户、IP、邮箱、支付指纹连成多对多的图谱。
+引入全网信誉：借助 3.4 万个站点共享的邮箱、IP、设备指纹信誉打分，按 Anthropic 设定的阈值自动放行、加强验证、转人工或封禁。
+跨客户查询：2026 年推出的 Global Profile 还能按账户、邮箱、手机号，查到其他 Sift 客户那里的关联账户、封禁和拒付记录。
+有没有机器码级风控：
+严格意义上没有。浏览器拿不到 MAC 地址、硬盘序列号、主板 UUID、Windows MachineGuid、TPM，s.js 也没有尝试去读。
+实践上，它接近“浏览器安装级”的持久识别。同一个 Chrome 里清 cookie、换 profile、开无痕之后，79 个字段中只有 __ssid 变化，其余 74 个逐字段相同。服务端几乎必然能把你认回原设备。
+什么能断开关联：
+登录同一账户会立刻确定关联，任何前端操作都没用。
+换了浏览器内核，只剩 16 个低熵字段相同；再换网络出口和显示环境，前端层面的关联基本就断开了，但仍可能被邮箱、手机号、支付卡和行为模式在服务端连上。
+所以，“这台电脑永远能被认出”不成立；“不换账户、不换浏览器、不换网络时几乎总能被认出”成立。
+两个意外发现：
+Chrome 151 上无痕检测已经失效。
+UA 篡改检测和操作系统篡改检测有代码缺陷：检测到篡改时，字段会直接从请求里消失，不会上报 true。不过“字段缺失”本身仍可能被当作信号。</p>
+<p>⚠️ 警告
+最值得注意的隐私敞口：登录后每切换一个对话，脚本就上报一次，内容包括当前完整 URL（含对话 UUID）和页面标题（对话标题的开头部分），并和明文账户 UUID 一起直接发给 Sift。这一结论来自 claude.ai 前端代码分析；调研用的浏览器没有登录，所以没有实际抓到这类请求。</p>
+<h2>1.2 术语速查</h2>
+<p>术语</p>
+<p>释义</p>
+<p>Sift</p>
+<p>美国反欺诈公司（原名 Sift Science），提供设备指纹、账户滥用与支付欺诈评分。它是 Anthropic 子处理者清单上的“Fraud and abuse detection”服务商。</p>
+<p>信标（beacon）</p>
+<p>嵌在页面里、把设备与环境信息回传服务器的脚本或请求。本文指 s.js 和它发出的 1×1 GIF。</p>
+<p>浏览器指纹</p>
+<p>不保存任何 ID，而是用浏览器暴露的软硬件特征组合来识别设备。</p>
+<p>FingerprintJS（FPJS）</p>
+<p>开源浏览器指纹库。s.js 内嵌了它的删减版 3.4.2。</p>
+<p>detectIncognito</p>
+<p>开源的无痕模式检测库。s.js 内嵌 1.6.2 版。</p>
+<p>__ssid</p>
+<p>Sift 脚本写在 claude.ai 域名下的 cookie，值是随机 UUID，上报字段名为 uu。</p>
+<p>CNAME 伪装（CNAME cloaking）</p>
+<p>把自家子域名用 DNS 别名指向第三方服务器，让第三方请求看起来像第一方请求。s-cdn.anthropic.com 指向 Sift 的 b-0.hexagon-cdn.com。</p>
+<p>MD5</p>
+<p>一种哈希算法。s.js 对部分字段做不加盐的 MD5；原值的可能取值少时，可以用字典反查。</p>
+<p>canvas / WebGL / 音频指纹</p>
+<p>分别让浏览器画一张图、读取显卡型号、离线渲染一段音频，用结果的细微差异区分设备。</p>
+<p>webdriver / 无头浏览器（headless）</p>
+<p>前者是浏览器被自动化程序控制时暴露的标志，后者是没有界面、在后台运行的浏览器，常用于爬虫和批量操作。</p>
+<p>设备 ID（device ID）</p>
+<p>Sift 服务端综合多种指纹和 IP 算出的设备标识，与 __ssid cookie 不是一回事。</p>
+<p>Global Data Network</p>
+<p>Sift 在 3.4 万多个客户站点之间共享的风险数据网络。</p>
+<p>Global Profile</p>
+<p>Sift 2026 年推出的跨客户身份查询接口。</p>
+<p>Events API</p>
+<p>客户（这里是 Anthropic）把注册、登录、支付等业务事件回传给 Sift 的服务端接口。</p>
+<p>机器码</p>
+<p>本文指硬件级的唯一标识，例如 MAC 地址、硬盘序列号、主板 UUID、Windows MachineGuid、TPM 背书密钥。</p>
+<h1>2 脚本是谁的：Sift 信标 v122 与它在 claude.ai 上的接法</h1>
+<h2>2.1 一份原样使用、由 Sift 托管的第三方脚本</h2>
+<p>文件头部的注释列出了脚本打包的开源代码：crypto-js、fingerprintjs2、FingerprintJS v3、detectIncognito。脚本内部的版本号字段是 122。三处来源的比对结果如下：</p>
+<ul>
+<li>
+<p>内容与官方原版一致：把 <code>s-cdn.anthropic.com/s.js</code> 与 Sift 官方地址 <code>cdn.sift.com/s.js</code>、<code>cdn.siftscience.com/s.js</code> 当天的文件比对，三份文件的 MD5 都是 <code>4e494a08…</code>，格式化后 diff 为空。【实测】</p>
+</li>
+<li>
+<p>跟随最新版：与 Sift 锁定版本的 <code>js/s-122.js</code> 相比只差 1 个字节（<code>sri:&amp;quot;0&amp;quot;</code>）。说明 Anthropic 加载的是“浮动最新版”，Sift 发布新版本后，claude.ai 上会自动生效。【实测】</p>
+</li>
+<li>
+<p>由 Sift 托管：<code>s-cdn.anthropic.com</code> 的 DNS 是一条 CNAME，指向 <code>b-0.hexagon-cdn.com</code>。TLS 证书主体是 <code>O=Sift Science, Inc.</code>，同一张证书还覆盖 OpenTable、Razorpay、DigitalOcean 等 Sift 客户的子域名。Anthropic 只是把子域名指了过去，脚本和数据接收都在 Sift 的服务器上。【实测】</p>
+</li>
+</ul>
+<p>从证书和网页存档可以排出时间线：</p>
+<ul>
+<li>
+<p>2023-10-05：Anthropic 首次为这个子域名签发证书。此后 20 个历史版本里，有 19 个能在 Sift 官方地址的存档中找到完全相同的文件，剩下 1 个只是 gzip 编码不同。</p>
+</li>
+<li>
+<p>2024-12：加入 FingerprintJS 3.4.2，带来 WebGL 与音频指纹。</p>
+</li>
+<li>
+<p>2025-11：v118 加入无痕检测。</p>
+</li>
+<li>
+<p>2026-03：v120 加入 webdriver、窗口外尺寸、通知权限三项反自动化信号。</p>
+</li>
+<li>
+<p>2026-11-11：升到 v122。</p>
+</li>
+</ul>
+<p>这说明反自动化能力一直在增强，而且增强是 Sift 推送的，不是 Anthropic 自己改的。</p>
+<p><img alt="Article image" src="/assets/2026-11-24-anthropic-风控指纹特征分析调研报告-47eecb22d8/03.jpg"></p>
+<p>_图 2　s.js 的构成：73% 是内嵌开源库</p>
+<p>58 KB 里真正负责采集的不到一半：FingerprintJS 约占 28%，detectIncognito 约 15%，Sift 自有信号约 12%。其余是 crypto-js 的 MD5 实现、Babel 运行时，以及传输与命令队列。</p>
+<p>FingerprintJS 被删掉了 7 个组件：</p>
+<ul>
+<li>
+<p>字体枚举既最耗时、区分度也最高，被删后没有任何替代实现。</p>
+</li>
+<li>
+<p>canvas、广告拦截、vendor 三项由 Sift 自己的信号补上。</p>
+</li>
+</ul>
+<p>FPJS 自己会算一个总指纹 visitorId，但它是“用到才计算”的属性，Sift 从来不读，所以既不计算也不上报。Sift 要的是原始组件，指纹在服务端自己算。【代码】</p>
+<h2>2.2 claude.ai 怎么加载和配置它</h2>
+<p><img alt="Article image" src="/assets/2026-11-24-anthropic-风控指纹特征分析调研报告-47eecb22d8/04.jpg"></p>
+<p>_图 3　claude.ai 的加载门控与上报时机</p>
+<p>两个站点的加载方式不同：</p>
+<ul>
+<li>
+<p>claude.ai：前端组件在账户信息加载完成后，动态插入 script 标签。</p>
+</li>
+<li>
+<p>platform.claude.com：用 Next.js 的 lazyOnload 方式加载，即页面空闲时再加载。</p>
+</li>
+</ul>
+<p>两站推入的命令完全一致，下表的参数都是实测抓到的，账户 UUID 一项来自代码：</p>
+<p>命令</p>
+<p>参数</p>
+<p>作用</p>
+<p>_setAccount</p>
+<p>99dfa2e716</p>
+<p>Anthropic 在 Sift 的信标密钥（公开的前端值）</p>
+<p>_setTrackerUrl</p>
+<p>s-cdn.anthropic.com</p>
+<p>把上报地址从 hexagon-analytics.com 改成 Anthropic 子域名；这个子域名实际指向 Sift</p>
+<p>_setRedactedQueryParams</p>
+<p>[&quot;q&quot;,&quot;returnTo&quot;]</p>
+<p>清空 URL 中搜索词和跳转地址这两个参数的值</p>
+<p>_setUserId</p>
+<p>账户 UUID（未登录时为空）</p>
+<p>把这台设备上的每次访问挂到你的账户名下</p>
+<p>_setSessionId</p>
+<p>activitySessionId cookie（有效期 12 小时）</p>
+<p>把同一会话里的前端信标和后端业务事件关联起来</p>
+<p>_trackPageview</p>
+<p>{cacheStableSignals:true}</p>
+<p>采集并上报一次；音频等稳定信号缓存在内存里复用</p>
+<p>页面没有调用 <code>_setCookieDomain</code>，所以 <code>__ssid</code> 写在注册域上：</p>
+<ul>
+<li>
+<p>claude.ai 写到 <code>.claude.ai</code>。</p>
+</li>
+<li>
+<p>platform 写到 <code>.claude.com</code>，与营销站 claude.com 共享。</p>
+</li>
+<li>
+<p>营销站 claude.com 和 www.anthropic.com 本身不加载 s.js。【实测】</p>
+</li>
+</ul>
+<p>前端代码里有一组不加载的条件：组织带 HIPAA 合规标记、功能开关 <code>sift_browser_script_kill_switch</code> 打开、路径属于 <code>/perks/</code> 或 <code>/desktop/approve/</code>、入口 URL 带一次性凭据参数。【代码】</p>
+<p>ℹ️ 注意
+门控说明 Anthropic 主动避开了 HIPAA 场景和带一次性凭据的 URL。但整个 Sift 组件里没有任何 cookie 同意判断：同页的 Segment 分析会受同意设置控制，Sift 不会。Anthropic 的 Cookie 表也把 <code>__ssid</code> 列为“必要、不可拒绝”的 Security cookie。普通用户没有关闭它的开关。</p>
+<h1>3 一次上报怎么发生</h1>
+<p><img alt="Article image" src="/assets/2026-11-24-anthropic-风控指纹特征分析调研报告-47eecb22d8/05.jpg"></p>
+<p>_图 4　一次上报的时序</p>
+<p>每次调用 <code>_trackPageview</code>，脚本都会先浅拷贝当前配置，然后同时启动两组采集：</p>
+<ul>
+<li>
+<p>Sift 自有的 21 个信号：读写 <code>__ssid</code>、canvas 绘制、无痕检测、广告拦截诱饵、四项篡改检测等。</p>
+</li>
+<li>
+<p>FingerprintJS 的 28 个组件：它会等浏览器空闲才启动，并设了 10 秒超时。</p>
+</li>
+</ul>
+<p>两组结果合并后改成短字段名。没有会话 ID 时，用 <code>__ssid</code> 的 MD5 代替。最后拼成 querystring，以 <code>&amp;amp;z=z</code> 结尾，赋给一张 1×1 的 <code>Image</code>。请求发出后不读响应、不重试。【代码】</p>
+<p>沙箱实测的时间线（相对页面导航开始）【实测】：</p>
+<ul>
+<li>
+<p>48 ms：写入 <code>__ssid</code>。</p>
+</li>
+<li>
+<p>99–105 ms：绘制 canvas 并导出图像数据。</p>
+</li>
+<li>
+<p>128 ms：查询存储配额（无痕检测）。</p>
+</li>
+<li>
+<p>134 ms：离线渲染一段音频。</p>
+</li>
+<li>
+<p>155 ms：执行 14 次媒体查询。</p>
+</li>
+<li>
+<p>156–162 ms：读取 WebGL 显卡串。</p>
+</li>
+<li>
+<p>163 ms：发出 GIF。</p>
+</li>
+</ul>
+<p>整个过程不到 200 ms，用户感知不到。</p>
+<h2>3.1 传输格式：明文 querystring，8 个字段做 MD5</h2>
+<p>下面是 claude.ai 登录页实际发出的一条信标，已打码，并按类别重新排版：</p>
+<p>GET https://s-cdn.anthropic.com/images/87963.gif?
+  bk=99dfa2e716 &amp; r=9985…  &amp; v=122 &amp; cs=UTF-8 &amp; h=claude.ai &amp; l=zh-CN
+  S=0016…(md5) &amp; uu=d44c…(uuid) &amp; t=[19 字符] &amp; u=https%3A%2F%2Fclaude.ai%2Flogin
+  ua=Mozilla/5.0 (X11; Linux x86_64) … Chrome/151.0.0.0 Safa…
+  nm=2 &amp; mh=6319… &amp; np=5 &amp; ph=332b… &amp; sh=1322 &amp; sw=2560 &amp; cd=24 &amp; p=Linux x86_64
+  to=-480 &amp; d=0 &amp; ce=true &amp; tp=0 &amp; ol=true &amp; pr=Gecko &amp; ps=20030107 &amp; vd=Google Inc.
+  hc=64 &amp; je=false &amp; ss=true &amp; ls=true &amp; in=true &amp; db=false
+  tl=false &amp; tr=false &amp; ts=false &amp; tb=false &amp; ab=false &amp; cf=e4da… &amp; sri=0 &amp; pf=26
+  inc=false &amp; bn=Chrome &amp; ow=0 &amp; oh=0 &amp; wd=false &amp; npe=default
+  fph=c0f4… &amp; fsh=1322 &amp; fsw=2560 &amp; fcd=24 &amp; fp=Linux x86_64 &amp; ftp=0 &amp; fhc=64
+  fss=true &amp; fls=true &amp; fin=true &amp; fad=124.… &amp; fdm=32 &amp; fvf=chrome &amp; fcg=srgb
+  ffc=false &amp; fm=0 &amp; fc=0 &amp; frm=false &amp; fhdr=false &amp; fmf=70d5… &amp; fa=255
+  fte=false &amp; fts=false &amp; fce=true &amp; fpdf=true &amp; fl=dfa0… &amp; ft=Asia/Shanghai &amp; pfe=9 &amp; z=z
+（登录后还会多出 ui=&lt;账户 UUID 原文&gt;）</p>
+<p>特性</p>
+<p>结论</p>
+<p>加密 / 签名 / 压缩</p>
+<p>都没有。任何能看到这个 URL 的一方，包括 Sift 的服务器日志、做 TLS 解密的企业代理、浏览器扩展，都能直接读出全部内容。【实测】</p>
+<p>哈希</p>
+<p>只有 S、cf、fvch、fl、fph、fmf、mh、ph 这 8 个字段是不加盐 MD5。例如 fl 就是 MD5(&quot;zh-CN&quot;)，fvch 是 MD5(&quot;vendor=…;renderer=…&quot;)。原值的可能取值少，用字典可以反查。【实测】</p>
+<p>截断</p>
+<p>UA、URL、referrer 编码后超过 200 字符、标题超过 100 字符时，会把原文反复对半截断，直到不超长为止。中文标题通常只剩前几个字。【代码】</p>
+<p>大小</p>
+<p>1 个 GET 请求，URL 长 1.15–1.27 KB，含 77–79 个键。【实测】</p>
+<p>cookie</p>
+<p>信标请求本身不带 cookie。__ssid 的值放在 URL 参数 uu 里。【实测】</p>
+<h2>3.2 频率：路径每变一次就上报一次</h2>
+<p>s.js 自己不监听任何事件，上报次数完全由页面决定。claude.ai 的规则是：</p>
+<ul>
+<li>
+<p>路由的 pathname 每变化一次，调用一次 <code>_trackPageview</code>。</p>
+</li>
+<li>
+<p>首次加载算 1 次。</p>
+</li>
+<li>
+<p>切换对话（<code>/chat/&amp;lt;uuid&amp;gt;</code>）、进入设置或升级页各算 1 次。</p>
+</li>
+<li>
+<p>发生重定向时，两个路径各报 1 次。</p>
+</li>
+<li>
+<p>只改 query 或 hash、在同一个对话里发消息都不上报，也没有定时心跳。</p>
+</li>
+</ul>
+<p>实测中，每次切换路由后 0.1–1 秒内发出请求。【实测 + 代码】</p>
+<h1>4 上报内容全景：79 个字段分五类</h1>
+<p><img alt="Article image" src="/assets/2026-11-24-anthropic-风控指纹特征分析调研报告-47eecb22d8/06.jpg"></p>
+<p>_图 5　上报字段全景：79 个键分五类</p>
+<p>下面五张表按类别拆开说明，每张表里都标出原始来源、上报形态，以及它能让服务端推出什么。字段代码就是 querystring 里的键名：带 <code>f</code> 前缀的来自 FingerprintJS，其余来自 Sift 自有信号。</p>
+<h2>4.1 身份标识：直接指认“你是谁”</h2>
+<p>字段</p>
+<p>来源</p>
+<p>形态</p>
+<p>意味着什么</p>
+<p>ui</p>
+<p>页面传入的账户 UUID</p>
+<p>明文</p>
+<p>每一次访问都和你的 Claude 账户绑定</p>
+<p>uu</p>
+<p>__ssid cookie，随机 UUIDv4</p>
+<p>明文</p>
+<p>浏览器级的长期 ID，清 cookie 后才会变</p>
+<p>S</p>
+<p>activitySessionId，没有时用 __ssid</p>
+<p>MD5</p>
+<p>把前端信标和后端业务请求的会话对齐</p>
+<p>bk</p>
+<p>Anthropic 的信标密钥</p>
+<p>明文</p>
+<p>标明这条数据属于 Anthropic 的 Sift 租户</p>
+<p>r v sri z</p>
+<p>随机数、版本号 122、常量 0、结尾标记</p>
+<p>明文</p>
+<p>传输辅助字段，不带个人信息</p>
+<h2>4.2 硬件派生信号：这台机器的“体质”</h2>
+<p>字段</p>
+<p>怎么算</p>
+<p>反映的层次</p>
+<p>稳定性 / 区分度</p>
+<p>fvch</p>
+<p>WebGL 读取未屏蔽的显卡厂商和型号字符串，再做 MD5</p>
+<p>GPU 型号、驱动、图形后端</p>
+<p>同一浏览器内极稳定；区分度最高</p>
+<p>cf</p>
+<p>在 2000×200 的离屏画布上画 emoji、Arial 文字和混合模式图形，导出后做 MD5</p>
+<p>GPU 与字体光栅化差异</p>
+<p>Chrome 下稳定；Firefox 每次会话随机化</p>
+<p>fad</p>
+<p>离线渲染一段三角波，经过压缩器后，对最后 500 个采样求和</p>
+<p>浏览器的音频实现（不经过声卡）</p>
+<p>换浏览器就变：Chrome 约 124.04，Firefox 约 35.75</p>
+<p>hc fhc</p>
+<p>hardwareConcurrency</p>
+<p>CPU 逻辑核数</p>
+<p>跨浏览器相同；Firefox 隐私窗口会改报 8</p>
+<p>fdm</p>
+<p>deviceMemory，取整到 2 的幂</p>
+<p>内存档位</p>
+<p>只有 Chromium 在 HTTPS 页面上有这个值</p>
+<p>fa</p>
+<p>用浮点 NaN 的符号字节判断</p>
+<p>CPU 指令集：255 为 x86，127 为 ARM</p>
+<p>极稳定，约 1 bit 信息</p>
+<p>sh sw fsh fsw</p>
+<p>screen.width/height；FPJS 的两个字段有字典序排序 bug</p>
+<p>显示器分辨率</p>
+<p>跨浏览器相同；换显示器或改缩放会变</p>
+<p>cd fcd fcg fhdr</p>
+<p>色深、色域、HDR 媒体查询</p>
+<p>显示器能力</p>
+<p>低熵</p>
+<p>tp ftp fte fts</p>
+<p>触点数、能否创建触摸事件</p>
+<p>是否触屏设备</p>
+<p>低熵；可识别用桌面浏览器冒充手机</p>
+<p>fmf</p>
+<p>24 个 Math 函数的结果做 MD5</p>
+<p>JS 引擎的数学库实现</p>
+<p>主要区分浏览器引擎家族</p>
+<h2>4.3 浏览器与系统环境：软件这一层</h2>
+<p>字段</p>
+<p>内容</p>
+<p>备注</p>
+<p>ua p fp</p>
+<p>User-Agent（截断）、平台</p>
+<p>用于和其他字段交叉核对，判断是否篡改</p>
+<p>l fl</p>
+<p>界面语言；fl 是语言的 MD5，Chrome 下只取主语言</p>
+<p>fl 可以字典反查</p>
+<p>to d ft</p>
+<p>时区偏移、夏令时差、IANA 时区名</p>
+<p>服务端可以和 IP 的地理位置比对</p>
+<p>pr ps vd bn fvf</p>
+<p>product、productSub、vendor、浏览器名、厂商特征</p>
+<p>bn 能分出 Brave、Edge、Opera</p>
+<p>nm mh np ph fph fpdf</p>
+<p>MIME 类型数与 MD5、插件数与 MD5、插件名 MD5、PDF 查看器</p>
+<p>无头浏览器的插件数通常为 0</p>
+<p>ce fce ss ls in db fss fls fin je</p>
+<p>cookie、各类存储、Java 是否可用</p>
+<p>只检测能力，不读取存储里的内容</p>
+<p>dt ol cs ffc fm fc frm fic</p>
+<p>Do Not Track、在线状态、字符集、无障碍与偏好类媒体查询</p>
+<p>低熵，主要用来凑组合</p>
+<h2>4.4 反自动化与反伪装：你是不是机器人、有没有在装</h2>
+<p>字段</p>
+<p>检测什么</p>
+<p>实测表现</p>
+<p>wd</p>
+<p>navigator.webdriver</p>
+<p>Playwright 运行的各种模式都是 true；正常 Chrome 是 false</p>
+<p>npe ow oh</p>
+<p>通知权限、浏览器外窗口尺寸</p>
+<p>旧版无头浏览器的通知权限是 denied；后台标签页的外窗口尺寸为 0</p>
+<p>tl tr</p>
+<p>语言前后矛盾、屏幕尺寸小于可用区域</p>
+<p>只有用 JS 改写 navigator 或 screen 时才会触发</p>
+<p>ts tb</p>
+<p>UA、平台、触屏、引擎特征是否自相矛盾</p>
+<p>有缺陷：检测到矛盾时字段直接消失，不会发 true</p>
+<p>inc</p>
+<p>无痕模式（detectIncognito）</p>
+<p>Chrome 151 失效；Firefox 隐私窗口能检出</p>
+<p>ab</p>
+<p>插入一个 div.adsbox 诱饵元素，看它是否被隐藏</p>
+<p>用来识别广告拦截插件</p>
+<p>pf pfe</p>
+<p>两组采集各自的耗时（毫秒）</p>
+<p>可以作为时序特征，识别虚拟机或被注入过的环境</p>
+<h2>4.5 页面上下文：你在看什么</h2>
+<p>字段</p>
+<p>内容</p>
+<p>注意</p>
+<p>u</p>
+<p>完整 location.href</p>
+<p>只清空 q、returnTo 两个参数的值；路径和 #hash 原样上报，对话页会带上对话 UUID</p>
+<p>t</p>
+<p>document.title，编码后最长 100 字符</p>
+<p>对话页的标题是“对话名 + 页面名”，中文通常会留下前几个字</p>
+<p>rf</p>
+<p>来源页，会先尝试读取顶层或父级页面</p>
+<p>实测曾带出 Cloudflare 人机挑战的一次性 token，没有被脱敏</p>
+<p>h</p>
+<p>主机名</p>
+<p>—</p>
+<p>🛑 小心
+MD5 挡不住什么：语言、显卡串、插件名这类字段，原值的可能取值都很少，可以逐个列举。所以这 8 个哈希更像压缩长度，起不到匿名作用。真正能直接指认人的 <code>ui</code>、<code>uu</code>、<code>u</code>、<code>t</code> 恰好都是明文。</p>
+<h1>5 记住你的几把钥匙：标识符与持久化</h1>
+<p><img alt="Article image" src="/assets/2026-11-24-anthropic-风控指纹特征分析调研报告-47eecb22d8/07.jpg"></p>
+<p>_图 6　标识符寿命</p>
+<p>s.js 自己只往浏览器里写一个持久标识，就是 <code>__ssid</code>。但在 claude.ai 页面上，能把“这次访问”和“上次访问”串起来的东西远不止它一个。下表把它们放在一起比较：</p>
+<p>标识</p>
+<p>存在哪</p>
+<p>寿命</p>
+<p>怎么清</p>
+<p>能否直接指认你</p>
+<p>账户 UUID（ui）</p>
+<p>服务端</p>
+<p>账户存续期间一直有效</p>
+<p>只能换账户</p>
+<p>能</p>
+<p>__ssid（uu）</p>
+<p>cookie .claude.ai</p>
+<p>脚本申请 4 年；Chrome 实际截到 400 天；官方 Cookie 表写 13 个月</p>
+<p>清 cookie、无痕模式、新 profile</p>
+<p>间接（经由账户关联）</p>
+<p>anthropic-device-id</p>
+<p>host-only cookie</p>
+<p>300 天（官方写 10 个月）</p>
+<p>清 cookie</p>
+<p>间接</p>
+<p>activitySessionId（S）</p>
+<p>cookie</p>
+<p>12 小时</p>
+<p>过期或清 cookie</p>
+<p>间接</p>
+<p>指纹组合</p>
+<p>不存储，每次重新计算</p>
+<p>只要环境不变就一直相同</p>
+<p>清不掉，只能改环境</p>
+<p>间接</p>
+<p>IP / ASN</p>
+<p>服务端</p>
+<p>随网络变化</p>
+<p>换网络</p>
+<p>间接</p>
+<h2>5.1 <code>__ssid</code> 的一生</h2>
+<p>每次上报时，脚本都去 <code>document.cookie</code> 里找 <code>__ssid</code>：</p>
+<ul>
+<li>
+<p>找不到、值长度小于 15、或者值是字符串 &quot;undefined&quot; / &quot;null&quot;，就用 <code>crypto.randomUUID()</code> 生成新值，写一个“当前年份 +4”过期的 cookie。</p>
+</li>
+<li>
+<p>找到了就原样复用，不续期。</p>
+</li>
+</ul>
+<p>cookie 属性也有讲究：</p>
+<ul>
+<li>
+<p>写入时没设置 Secure 和 SameSite，JS 写的 cookie 本来也不能是 HttpOnly。所以页面上任何脚本都能读到它，它也会随每个发往 <code>*.claude.ai</code> 的请求一起发给 Anthropic 的服务器。</p>
+</li>
+<li>
+<p>cookie 域由脚本内置的顶级域名表推算，实际效果是“取最后两段”：claude.ai 上是 <code>.claude.ai</code>，platform 上是 <code>.claude.com</code>。两边的 <code>__ssid</code> 不同，但实测两站上报的 canvas、插件、数学库指纹完全一样。【代码 + 实测】</p>
+</li>
+</ul>
+<h2>5.2 没有超级 cookie</h2>
+<p>全文检索并动态挂钩（hook）存储 API 之后确认，脚本不会往 localStorage、sessionStorage、IndexedDB、Cache Storage、Service Worker、<code>window.name</code> 写入任何标识，也不靠 ETag 或 HSTS 这类缓存机制存 ID。detectIncognito 在 Safari 和老版 Firefox 上会建一个临时 IndexedDB 数据库，随即删除；在 Chrome 上只查询存储配额，不碰 IndexedDB。所以清掉 <code>__ssid</code> 就是真的清掉了，脚本不会从别处把它恢复。【代码 + 实测】</p>
+<h2>5.3 s.js 之外的第一方设备标识</h2>
+<p>claude.ai 的前端另有一个第一方 cookie <code>anthropic-device-id</code>。它作为请求头 <code>anthropic-device-id</code> 随每一次 API 调用发出，也用于 GrowthBook 实验曝光事件。<code>activitySessionId</code> 则通过请求头 <code>x-activity-session-id</code> 发给后端。【代码】</p>
+<p>这样一来，Anthropic 后端手里同时有三样东西：</p>
+<ul>
+<li>
+<p>自己的设备 ID；</p>
+</li>
+<li>
+<p>Sift 信标里的会话 MD5；</p>
+</li>
+<li>
+<p>账户 UUID。</p>
+</li>
+</ul>
+<p>三者可以把 Sift 的设备结论和具体业务请求精确对齐【推断】。不过这几个 ID 都是随机值，清 cookie 就会换新。</p>
+<h1>6 稳定性实测：清 cookie、换 profile、开无痕之后还剩什么</h1>
+<p>要回答“能不能一直认出这台电脑”，关键是看哪些字段在各种重置操作后不变。实验设计如下：</p>
+<ul>
+<li>
+<p>在本机沙箱里，用 HTTPS 的本地页面模仿 claude.ai 的接入方式加载原版 s.js。</p>
+</li>
+<li>
+<p>所有发往 Sift 的请求都在本地拦截，实验期间没有任何数据发到外部。</p>
+</li>
+<li>
+<p>Chrome 151 和 Firefox 153 各自覆盖 7 类场景，共 35 次运行。</p>
+</li>
+</ul>
+<p>实验环境</p>
+<p>说明</p>
+<p>机器</p>
+<p>Linux x86_64，64 个逻辑核，无独立 GPU：Chromium 用 SwiftShader 软件渲染，Firefox 用 llvmpipe 软件渲染</p>
+<p>浏览器</p>
+<p>Chromium 151（Playwright 驱动和直接启动两种）、Firefox 153（Playwright 驱动和直接启动两种）</p>
+<p>页面</p>
+<p>自签证书的 HTTPS 页面，用来保证安全上下文：非 HTTPS 页面上 deviceMemory 等字段会缺失</p>
+<p>隔离</p>
+<p>三层隔离：Playwright 拦截请求；本机 DNS 映射把 Sift 域名解析到本地；Firefox 运行在只有回环网卡的独立网络命名空间里</p>
+<p><img alt="Article image" src="/assets/2026-11-24-anthropic-风控指纹特征分析调研报告-47eecb22d8/08.jpg"></p>
+<p>_图 7　稳定性矩阵：清 cookie、新 profile、无痕都只换掉 uu</p>
+<p>场景</p>
+<p>变化的字段</p>
+<p>结论</p>
+<p>同一 profile 重启后再访问</p>
+<p>无，只有随机数和耗时在变</p>
+<p>完全同一台设备</p>
+<p>清空 cookie 和全部站点数据</p>
+<p>只有 uu</p>
+<p>74 个字段不变</p>
+<p>全新 profile</p>
+<p>只有 uu</p>
+<p>74 个字段不变</p>
+<p>Chrome 真实无痕窗口</p>
+<p>只有 uu；inc 仍然是 false</p>
+<p>既没认出是无痕，也没换掉指纹</p>
+<p>Firefox 隐私窗口</p>
+<p>uu；核数从 64 改报 8；canvas 随机化；inc=true</p>
+<p>指纹弱化了，但被识别为隐私模式</p>
+<p>只改 UA、语言或时区</p>
+<p>只有对应的上下文字段；UA 改成 Windows 时 ts 消失</p>
+<p>硬件层原样保留</p>
+<p>改屏幕或窗口尺寸</p>
+<p>屏幕和窗口相关的 6 个字段</p>
+<p>其余不变</p>
+<p>换到 Firefox</p>
+<p>显卡串、音频、数学库、canvas、插件、UA 等</p>
+<p>只剩 16 个低熵字段相同</p>
+<p>💡 提示
+实测结论：在同一个 Chromium 里做 10 次各种重置（重访、清数据、新 profile、无痕），<code>__ssid</code> 一共出现 8 个不同值，而去掉 <code>__ssid</code> 后的全量指纹哈希 10 次完全相同。服务端只要用任意一个稳定子集做匹配，就能把每个新的 <code>__ssid</code> 并回同一台设备。这台机器 64 核、没有 GPU，比普通电脑更显眼。实验只能证明指纹稳定，不能证明它在人群中唯一。</p>
+<h1>7 有没有“机器码级”风控</h1>
+<p>❗ 重要
+直接回答：</p>
+<p>• 没有硬件序列号级别的识别，网页也做不到。</p>
+<p>• 有“浏览器安装级”的持久识别：不换浏览器内核、不换显示和系统环境时，清 cookie、换 profile、开无痕都只会换掉一个随机 ID，指纹原样保留。</p>
+<p>• 账户、IP 和 Sift 全网数据会把剩下的缝隙补上。 “只要在这台电脑上就永远能被认出”这个说法过强，“在这台电脑的这个浏览器里，几乎总能被认出”是准确的。</p>
+<p><img alt="Article image" src="/assets/2026-11-24-anthropic-风控指纹特征分析调研报告-47eecb22d8/09.jpg"></p>
+<p>_图 8　识别阶梯：从账户到硬件序列号</p>
+<h2>7.1 严格意义：浏览器拿不到硬件序列号</h2>
+<p>浏览器把网页关在沙箱里：</p>
+<ul>
+<li>
+<p>W3C 的设计原则要求，暴露给网页的设备标识应当随机生成、按站点隔离、在用户清除数据时一并清除。</p>
+</li>
+<li>
+<p>WebRTC 早已用临时 mDNS 名替代真实的内网 IP。</p>
+</li>
+<li>
+<p><code>deviceMemory</code> 只给出取整后的档位。</p>
+</li>
+<li>
+<p>WebUSB、WebAuthn 这类能碰到硬件的 API 都要用户逐次授权，s.js 也一个都没调用。</p>
+</li>
+</ul>
+<p>所以 MAC 地址、硬盘序列号、主板 UUID、Windows MachineGuid、TPM 背书密钥，网页脚本都拿不到。Sift 隐私声明的采集清单里出现过 MAC 地址，但那份清单同时覆盖 App SDK，网页端不可能拿到。【官方 + 推断】</p>
+<h2>7.2 实践意义：硬件派生信号几乎等于“这台机器的这个浏览器”</h2>
+<p>拿不到序列号，不等于认不出机器。s.js 采集的显卡型号、canvas 渲染结果、CPU 核数、内存档位、屏幕分辨率、CPU 架构、时区，都由硬件和操作系统决定，你清多少次浏览器数据都不会变。第 6 章的实验表明，在同一个 Chrome 里，它们就是一个稳定的设备签名。</p>
+<p>Sift 官方说法与此吻合：</p>
+<ul>
+<li>
+<p>会“用多种方法计算多个设备指纹”，指纹里还包括 IP 和屏幕尺寸。</p>
+</li>
+<li>
+<p>多信号指纹“按概率匹配设备”，“用户清除浏览器数据后仍能持续”。【官方】</p>
+</li>
+</ul>
+<p><img alt="Article image" src="/assets/2026-11-24-anthropic-风控指纹特征分析调研报告-47eecb22d8/10.jpg"></p>
+<p>_图 9　还能被认出来吗：断联决策树</p>
+<h2>7.3 “永远”为什么不成立</h2>
+<p>指纹会漂移：
+浏览器大版本升级会改变音频、数学库和显卡串的格式；
+换显示器、改缩放、驱动升级、笔记本切换独显，都会改动部分字段；
+学术研究 FP-STALKER 测得，真实设备的指纹平均可被追踪 51.8 天，45.5% 的指纹一天内至少变化一项。
+开源版指纹本身不精确：FingerprintJS 官方自述，开源版的准确率只有 40–60%，ID 往往只能维持几周。真实流量中只有 33.6% 的浏览器指纹是唯一的，移动端只有 18.5%；同型号新机器会撞指纹，Sift 帮助中心也承认这一点。
+真正把漂移补上的是另外三样东西：登录同一账户、相同的出口 IP 或 ASN，以及 Sift 服务端的概率匹配和全网历史。这三样都不是“机器码”，换账户、换网络就能削弱。</p>
+<h2>7.4 原生客户端是另一回事</h2>
+<p>客户端</p>
+<p>设备标识</p>
+<p>说明</p>
+<p>Claude Code CLI</p>
+<p>userID、machineID</p>
+<p>两者都是 crypto.randomBytes(32) 生成的随机值，存在 ~/.claude.json，删掉就会重新生成。userID 以 device_id 的名义随每个 API 请求的 metadata 发出，静态分析没有看到遥测开关能控制这一步。【代码，未抓包】</p>
+<p>Claude Code（OTEL）</p>
+<p>host.id</p>
+<p>这是唯一会读取真实 OS 机器码的地方：Linux 上的 /etc/machine-id、macOS 的 IOPlatformUUID、Windows 的 MachineGuid。但只在显式开启 OTEL 并设置 OTEL_RESOURCE_INCLUDE_HOST=1 时才读取，而且发往你自己配置的 collector，不发给 Anthropic。【官方】</p>
+<p>Claude Desktop</p>
+<p>ant-did</p>
+<p>首次启动时生成随机 UUID 并写入文件【官方，3P 部署文档】。社区称消费版也会以 anthropic-device-id 请求头发出，切换账号后不变【社区】。</p>
+<p>结论一致：Anthropic 自家客户端默认使用的设备 ID 都是“随机生成并存在文件里的安装 ID”，不是硬件机器码。</p>
+<h1>8 服务端能做什么：从一台设备到跨站身份图谱</h1>
+<p><img alt="Article image" src="/assets/2026-11-24-anthropic-风控指纹特征分析调研报告-47eecb22d8/11.jpg"></p>
+<p>_图 10　关联图谱：一台设备把账户、cookie、IP、邮箱和支付连成网</p>
+<h2>8.1 设备解析与关联图谱</h2>
+<p>Sift 的数据模型是：一个会话对应一个设备指纹，一个设备可以对应多个用户，一个用户也可以对应多个设备。在这个模型上：</p>
+<ul>
+<li>
+<p>页面用 <code>_setUserId</code> 把会话挂到账户上。</p>
+</li>
+<li>
+<p>登录前的匿名浏览，通过会话 ID 回溯到同一账户。</p>
+</li>
+<li>
+<p>Console 的 Network 视图按设备 ID、cookie 指纹、IP、账单或收货地址，把共用这些属性的账户列在一起，可以批量处置。</p>
+</li>
+<li>
+<p>官方帮助文档直说，同一设备上有多个用户，本身就是“更强的欺诈信号”。【官方】</p>
+</li>
+</ul>
+<p>Device Fingerprinting API 对每台设备给出以下信息【官方】：</p>
+<ul>
+<li>
+<p>首次出现时间；</p>
+</li>
+<li>
+<p>这台设备上出现过的用户列表；</p>
+</li>
+<li>
+<p>Anthropic 自己打的 bad / not_bad 标签；</p>
+</li>
+<li>
+<p><code>network.first_seen</code> 和 <code>network.score</code>：前者是 Sift 在全部客户中首次见到这台设备的时间，后者是其他客户打的标签算出来的 0–1 风险分。</p>
+</li>
+</ul>
+<p>Anthropic 即使没有购买这个 API，Sift 的评分模型也照样使用设备指纹。【官方】</p>
+<h2>8.2 全网信誉与 Global Profile</h2>
+<p>Sift 自称每年处理 1 万亿以上事件，覆盖 3.4 万多个站点和 App。它明确写道：在网络中共享的数据包括“邮箱地址、IP 地址和设备指纹”。全局模型使用“所有客户的数据”，在一个站点识别出的欺诈者会影响其他站点的判断。</p>
+<p>2026 年推出的 Global Profile 更进一步，可以按账户 ID、邮箱或手机号查询：</p>
+<ul>
+<li>
+<p>这个身份在其他 Sift 客户那里有多少关联账户，分布在哪些行业；</p>
+</li>
+<li>
+<p>被其他客户 block 或 watch 过多少次；</p>
+</li>
+<li>
+<p>有过多少拒付；</p>
+</li>
+<li>
+<p>默认回看 12 个月。【官方】</p>
+</li>
+</ul>
+<p>同时，Sift 也强调“我们不给人打分，只给某站点上的某次交互打分”，阈值和处置由客户自己决定。【官方】</p>
+<p><img alt="Article image" src="/assets/2026-11-24-anthropic-风控指纹特征分析调研报告-47eecb22d8/12.jpg"></p>
+<p>_图 11　从信号到处置：Sift 打分，Anthropic 定阈值</p>
+<h2>8.3 评分与处置</h2>
+<p>能力</p>
+<p>官方依据</p>
+<p>对你意味着什么</p>
+<p>IP 情报</p>
+<p>识别代理、VPN、机房、Tor 出口、云厂商 IP，IP 所属组织，以及 IP 与账单地址的距离</p>
+<p>机房 IP 和 VPN 会直接抬高风险分</p>
+<p>身份增强</p>
+<p>邮箱年龄、一次性邮箱、按数字规范化识别相近邮箱（Sift 官方示例：johndoe123@ 与 johndoe124@）、电话线路类型、发卡行与卡号前几位</p>
+<p>批量注册的邮箱和虚拟卡更容易被关联</p>
+<p>聚合信号</p>
+<p>users_per_device_id、devices_per_user、create_account_per_ip_global_1h（全网范围）等 474 个可回传信号</p>
+<p>同一台设备上的账户数会被直接计数</p>
+<p>评分</p>
+<p>账户滥用、支付滥用、账户盗用、内容滥用等多类分数</p>
+<p>注册、登录、支付各有一套分数</p>
+<p>工作流与决策</p>
+<p>满足条件就自动拦截、转人工审核或放行；决策结果再反馈给模型</p>
+<p>封号可能是自动的，申诉后的结果也会反哺模型</p>
+<p>Anthropic 一侧有两点可以确认：</p>
+<ul>
+<li>
+<p>子处理者清单写明 Sift 用于“Fraud and abuse detection”，覆盖除 Claude for Government 外的全部产品。</p>
+</li>
+<li>
+<p>2024 年 3 月，一位 Anthropic 员工在 Hacker News 上公开承认，注册环节的反欺诈“过于激进”，调低后解封了一批账号。</p>
+</li>
+</ul>
+<p>Anthropic 具体启用了哪些 Sift 产品、回传了哪些业务字段（比如支付卡信息）、阈值怎么设，外部无法确认。</p>
+<h1>9 反自动化与反伪装：哪些检测有效，哪些已经失效</h1>
+<p><img alt="Article image" src="/assets/2026-11-24-anthropic-风控指纹特征分析调研报告-47eecb22d8/13.jpg"></p>
+<p>_图 12　伪装检测映射：哪些手段会被识破，哪些检测已经失效</p>
+<p>手段</p>
+<p>会被什么暴露</p>
+<p>实测</p>
+<p>Playwright / Selenium 驱动</p>
+<p>wd=true</p>
+<p>有效；去掉自动化启动参数后变为 false</p>
+<p>旧版无头 Chrome</p>
+<p>UA 含 HeadlessChrome、插件数为 0、屏幕 800×600、通知权限 denied、canvas 与有头模式不同</p>
+<p>破绽最多</p>
+<p>新版无头 Chrome</p>
+<p>UA 和屏幕尺寸</p>
+<p>canvas 与有头模式一致</p>
+<p>改 UA 冒充 Windows 或 iPhone</p>
+<p>platform、触屏能力、引擎特征和 UA 对不上</p>
+<p>能检出，但 ts/tb 直接消失，不发 true</p>
+<p>用 JS 改写语言或屏幕</p>
+<p>tl、tr</p>
+<p>有效</p>
+<p>只改时区</p>
+<p>前端没有篡改标志；服务端可以拿时区和 IP 地理位置比对</p>
+<p>前端不报警</p>
+<p>Chrome 无痕窗口</p>
+<p>inc</p>
+<p>失效：普通窗口和无痕窗口都报 10 GiB 配额</p>
+<p>Firefox 隐私窗口</p>
+<p>inc</p>
+<p>有效</p>
+<p>广告拦截插件</p>
+<p>ab</p>
+<p>用诱饵元素检测</p>
+<p>两个代码缺陷值得记下来：</p>
+<ul>
+<li>
+<p>篡改检测漏了 return：<code>tamperedBrowserSignal</code> 和 <code>tamperedOSSignal</code> 只在判定为 false 的分支里返回结果，判定为 true 的分支都没有返回，所以“检测到篡改”在请求里表现为字段缺失。Sift 服务端如果知道这一点，缺失本身仍然是可用的信号。</p>
+</li>
+<li>
+<p>无痕检测的判据过时：detectIncognito 在 Chrome 上的判据是“配额小于两倍堆上限”，而当前 Chrome 在普通和无痕模式下都报固定的 10 GiB，这个判据恒为假。【代码 + 实测】</p>
+</li>
+</ul>
+<h1>10 claude.ai 上的完整风控栈</h1>
+<p><img alt="Article image" src="/assets/2026-11-24-anthropic-风控指纹特征分析调研报告-47eecb22d8/14.jpg"></p>
+<p>_图 13　claude.ai 风控全栈：从网络边缘到服务端共六层</p>
+<p>s.js 只是 claude.ai 风控的一层。把前端代码、cookie、子处理者清单放在一起看，从网络边缘到服务端共六层：</p>
+<p>层</p>
+<p>组件</p>
+<p>管什么</p>
+<p>关键标识</p>
+<p>① 网络边缘</p>
+<p>Cloudflare Bot Management、Managed Challenge 人机挑战</p>
+<p>机器人流量、挑战验证</p>
+<p>cf_clearance、__cf_bm、_cfuvid</p>
+<p>② 登录与关键动作</p>
+<p>hCaptcha（含隐形的客户端证明）、Google 登录</p>
+<p>登录、魔法链接、短信验证、OAuth 同意</p>
+<p>各动作独立的 sitekey；g_state</p>
+<p>③ 全站设备信标</p>
+<p>Sift s.js；claude.ai 前端自有的设备 ID 与会话 ID</p>
+<p>设备指纹、反自动化；API 请求的设备与会话归属</p>
+<p>__ssid、anthropic-device-id、activitySessionId</p>
+<p>④ 支付</p>
+<p>Stripe.js 与 Radar 反欺诈信号</p>
+<p>支付欺诈（只在结算时加载）</p>
+<p>__stripe_mid、__stripe_sid</p>
+<p>⑤ 身份核验</p>
+<p>Persona、Yoti</p>
+<p>Free / Pro / Max 用户的身份验证（按需触发）</p>
+<p>证件、人脸</p>
+<p>⑥ 服务端</p>
+<p>IP 情报、Sift 评分与工作流、Anthropic 自有规则（推断）</p>
+<p>代理与机房识别、风险评分、地区与多账户策略</p>
+<p>IP、ASN、账户 UUID</p>
+<p>另外，Datadog RUM 做性能监控（不录屏、默认遮蔽内容），Segment 做产品分析（受 cookie 同意控制），GrowthBook 管功能开关（含 Sift 的紧急关停开关），这三者不属于风控。子处理者清单里还有 Arkose Labs，但这次在 claude.ai 前端代码里没有找到它。</p>
+<h1>11 评价：边界、缺陷与隐私影响</h1>
+<h2>11.1 设计上克制的地方</h2>
+<ul>
+<li>
+<p>不采集行为：没有键盘、鼠标、滚动、剪贴板、表单监听。按键节奏、鼠标轨迹这类行为生物特征都没有采。</p>
+</li>
+<li>
+<p>没有 evercookie，清 cookie 真的能清掉 ID；没有 WebRTC 内网 IP 探测，也不枚举字体。</p>
+</li>
+<li>
+<p>Anthropic 在 HIPAA 组织、一次性凭据 URL、福利页、桌面端授权页等场景下不加载 Sift，并对 <code>q</code>、<code>returnTo</code> 两个参数脱敏。</p>
+</li>
+</ul>
+<h2>11.2 缺陷</h2>
+<p>问题</p>
+<p>说明</p>
+<p>ts / tb 永远不会是 true</p>
+<p>判定为 true 的分支没有 return，检出篡改时字段直接消失</p>
+<p>inc 在 Chrome 上失效</p>
+<p>配额判据过时，普通窗口和无痕窗口一样</p>
+<p>tm、db 是死字段</p>
+<p>time_ 从来没有被赋值；1 == openDatabase 恒为 false</p>
+<p>屏幕字段的排序 bug</p>
+<p>FPJS 对宽高做字典序排序，1366×768 被报成 768/1366</p>
+<p>cookie 域推算</p>
+<p>遇到 .co.uk、.com.cn 这类多级后缀会算错，导致每次都重新生成 ID。claude.ai 不受影响</p>
+<p>URL 脱敏不完整</p>
+<p>只处理 query 里的指定参数，路径和 #hash 原样上报；实测带出过 Cloudflare 人机挑战的一次性 token</p>
+<h2>11.3 隐私影响与你的权利</h2>
+<p>数据直达第三方：数据名义上发给 anthropic.com 的子域名，实际进入 Sift 的服务器，浏览器的第三方请求拦截很难识别出来。Sift 服务条款写明客户数据会与其他客户的数据“混合”（commingled），用于改进它的全局模型；隐私声明则说会在全部客户网络中关联共同的数据属性。
+对话元数据外泄到第三方：登录后，对话 UUID、对话标题开头、账户 UUID 会随每次路由切换一起发给 Sift。
+政策披露是笼统的：
+Anthropic 隐私政策只写了会把设备与连接信息（含“概率性标识符”）分享给反欺诈服务商，没有点名 Sift，也没写保留期。
+Cookie 表把 __ssid 列为第一方的必要 cookie，没说明它属于 Sift。
+Usage Policy 在 2026-11-12 版新增：禁止以规避检测为目的创建多个账户，禁止通过消费级订阅转售或代理。
+你能做什么：
+欧盟、英国、瑞士居民可以把 Sift 当作数据控制者（controller），通过 privacy@sift.com (mailto:privacy@sift.com) 或 sift.com/data-request 申请访问或删除数据，但 Sift 保留以“维护模型准确性”为由继续保存数据的权利。
+美国居民按 Sift 的说法应先联系 Anthropic。</p>
+<h1>12 附录</h1>
+<h2>12.1 代码入口</h2>
+<p>行号对应把 s.js 用 prettier 3 格式化后的 3,677 行版本。</p>
+<p>函数 / 对象</p>
+<p>行号</p>
+<p>作用</p>
+<p>R / L</p>
+<p>624–1043</p>
+<p>crypto-js MD5，以及输出 32 位 hex 的包装函数</p>
+<p>$</p>
+<p>1067–1118</p>
+<p>FingerprintJS 组件到 31 个 f* 字段的映射</p>
+<p>K</p>
+<p>1119–1176</p>
+<p>Sift 内部字段到短键名的映射</p>
+<p>Ae</p>
+<p>1599–2033</p>
+<p>FingerprintJS 的 28 个组件（audio、videoCard、math 等）</p>
+<p>We / He</p>
+<p>2358–2412</p>
+<p>生成 UUID；写 cookie 并推算 cookie 域</p>
+<p>detectIncognito</p>
+<p>2425–2873</p>
+<p>无痕检测</p>
+<p>Ye / Xe / Ze</p>
+<p>2876–2911</p>
+<p>截断、拼 querystring、URL 脱敏</p>
+<p>et</p>
+<p>2913–3333</p>
+<p>Sift 自有的 21 个信号</p>
+<p>rt / lt / ct</p>
+<p>3365–3570</p>
+<p>采集流水线与 GIF 发送</p>
+<p>vt 与 window._sift</p>
+<p>3586–3676</p>
+<p>命令接口与命令队列</p>
+<h2>12.2 调研方法</h2>
+<p>调研线</p>
+<p>做了什么</p>
+<p>静态逆向：FPJS 层</p>
+<p>逐个组件对照上游 v3.4.2 源码；把 MD5 和 MurmurHash3 抄到独立脚本，与标准实现比对结果</p>
+<p>静态逆向：Sift 层</p>
+<p>分析 21 个信号、标识符、存储痕迹、命令接口；全文检索并列出“没做的事”；手抄关键函数验证</p>
+<p>沙箱实测</p>
+<p>Chromium 151 与 Firefox 153 共 35 次运行，覆盖重访、清数据、新 profile、无痕、无头、篡改、跨浏览器；对外请求数为 0</p>
+<p>claude.ai 接入</p>
+<p>在本机 Chrome 里新开自己的标签页，挂钩 window._sift（未登录）；下载并分析 claude.ai 的 961 个前端 chunk 与 platform 的 RSC 数据</p>
+<p>Sift 服务端</p>
+<p>Sift 开发者文档、帮助中心、隐私声明、服务条款、博客、专利；W3C、IETF、MDN 文档与学术论文</p>
+<p>Anthropic 侧</p>
+<p>隐私政策及其历史版本、Cookie 表、子处理者清单、Usage Policy；与 Sift 官方脚本逐字节比对；DNS 与证书查询；网页存档里的历史版本；Claude Code 二进制静态检查</p>
+<h2>12.3 未验证事项</h2>
+<ul>
+<li>
+<p>登录状态下 <code>ui</code> 是否就是账户 UUID，对话页的 <code>u</code>、<code>t</code> 是否带对话 UUID 和标题：目前只有代码证据，调研用的浏览器没有登录。</p>
+</li>
+<li>
+<p>Sift 设备 ID 的具体匹配算法、返回给不同客户的设备 ID 是否相同：官方没有公开。</p>
+</li>
+<li>
+<p>Anthropic 启用了哪些 Sift 产品、回传了哪些 Events API 字段（尤其是支付卡和电话）、阈值怎么设。</p>
+</li>
+<li>
+<p>真实 GPU 机器上 <code>fvch</code> 的区分度，以及 Safari 下的行为：本次只测了一台无 GPU 的 Linux 机器。</p>
+</li>
+<li>
+<p>Claude Code 设置 <code>DISABLE_TELEMETRY</code> 后，API 请求的 metadata 里是否仍然带 <code>device_id</code>：只有静态代码推断，没有抓包。</p>
+</li>
+<li>
+<p>社区关于“同一设备多号连坐”的说法：有正反两方面的个案，无法核实。官方材料里没有任何一处写到设备连坐。</p>
+</li>
+</ul>
+<h2>12.4 参考来源</h2>
+<ul>
+<li>
+<p>Sift JavaScript API 文档</p>
+</li>
+<li>
+<p>Sift Device Fingerprinting API</p>
+</li>
+<li>
+<p>Sift Global Profile API</p>
+</li>
+<li>
+<p>Sift：One trillion events power the Global Data Network</p>
+</li>
+<li>
+<p>Sift Service Privacy Notice</p>
+</li>
+<li>
+<p>Sift 帮助中心：设备与浏览器指纹</p>
+</li>
+<li>
+<p>Anthropic 子处理者清单</p>
+</li>
+<li>
+<p>Anthropic 隐私政策</p>
+</li>
+<li>
+<p>Anthropic Cookie 表</p>
+</li>
+<li>
+<p>Anthropic Usage Policy</p>
+</li>
+<li>
+<p>Claude Code 数据使用说明</p>
+</li>
+<li>
+<p>Claude Code 监控与 OTEL</p>
+</li>
+<li>
+<p>FingerprintJS v3 README</p>
+</li>
+<li>
+<p>detectIncognito</p>
+</li>
+<li>
+<p>W3C TAG Web Platform Design Principles</p>
+</li>
+<li>
+<p>Laperdrix 等：Browser Fingerprinting 综述</p>
+</li>
+<li>
+<p>HN：Anthropic 员工谈注册反欺诈</p>
+</li>
+</ul></div><a class="source" href="https://x.com/riba2534/status/2124194803575607364" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>

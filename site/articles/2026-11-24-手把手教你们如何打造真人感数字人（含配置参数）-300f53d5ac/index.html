@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="手把手教你们如何打造真人感数字人（含配置参数）">
+  <title>手把手教你们如何打造真人感数字人（含配置参数） · Reading Archive</title><link rel="stylesheet" href="/style.css"><script src="/sync.js" defer></script>
+</head><body>
+  <header class="masthead"><a href="/">Reading Archive</a><span class="sync"><span id="sync-status" role="status"></span><button id="sync-button" type="button">同步</button></span></header><main><article><a class="back" href="/">← 返回文章列表</a><div class="meta">麦麦提 @shengtang135754 · 2026-11-24</div><div class="prose"><h1>手把手教你们如何打造真人感数字人（含配置参数）</h1>
+<p>三大赛道成品配方</p>
+<p>【方向 1：《玄武门之变》65 秒历史纪录片 · 16:9 横屏】</p>
+<p>• 节奏结构：总长 65.85s（A-Roll 28.7s + B-Roll 37.2s），按 A1 → 2镜B → A2 → 3镜高潮B → 2镜转折B → A3 交替推进，绝不连续口播超 10 秒。</p>
+<p>• 镜头配方：7 镜全走 MiniMax-H3 影视档（1024×576, 137f/145f, 8 steps），锁长安十二时辰青金/朱砂影调：晨雾玄武门、油灯兵图、暗影伏兵、太子策马入宫、鎏金角弓放箭、朱门洞开、盛唐长安航拍（前 5 镜开真人 LoRA，后 2 镜关）。</p>
+<p>• 配乐黑科技：用 NumPy 合成 D 小调五声部底噪 + 稀疏古筝拨弦 + 伏击段（29s–45s）低频战鼓，压到 -26.5 dBFS，0 版权风险。</p>
+<p>【方向 2：《东方主理人 · 高定家具》58 秒竖屏口播 · 9:16 混排省钱版】</p>
+<p>• 节奏结构：总长 58.5s（A-Roll 27.1s + B-Roll 30.2s），顺序为：开场立人设 → 客厅沙发/餐桌 → 讲榫卯与木蜡油工艺 → 主卧/展厅 → 户型图免费定制引流。</p>
+<p>• 50/50 混排省一半显卡费：6 个产品镜里，只把最吃流动光影的 3 镜（纳帕牛皮微距、黑胡桃餐桌树影、主卧微风纱帘）交给 MiniMax-H3（576×1024, 121f / 6 steps，全程关真人 LoRA）；客厅全景、榫卯工艺、展厅全景 3 镜走本地 2.5D 运镜。</p>
+<p>• 包装氛围：左上角暖香槟磨砂胶囊标签 + 舒缓钢琴曲（Evening_Fall_Piano.mp3）配侧链闪避。</p>
+<p>【方向 3：《东方主理人 · 茶具空间》51 秒「坐播 + 走动逛店」高阶版 · 9:16】</p>
+<p>• 破局核心：摆脱数字人“钉死在椅子上”的塑料感——坐播开场/收尾 + 走动逛店串场，全片 50.8s（A-Roll 仅 17.8s，其余全是第一视角陪逛与器物特写）。</p>
+<p>• 镜头配方：3 个走动镜（紫砂展墙抬手示意、青瓷长桌轻转盖碗赏釉、竹影长廊回眸引路）+ 1 个 85mm 慢动作紫砂壶倒茶热气，走 MiniMax-H3（has_people=true, 121f / 6 steps）；3 个器物静物/茶室全景走本地 2.5D 运镜。</p>
+<p>• 人物一致性铁律：坐播定妆照与 3 个走动镜锁定同一套象牙白金边外套与暖调环境光，走动镜严格写死 closed-lip smile，画外音顺滑讲解，观感极接近专业团队稳定器跟拍。</p>
+<p>• 包装氛围：宋韵深茶木+青瓷玉绿竖条标签 + 古筝轻乐（Guzheng_City.mp3）。1. 本地 Mac（Apple Silicon MPS，0 云端费）：VoxCPM2 声音克隆 + 首段锁声线</p>
+<ol start="2">
+<li>
+<p>云端管线 A（Colab G4 96G，约 26GB）：Wan2.1-I2V-14B + InfiniteTalk 跑 A-Roll 真人口播</p>
+</li>
+<li>
+<p>云端管线 B（Colab G4 96G，约 42GB）+ 本地 CPU：MiniMax-H3 跑强动作和走动镜，建筑与展厅空镜走本地 2.5D 运镜（2.5 秒/镜，0 显卡费）</p>
+</li>
+<li>
+<p>本地 FFmpeg + Pillow：静音谷点卡字幕 + 章节标签 + 侧链闪避混音</p>
+</li>
+</ol>
+<p>一、部署与安装指令</p>
+<p>【1】本地 Mac 端（配音 + 2.5D 空镜 + 终版合成）</p>
+<p>安装基础依赖与 VoxCPM2（6.4GB 本地权重，以后离线 0 费用出声音）：</p>
+<p>brew install ffmpeg git python@3.11</p>
+<p>git clone https://github.com/OpenBMB/VoxCPM.git ~/VoxCPM</p>
+<p>cd ~/VoxCPM &amp;&amp; python3.11 -m venv .venv &amp;&amp; source .venv/bin/activate</p>
+<p>pip install -e . soundfile numpy pillow huggingface_hub</p>
+<p>huggingface-cli download openbmb/VoxCPM2 --local-dir ~/VoxCPM/pretrained_models/VoxCPM2</p>
+<p>清洗 5–10 秒参考干声（去喷麦与底噪）：</p>
+<p>ffmpeg -y -i raw.m4a -af &quot;highpass=f=80,afftdn=nf=-28&quot; -ar 48000 -ac 1 voice_ref_clean.wav</p>
+<p>【2】云端管线 A：数字人 A-Roll（与 B-Roll 彻底隔离）</p>
+<p>本机开 G4 并免交互挂载云盘</p>
+<p>colab new --gpu G4 -s g4_dh</p>
+<p>colab dfs mount -s g4_dh</p>
+<p>云端装 ComfyUI + 3 个必需插件 + 核心依赖：</p>
+<p>apt-get update -qq &amp;&amp; apt-get install -y -qq aria2</p>
+<p>git clone --depth 1 https://github.com/comfyanonymous/ComfyUI.git /content/ComfyUI</p>
+<p>cd /content/ComfyUI/custom_nodes</p>
+<p>git clone --depth 1 https://github.com/kijai/ComfyUI-WanVideoWrapper.git</p>
+<p>git clone --depth 1 https://github.com/kijai/ComfyUI-KJNodes.git</p>
+<p>git clone --depth 1 https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite.git</p>
+<p>uv pip install --system -q -r /content/ComfyUI/requirements.txt -r /content/ComfyUI/custom_nodes/ComfyUI-WanVideoWrapper/requirements.txt gguf accelerate einops ftfy &quot;diffusers&gt;=0.33.0&quot; &quot;peft&gt;=0.17.0&quot; sentencepiece pyloudnorm opencv-python-headless scipy imageio-ffmpeg librosa soundfile color-matcher</p>
+<p>必装 7 个权重（共约 26GB，用 aria2c -x 16 -s 16 拉到 /content/ComfyUI/models/）：</p>
+<p>• diffusion_models/：Wan2_1-I2V-14B-480p_fp8_e4m3fn_scaled_KJ.safetensors</p>
+<p>• diffusion_models/：Wan2_1-InfiniteTalk-Single_fp8_e4m3fn_scaled_KJ.safetensors</p>
+<p>• loras/：lightx2v_I2V_14B_480p_cfg_step_distill_rank64_bf16.safetensors</p>
+<p>• wav2vec2/：wav2vec2-chinese-base_fp16.safetensors</p>
+<p>• text_encoders/：umt5-xxl-enc-fp8_e4m3fn.safetensors（必须用 Kijai 非 scaled 版）</p>
+<p>• vae/：wan_2.1_vae.safetensors</p>
+<p>• clip_vision/：clip_vision_h.safetensors</p>
+<p>避坑补丁：新版 transformers 5.x 的 Wav2Vec2Encoder 默认不返回 hidden_states，需在 ComfyUI-WanVideoWrapper/multitalk/nodes.py 对 wav2vec2.encoder.layers 挂 register_forward_hook 收集 12 层隐藏态，否则直接报 NoneType。</p>
+<p>启动全显存常驻 ComfyUI + HTTP/2 隧道：</p>
+<p>nohup python3 /content/ComfyUI/main.py --listen 127.0.0.1 --port 8188 --highvram --disable-mmap &gt; /tmp/comfyui.log 2&gt;&amp;1 &amp;</p>
+<p>nohup /usr/local/bin/cloudflared tunnel --protocol http2 --url http://127.0.0.1:8188 &gt; /tmp/cloudflared.log 2&gt;&amp;1 &amp;</p>
+<p>【3】云端管线 B：电影级 B-Roll（另开独立会话 g4_broll）</p>
+<p>拉取 MiniMax-H3 scheme_a 权重（约 42.3GB）：</p>
+<p>• 底模：Minimax-h3_Singularity_ref2va_Pruned_v1.3_int8.safetensors</p>
+<p>• 编码器：qwen3vl_32b_heretic_minimax_h3_nvfp4.safetensors</p>
+<p>• VAE：minimax_h3_video_vae_fp16.safetensors + minimax_h3_audio_vae_fp32.safetensors</p>
+<p>• 加速与写实 LoRA：minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors、h3-realism-people-t2v-i2v-r2v.safetensors</p>
+<p>• 物理桥接：BUNNY_H3_ActionLogic_Bridge_V2.safetensors</p>
+<p>二、全套实测核心参数（照抄即可）</p>
+<p>【1】VoxCPM2 声音克隆参数</p>
+<p>• 采样精度：inference_timesteps=20、cfg_value=1.78（干货课 1.85）、normalize=True、denoise=False、retry_badcase=True (max=3)</p>
+<p>• 多段防变声锁：第 1 段用参考干声生成；第 2～N 段全部锚定第 1 段（prompt_wav=p01.wav, prompt_text=p01_text, reference_wav=ref.wav）</p>
+<p>• 静音裁切：thresh_db=-50.0、pad_head=0.08s、pad_tail=0.16s、段间自然换气 0.30s</p>
+<p>• 响度统一：按语音有效 RMS 锁在 -17.4 dBFS（切勿峰值归一化），导出 48kHz / 16-bit 立体声 WAV</p>
+<p>【2】Wan2.1 + InfiniteTalk（A-Roll 口播参数）</p>
+<p>• 定妆照规范：85mm 棚拍或实景光、自然闭唇微笑、嘴与下巴无遮挡（严禁大张嘴露齿照或广角自拍）</p>
+<p>• 分辨率与帧率：竖屏生成 480×832 放大 1080×1920；横屏生成 832×480 放大 1920×1080，固定 25fps</p>
+<p>• 加载器：base_precision=&quot;fp16_fast&quot;、quantization=&quot;disabled&quot;、attention_mode=&quot;sdpa&quot;、LightX2V LoRA strength=1.0 且 merge_loras=False</p>
+<p>• 语音与锁脸：wav2vec2-chinese-base_fp16、normalize_loudness=True、audio_scale=1.0、CLIPVision strength=1.0（多段切块始终锁原始首帧）</p>
+<p>• 防偏色滑窗：frame_window_size=81、motion_frame=9、colormatch=&quot;mkl&quot;、mode=&quot;infinitetalk&quot;</p>
+<p>• 采样器：steps=4（极速量产，快 33%）或 steps=6（牙齿超清）、cfg=1.0、shift=11.0、scheduler=&quot;dpm++_sde&quot;</p>
+<p>【3】MiniMax-H3 + 本地 2.5D（B-Roll 电影镜头参数）</p>
+<p>• 分辨率与帧率：竖屏 576×1024 @ 24fps / 横屏 1024×576 @ 24fps（后期统一对齐 25fps）</p>
+<p>• 帧数与步数：极速 Turbo 档 121 帧 (5.04s) / 6 steps（约 40 秒/镜）；影视档 137–145 帧 / 8 steps</p>
+<p>• LoRA 精准开关：有真人/手部开 h3-realism-people=0.72 + fl2v_turbo=0.75；纯家具/建筑必须关真人 LoRA，只开 fl2v_turbo=0.75</p>
+<p>• 关键节点：SigmaShift (video=12.0, audio=3.0)、BunnyH3ConditioningBridge (alpha=0.16, per_token)、MiniMaxH3AddGuide (frame_idx=0)、SigmasTail (tail_steps=2, strength=0.5)、sampler=res_multistep</p>
+<p>• 闭嘴铁律：所有 B-Roll 提示词写死 silent non-speaking, closed-lip smile，绝不抢主音轨</p>
+<p>• 本地 2.5D 运镜：2× 超采样 → zoompan（1.0→1.12 慢推拉横移）+ vignette=PI/7, noise=alls=3:allf=t+u, eq=contrast=1.02:saturation=1.03</p>
+<p>【4】FFmpeg 精剪与专业混音参数</p>
+<p>• 画面放大：scale=1080:1920:flags=lanczos + unsharp=3:3:0.40:3:3:0.0，导出 libx264 -preset medium -crf 16 -pix_fmt yuv420p</p>
+<p>• 音频避让与闪避：BGM 先做 loudnorm=I=-16:TP=-1.5:LRA=9，在 2200Hz 切 -3dB 给中文人声让路（volume=0.30），加 sidechaincompress=threshold=0.025:ratio=3.0:attack=25:release=320 + alimiter=limit=0.95，封装 AAC 224k / 48kHz</p>
+<p>• 字幕对齐：用 25ms 窗 / 10ms 步长扫每段 WAV 的静音谷点自动切分，同步导出 .srt 与磨砂字幕条</p></div><a class="source" href="https://x.com/shengtang135754/status/2123997615784386826" rel="noopener noreferrer">查看原文 ↗</a></article></main>
+  <footer>Saved for thoughtful reading.</footer>
+</body></html>
